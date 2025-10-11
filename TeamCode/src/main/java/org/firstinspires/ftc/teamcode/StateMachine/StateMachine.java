@@ -12,7 +12,7 @@ public class StateMachine {
     Aim,
     Shoot
   }
-  private State currentState = State.Find;
+  public State currentState = State.Find;
   public LinearOpMode opMode;
   public Telemetry telemetry;
 

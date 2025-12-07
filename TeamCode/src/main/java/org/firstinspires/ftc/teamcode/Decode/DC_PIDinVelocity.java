@@ -1,7 +1,9 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode_2025;
+package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13532
+
+// All rights reserved.
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -9,12 +11,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 @Config
 @Autonomous
-public class PIDinVelocity extends LinearOpMode {
+public class DC_PIDinVelocity extends LinearOpMode {
 
   // our DC motor.
   DcMotor BLmotor;
@@ -39,7 +40,7 @@ public class PIDinVelocity extends LinearOpMode {
     DcMotorControllerEx motorControllerEx = (DcMotorControllerEx) BLmotor.getController();
 
     // get the port number of our configured motor.
-    int motorIndex = ((DcMotorEx) BLmotor).getPortNumber();
+    int motorIndex = BLmotor.getPortNumber();
 
     // get the PID coefficients for the RUN_USING_ENCODER  modes.
     PIDFCoefficients pidOrig =

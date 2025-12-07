@@ -1,11 +1,11 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode_2025;
+package org.firstinspires.ftc.teamcode.Decode;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-public class PIDController {
+public class DC_PIDController {
 
   double spdMax = .8;
   double Kp;
@@ -26,13 +26,13 @@ public class PIDController {
    * @param Ki integral gain
    * @param Kd derivative gain
    */
-  public PIDController(double Kp, double Ki, double Kd) {
+  public DC_PIDController(double Kp, double Ki, double Kd) {
     this.Kp = Kp;
     this.Ki = Ki;
     this.Kd = Kd;
   } // constructor PIDController
 
-  public PIDController(double Kp, double Ki, double Kd, boolean angleWrap) {
+  public DC_PIDController(double Kp, double Ki, double Kd, boolean angleWrap) {
     this.Kp = Kp;
     this.Ki = Ki;
     this.Kd = Kd;

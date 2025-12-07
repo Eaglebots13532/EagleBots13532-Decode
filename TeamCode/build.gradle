@@ -25,4 +25,6 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
+    implementation 'org.ejml:ejml-core:0.43.1' // Use the latest version
+    implementation 'org.ejml:ejml-simple:0.43.1' // Optional: for a simpler interface
 }

@@ -1,0 +1,26 @@
+/* Copyright (c) 2024-2025 FTC 13532
+-- All rights reserved.
+- - - - -  eaglebots configuration -
+Left   Motor  0 . . . . . . . . .  LFM
+Right  Motor  1 . . . . . . . . .  RFM
+Left   Servo  0 . . . . . . . . .  LFS
+Right  Servo  1 . . . . . . . . .  RFS
+
+Left   Analog  . . . . .  Analog 0 LFP [one cable
+Right  Analog  . . . . . .Analog 1 RFP  for both]
+chute  Analog  . . . . . .Analog 3 CP
+
+Arm    Motor  3 . . . . . . . . . . arm
+Spin   Motor  2 . . . . . . . . . . launch
+Intake Servo  3 . . . . . . . . . . intake
+chute  Servo  4 . . . . . . . . . . chute
+tilt   Servo  2 . . . . . . . . . . tilt
+gate   Servo  5 . . . . . . . . . . gate
+
+Ball   Rev Color Sensor . . . IC0 1 ballSensor
+
+April Tag  . . . . . . . . . .IC1 0 april
+Husky Camera   . . . . . . . .IC2 0 huskyLens
+PinPoint . . . . . . . . . . .IC3 0 odo
+
+ */

@@ -1,0 +1,46 @@
+/* Decode season 2025 - 2026
+-------------------------
+Robot setup task list
+-------------------------
+DC_Swerve
+T1. check swerve movement
+    a. Wheel turn alignment
+        1. Set servo position to 0.5
+        2. remove servo horn setting wheels to drive straight
+        3. UT_Swerve_tests: assemble and test
+T2. Test drive using _TankTeleOpDecode
+
+DC_Intake_Launch
+Intake
+T1. UT_Intake_Launch_Test: Start Intake and stop as per program instruction.
+
+Arm (ball shooter)
+T1. UT_Arm_chute_Test: Set arm "Home" position drive to "Launch" position record encoder difference.
+                      repeat multiple time and record average. Repeat for "End Game" position.
+T2. Place values in DC_intake_Launch. Test arm movement with UT_LaunchArm_Test.
+
+Chute
+UT_Arm_Chute_Spin_Test: Set chute "Home" position, record voltage, repeat multiple times and record
+                      average. Record values for each position. Repeat for long range angle and
+                      short range angle.
+T2. Place values in DC_intake_Launch. Test chute movement with UT_LaunchArm_Test.
+
+Gate
+T1. UT_Intake_Launch_Test:
+T2. Place values in DC_intake_Launch. Test gate movement with UT_LaunchArm_Test.
+
+Ball Sensor
+T1. UT_BallSensor_Test: Check distance reading of color sensor, V3. Place ball into chute recording
+                      distance value. Check the return color found.
+T2. Place values in DC_BallSensor. Test launch with UT_LaunchArm_Test.
+
+Husky Camera April Tags
+T1. UT_TestAprilTag:
+
+Husky Camera Color (Ball recognition)
+T1. UT_TestColorBall
+
+Field Odometry
+T1. UT_TestPinpoint_odometry
+
+*/

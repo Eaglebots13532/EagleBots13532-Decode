@@ -1,7 +1,9 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode_2025;
+package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13532
+
+// All rights reserved.
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,7 +39,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
  */
 @TeleOp(name = "Test AprilTag", group = "Concept")
-public class UT_TestAprilTag extends LinearOpMode {
+public class UT_TestAprilTagWebCam extends LinearOpMode {
 
   private static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 

@@ -1,7 +1,9 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode_2025;
+package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13532
+
+// All rights reserved.
 
 import android.util.Size;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -27,7 +29,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
  */
 
 @TeleOp(name = "Camera Frame Capture", group = "Training")
-public class UtilityCameraFrameCapture extends LinearOpMode {
+public class UT_UtilityCameraFrameCapture extends LinearOpMode {
   /*
    * EDIT THESE PARAMETERS AS NEEDED
    */

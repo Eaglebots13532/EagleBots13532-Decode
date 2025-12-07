@@ -1,38 +1,44 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode_2025;
+package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13532
 
+// All rights reserved.
+
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import java.util.List;
 
-public class Swerve_Drive {
+public class DC_Swerve_Drive {
   private LinearOpMode myOp = null;
+  private LynxModule[] allHubs;
 
   // Define a constructor that allows the OpMode to pass a reference to itself.
-  Swerve_Drive(LinearOpMode opmode) {
+  DC_Swerve_Drive(LinearOpMode opmode) {
     myOp = opmode;
   }
-
-  private Odometry_Sensor odo = new Odometry_Sensor();
 
   // *** - *** -
   // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
   public DcMotorEx lfDrive = null;
-  public DcMotorEx rfDrive = null;
+  public DcMotorEx rtDrive = null;
   // ---
+  // public Servo lfTurn = null;
+  // public Servo rtTurn = null;
   public Servo lfTurn = null;
-  public Servo rfTurn = null;
+  public Servo rtTurn = null;
+
   // ---
-  public AnalogInput lfServo = null;
-  // public AnalogInput lrServo = null;
-  public AnalogInput rfServo = null;
-  // public AnalogInput rrServo = null;
+  public AnalogInput lfSPot = null;
+
+  public AnalogInput rtSPot = null;
+
   // ---
-  // Swerve chassis constants
+  // Swerve chassis constants in inches (to be done)
   private static final double wDia = 96.0; // mm
   private static final double wCir = wDia * 3.141592; // 301.593 wheel circumference
   public static final double mEnc = 537.7; // PPR
@@ -43,9 +49,19 @@ public class Swerve_Drive {
   private static final double trackWidth = 323.85;
   // outside wheel angle from inside turn aout=ain*ratio
   private final double ackermanRatio = getAckermanRatio(wheelBaseWidth, trackWidth);
-  private static final double servoDegVolt = .0045;
-  private static final double SA180 = 1.625;
-  public double lfsa, rfsa; // global servo potentiometer voltages
+  // turn servo constants
+  private static final double minTurnRad = Math.toRadians(0.0);
+  private static final double maxTurnRad = Math.toRadians(235.0);
+  // following 3 determined from UTServeTest
+  private static final double servoMin = 0.85;
+  private static final double sp180 = 2.52;
+  private static final double servoMax = 3.03;
+  // turn slope ~= 0.5315 radians provides larger slope + fudge factor
+  private static final double turnslope = ((servoMax - servoMin) / (maxTurnRad - minTurnRad)) + 0.0;
+  double turnDeg = 3.1415; // radians
+  double setServo = turnDeg * turnslope + servoMin;
+  public double lfsa, rtsa; // global servo potentiometer voltages
+  private double lfVal, rtVal; // start, present position
   public boolean cutSpeed = false;
   // ---
   // KPI PID controller variables
@@ -54,24 +70,24 @@ public class Swerve_Drive {
   private final double kd = 0.2; // derivative k gain
   protected boolean anglewrap = false; //
   // pid controllers set set with values above
-  PIDController lfController = new PIDController(Kp, ki, kd);
-  PIDController rfController = new PIDController(Kp, ki, kd);
+  DC_PIDController lfController = new DC_PIDController(Kp, ki, kd);
+  DC_PIDController rtController = new DC_PIDController(Kp, ki, kd);
   // ---
-  private double stfAng = 0.0; // Saved straf angle
+  private final double stfAng = 0.0; // Saved straf angle
   protected boolean stfDrv = true; // true for drive false for straf
+
   // ---
   // Global variables -
 
   // Methods used in Swerve  robot
   // -----------------------------
   public void SwerveInit() {
-    odo.DoInit();
     // ---
     // A timer helps provide feedback while calibration is taking place
     ElapsedTime timer = new ElapsedTime();
     // Define and Initialize Motors (note: need to use reference to actual OpMode).
     lfDrive = myOp.hardwareMap.get(DcMotorEx.class, "LFM");
-    rfDrive = myOp.hardwareMap.get(DcMotorEx.class, "RFM");
+    rtDrive = myOp.hardwareMap.get(DcMotorEx.class, "RFM");
 
     // To drive forward, most robots need the motor on one side to be reversed, because the axles
     // point in opposite directions.
@@ -80,76 +96,109 @@ public class Swerve_Drive {
     // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90
     // Deg drives may require direction flips
     lfDrive.setDirection(DcMotorEx.Direction.FORWARD);
-    rfDrive.setDirection(DcMotorEx.Direction.REVERSE);
+    rtDrive.setDirection(DcMotorEx.Direction.REVERSE);
 
     // set encoders to zero a stop is performed so set either WITHOUT or WITH encoders
     // if not the motors are stopped and will not start !!!
     lfDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
     lfDrive.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-    rfDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-    rfDrive.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+    rtDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+    rtDrive.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
     // use braking to slow the motor down faster
     lfDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-    rfDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+    rtDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
     // Define and initialize ALL installed servos.
     lfTurn = myOp.hardwareMap.get(Servo.class, "LFS");
-    rfTurn = myOp.hardwareMap.get(Servo.class, "RFS");
-    // limit the turn range of servos
-    lfTurn.scaleRange(0.3, 0.67); // set limits of servo
-    rfTurn.scaleRange(0.3, 0.67); // set limits of servo
+    rtTurn = myOp.hardwareMap.get(Servo.class, "RFS");
+    // limit the turn range of servos, may not need this
+    // lfTurn.scaleRange(0.3, 0.67); // set limits of servo
+    // rtTurn.scaleRange(0.3, 0.67); // set limits of servo
 
-    lfServo = myOp.hardwareMap.get(AnalogInput.class, "LFP");
-    rfServo = myOp.hardwareMap.get(AnalogInput.class, "RFP");
-    myOp.telemetry.addLine("Ports Initialized");
-    myOp.telemetry.update();
+    lfSPot = myOp.hardwareMap.get(AnalogInput.class, "LFP");
+    rtSPot = myOp.hardwareMap.get(AnalogInput.class, "RFP");
+
+    // setup bulk reads
+    List<LynxModule> allHubs = myOp.hardwareMap.getAll(LynxModule.class);
+    for (LynxModule hub : allHubs) {
+      hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
     }
+  }
+
+  // return potentiometer voltage from JoyStick value
+  public double gpXtoSpv(double gpX) {
+    // map joystick 0 to 1 as 90 to 180 and | -1 to 0 | 180 to 270 return sign to motor drive
+    return servoMax + (servoMin - servoMax) * gpX;
+  }
+
+  // turn the robot
+  // they are treated separate but presently are the same values 90 - about 270
+  // passes the seek potentiometer voltages
+  public void turnRobot(double lfsp, double rtsp) {
+    // check if 225 and 45 turning voltages - turn upon ifself not implemented need is
+    // determine shortest path in rotation
+    // start deg - end deg > 180 voltage - maxVolt < 180 voltage - maxVolt
+    double lfEnd = lfsp - lfVal;
+    double rtEnd = rtsp - lfVal;
+    // calculate the rotation volts; // potentiometer seek voltage
+    if (lfEnd > sp180) lfEnd = lfEnd - servoMax;
+    else lfEnd = lfEnd + servoMax;
+    if (rtEnd > sp180) rtEnd = rtEnd - servoMax;
+    else rtEnd = rtEnd + servoMax;
+    // if + rot ccw if - rot cw the abs of result
+    // turning 180 - 270 causes the motor to reverse
+    // set drive speed at .5
+    driveSpeed(.5 * Math.signum(lfEnd));
+    driveSpeed(.5 * Math.signum(rtEnd));
+    while (myOp.opModeIsActive() && servoBusy(lfEnd, rtEnd)) {
+      myOp.idle();
+    }
+  }
 
   // set robot to turn around center
   public void posRot() { // position to rotate robot - analog fb avail
     ElapsedTime timer = new ElapsedTime();
-    lfTurn.setPosition(0.43); // offset calibration
-    rfTurn.setPosition(0.57); // wheel at -45 deg
+
+    // lfTurn.setPosition(0.43); // offset calibration
+    // rtTurn.setPosition(0.57); // wheel at -45 deg
 
     lfDrive.setDirection(DcMotorEx.Direction.FORWARD);
-    rfDrive.setDirection(DcMotorEx.Direction.FORWARD);
-    while(myOp.opModeIsActive() && servoBusy(0.43, 0.43)){
+    rtDrive.setDirection(DcMotorEx.Direction.FORWARD);
+    while (myOp.opModeIsActive() && servoBusy(0.43, 0.43)) {
       myOp.idle();
-    };
+    }
   }
 
   // check for a change in potentiometer returning false if
   // potentiometer stops when servo reaches its set position
   // use in a while loop call getServoPot before entering while
-  public boolean servoBusy(double sclf, double scrf) { // reference state
+  public boolean servoBusy(double sclf, double scrt) { // reference state
+    // sclf is the seek servo pot voltage
     boolean cmp = true;
     ElapsedTime timer = new ElapsedTime();
-    myOp.sleep(5); // wait for servo to move
-    // reference pot goal
-    double reflf = cmdPot(sclf); // convert servo cmd to est pot voltages
 
     while (myOp.opModeIsActive() && cmp) {
       // state of pot
-      boolean lf_f = false, rf_f = false;
+      boolean lf_f = false, rt_f = false;
       getServoPot(); // read xxsa global variables
-      // error
-      if (Math.abs(reflf - lfsa) < 0.1) lf_f = true;
-      if (Math.abs(reflf - rfsa) < 0.1) rf_f = true;
-      if (lf_f && rf_f) cmp = false;
+      // error lfsa && rtsa are servo potentiometer voltages
+      if (Math.abs(sclf - lfsa) < 0.1) lf_f = true;
+      if (Math.abs(scrt - rtsa) < 0.1) rt_f = true;
+      if (lf_f && rt_f) cmp = false;
     }
     // compare to saved  if a servo has settled otherwise return
     return cmp;
   } // end servoBusy
 
   public void getServoPot() {
-    lfsa = lfServo.getVoltage();
-    rfsa = rfServo.getVoltage();
+    lfsa = lfSPot.getVoltage();
+    rtsa = rtSPot.getVoltage();
   }
 
   // returns servo cmd set position 0 - 1
   public double potCmd(double pot) {
-    double averMax = (lfServo.getMaxVoltage() + rfServo.getMaxVoltage()) / 2.0;
+    double averMax = (lfSPot.getMaxVoltage() + rtSPot.getMaxVoltage()) / 2.0;
     return pot / averMax;
   }
 
@@ -159,18 +208,22 @@ public class Swerve_Drive {
     return (2.3373 * cmd) + 0.455;
   }
 
+  // this starts servos moving with CRServo power -1 < 0 < 1
+  public void servoTurn(double setServo) {
+    lfTurn.setPosition(setServo);
+    rtTurn.setPosition(setServo);
+  }
+
   public void driveSpeed(double desV) {
     // Use existing function to drive wheels.
     // left drive
-
     lfDrive.setPower(desV);
-
-    rfDrive.setPower(desV);
+    rtDrive.setPower(desV);
   }
 
   public void driveStop() {
     lfDrive.setPower(0.0);
-    rfDrive.setPower(0.0);
+    rtDrive.setPower(0.0);
   }
 
   // calculate distance in turn in encoder pulses as whole pulse; integer
@@ -181,20 +234,6 @@ public class Swerve_Drive {
   // calculate distance to travel in encoder pulses
   public int encCntD(double dist) { // encoder count distance
     return (int) (mEnc * dist / wCir);
-  }
-
-  // field centric driving
-  public double fieldCentricX(double gmX, double gmY) {
-    // xx = xcosB - ysinB
-    double botheading = odo.getHeading();
-    return gmX * Math.cos(-botheading) - gmY * Math.sin(-botheading);
-  }
-
-  // field centric driving
-  public double fieldCentricY(double gmX, double gmY) {
-    // yy = xsinB + ycosB
-    double botheading = odo.getHeading();
-    return gmX * Math.sin(-botheading) + gmY * Math.cos(-botheading);
   }
 
   public double getWDist(double tDist) {
@@ -220,15 +259,14 @@ public class Swerve_Drive {
     return d * Math.sin(a);
   }
 
-
-    // Get encoder position value lf motor
+  // Get encoder position value lf motor
   public int getlfEncoder() {
     return lfDrive.getCurrentPosition();
   }
 
   // Get encoder position value rf motor
   public int getrfEncoder() {
-    return rfDrive.getCurrentPosition();
+    return rtDrive.getCurrentPosition();
   }
 
   // Get encoder position value rr motor

@@ -21,6 +21,7 @@ apply plugin: 'com.android.application'
 
 android {
 
+    //noinspection GradleDependency
     compileSdkVersion 34
 
     signingConfigs {
@@ -89,19 +90,22 @@ android {
             signingConfig signingConfigs.release
 
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a"
+                //noinspection ChromeOsAbiSupport
+                abiFilters "arm64-v8a"
             }
         }
         debug {
             debuggable true
             jniDebuggable true
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a"
+                //noinspection ChromeOsAbiSupport
+                abiFilters "arm64-v8a"
             }
         }
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -113,4 +117,38 @@ android {
 }
 
 repositories {
+}
+
+spotless {
+    java {
+        target fileTree(".") {
+            include "**/*.java"
+            exclude "**/build/**", "**/build-*/**", "FtcRobotController/**"
+        }
+        removeUnusedImports()
+        importOrder()
+        cleanthat()
+        googleJavaFormat()
+        endWithNewline()
+        licenseHeader("// Copyright (c) 2024-2025 FTC 13532\n// All rights reserved.\n\n")
+    }
+    groovyGradle {
+        target fileTree(".") {
+            include "**/*.gradle"
+            exclude "**/build/**", "**/build-*/**"
+        }
+        greclipse()
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format "misc", {
+        target fileTree(".") {
+            include "**/*.md", "**/.gitignore"
+            exclude "**/build/**", "**/build-*/**", "FtcRobotController/**"
+        }
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
+        endWithNewline()
+    }
 }

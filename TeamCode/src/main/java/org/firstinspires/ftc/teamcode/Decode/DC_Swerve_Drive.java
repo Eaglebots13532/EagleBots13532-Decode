@@ -101,9 +101,14 @@ public class DC_Swerve_Drive {
         angleErrorRad = addAngles(addAngles(targetAngleRad, Math.PI), -currentAngleRad);
       }
 
+      driveMotorPower *= Math.cos(angleErrorRad);
+
+      myOp.telemetry.addData("Wheel " + i + " driveMotorPower", driveMotorPower);
+      myOp.telemetry.addData("Wheel " + i + " angleErrorRad", angleErrorRad);
+
       // Drive the motor and the steer PID here
       // ...
-      driveMotors[i].setPower(driveMotorPower * Math.cos(angleErrorRad));
+      driveMotors[i].setPower(driveMotorPower);
       steerServos[i].setPower(angleErrorRad * 1);
     }
   }

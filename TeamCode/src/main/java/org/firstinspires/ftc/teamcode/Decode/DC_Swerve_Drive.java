@@ -142,10 +142,10 @@ public class DC_Swerve_Drive {
     double lfEnd = lfsp - lfVal;
     double rtEnd = rtsp - lfVal;
     // calculate the rotation volts; // potentiometer seek voltage
-    if (lfEnd > sp180) lfEnd = lfEnd - servoMax;
-    else lfEnd = lfEnd + servoMax;
-    if (rtEnd > sp180) rtEnd = rtEnd - servoMax;
-    else rtEnd = rtEnd + servoMax;
+    if (lfEnd > sp180) lfEnd -= servoMax;
+    else lfEnd += servoMax;
+    if (rtEnd > sp180) rtEnd -= servoMax;
+    else rtEnd += servoMax;
     // if + rot ccw if - rot cw the abs of result
     // turning 180 - 270 causes the motor to reverse
     // set drive speed at .5

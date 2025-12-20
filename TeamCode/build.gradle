@@ -31,7 +31,7 @@ android {
 // Android tasks are generated during configuration, so we wrap this in afterEvaluate {}
 afterEvaluate {
     tasks.named("compileDebugJavaWithJavac").configure {
-        dependsOn("createVersionFile", "spotlessApply")
+        dependsOn("spotlessApply")
     }
 }
 

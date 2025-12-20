@@ -5,9 +5,8 @@ package org.firstinspires.ftc.teamcode.Decode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Pose2d;
+import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
 
 /*
  * This OpMode illustrates how to use the GoBildaPinpoint
@@ -33,7 +32,7 @@ public class UT_SensorGoBildaPinpoint extends OpMode {
     configurePinpoint();
 
     // Set the location of the robot - this should be the place you are starting the robot from
-    pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+    pinpoint.resetPosition(Pose2d.kZero);
   }
 
   @Override
@@ -42,14 +41,14 @@ public class UT_SensorGoBildaPinpoint extends OpMode {
     telemetry.addLine("Press A to reset the position");
     if (gamepad1.a) {
       // You could use readings from April Tags here to give a new known position to the pinpoint
-      pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+      pinpoint.resetPosition(Pose2d.kZero);
     }
     pinpoint.update();
-    Pose2D pose2D = pinpoint.getPosition();
+    Pose2d pose2D = pinpoint.getPose();
 
-    telemetry.addData("X coordinate (IN)", pose2D.getX(DistanceUnit.INCH));
-    telemetry.addData("Y coordinate (IN)", pose2D.getY(DistanceUnit.INCH));
-    telemetry.addData("Heading angle (DEGREES)", pose2D.getHeading(AngleUnit.DEGREES));
+    telemetry.addData("X coordinate (IN)", Units.metersToInches(pose2D.getX()));
+    telemetry.addData("Y coordinate (IN)", Units.metersToInches(pose2D.getY()));
+    telemetry.addData("Heading angle (DEGREES)", pose2D.getRotation().getDegrees());
   }
 
   public void configurePinpoint() {

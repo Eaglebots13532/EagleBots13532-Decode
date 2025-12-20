@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
+import org.firstinspires.ftc.teamcode.ODO.GoBildaPinpointDriver;
 
 public class DC_Odometry_Sensor {
   private LinearOpMode myOp = null;
@@ -61,9 +62,9 @@ public class DC_Odometry_Sensor {
     lx = x;
     ly = y;
     lb = b; // save last values
-    x = ppo.getPosX();
-    y = ppo.getPosY();
-    b = ppo.getHeading();
+    x = ppo.getPose().getX();
+    y = ppo.getPose().getY();
+    b = ppo.getPose().getRotation();
   }
 
   public double getx() {
@@ -94,7 +95,7 @@ public class DC_Odometry_Sensor {
   // returns heading in radians
   public double getHeading() {
     ppo.update();
-    return ppo.getHeading().getRadians();
+    return ppo.getYaw().getRadians();
   }
 
   public double vector() {

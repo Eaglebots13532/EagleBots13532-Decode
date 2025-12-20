@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
+import org.firstinspires.ftc.teamcode.ODO.GoBildaPinpointDriver;
 
 /*
  * This OpMode illustrates how to use the GoBildaPinpoint
@@ -32,7 +33,7 @@ public class UT_SensorGoBildaPinpoint extends OpMode {
     configurePinpoint();
 
     // Set the location of the robot - this should be the place you are starting the robot from
-    pinpoint.resetPosition(Pose2d.kZero);
+    pinpoint.setPose(Pose2d.kZero);
   }
 
   @Override
@@ -41,7 +42,7 @@ public class UT_SensorGoBildaPinpoint extends OpMode {
     telemetry.addLine("Press A to reset the position");
     if (gamepad1.a) {
       // You could use readings from April Tags here to give a new known position to the pinpoint
-      pinpoint.resetPosition(Pose2d.kZero);
+      pinpoint.setPose(Pose2d.kZero);
     }
     pinpoint.update();
     Pose2d pose2D = pinpoint.getPose();

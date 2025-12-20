@@ -67,7 +67,7 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
   @Override
   public void runOpMode() {
     // Initialize class components
-    drive.SwerveInit();
+    drive.init();
     odo.DoInit();
     decode.InitIL();
     ball.initHuskyLens();
@@ -91,12 +91,10 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
     while (opModeIsActive()) {
       try {
         // x & y are the drive position
-        gpY = -gamepad1.left_stick_y;
-        gpX = gamepad1.right_stick_x;
-        double speed = gpY * limitSpeed;
-        drive.driveSpeed(speed);
-        turnDeg = (gpX + 1.0) / 2.0;
-        drive.servoTurn(turnDeg);
+        drive.drive(
+            -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
+            -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
+            -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
         // toggles
         if (B()) btoggle = !btoggle;
         if (B()) limitSpeed = .8;

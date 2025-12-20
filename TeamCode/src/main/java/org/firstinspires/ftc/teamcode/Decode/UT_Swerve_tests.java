@@ -63,7 +63,7 @@ public class UT_Swerve_tests extends LinearOpMode {
   @Override
   public void runOpMode() {
     // Initialize class components
-    drive.SwerveInit();
+    drive.init();
     ppo.DoInit();
     // Wait for the DS start button to be touched.
     telemetry.addLine("- - Game Pad A - -");
@@ -75,41 +75,14 @@ public class UT_Swerve_tests extends LinearOpMode {
     while (opModeIsActive()) {
       boolean setServoDir = true;
       try {
-        // x & y are the drive position
-        gpY = -gamepad1.left_stick_y;
-        gpX = gamepad1.right_stick_x;
-
-        wheelTurn = (gpX + 1.0) / 2.0;
-        // map joystick 0 to 1 as 90 to 180 and | -1 to 0 | 180 to 270 return sign to motor drive
-        turnVolt = servoMaxV + (zeroOffset - servoMaxV) * gpX; // seek potentiometer voltage
-        motorSpeed = gpY * limitSpeed;
-        // turning 180 - 270 causes the motor to reverse
-        if (motorSpeed > 1.0) motorSpeed = 1.0;
-        if (motorSpeed < -1.0) motorSpeed = -1.0;
-
-        drive.lfTurn.setPosition(wheelTurn);
-        drive.rtTurn.setPosition(wheelTurn);
-        // if(Math.abs(gpX) > .1)motorSpeed *= Math.signum(gpX);
-        drive.lfDrive.setPower(motorSpeed); // turn on motor drive
-        drive.rtDrive.setPower(motorSpeed);
+        drive.drive(
+            -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
+            -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
+            -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
         //
         // telemetry.addData("gpX ",gpX);
         // telemetry.addData("gpY ",gpY);
-        telemetry.addData("Est. radian", (turnVolt - zeroOffset) / turnslope);
-        telemetry.addData("LSpv  radian", (drive.lfsa - zeroOffset) / turnslope);
-        telemetry.addData("RSpv  radian", (drive.rtsa - zeroOffset) / turnslope);
-        telemetry.addLine("Servo request");
-        telemetry.addData("Left ", drive.lfTurn.getPosition());
-        telemetry.addData("Right", drive.rtTurn.getPosition());
-        telemetry.addLine(". . . . . . . . . .");
-        telemetry.addLine("Servo potentiometer");
-        telemetry.addData("Left ", drive.lfSPot.getVoltage());
-        telemetry.addData("Right", drive.rtSPot.getVoltage());
-        telemetry.addLine(". . . . . . . . . .");
-        telemetry.addLine("Drive Motor velocity");
         telemetry.addData("Motor Speed", motorSpeed);
-        telemetry.addData("Left ", drive.lfDrive.getVelocity());
-        telemetry.addData("Right", drive.rtDrive.getVelocity());
         telemetry.addLine("Odometry values");
         telemetry.addData("X:", ppo.getXPosition());
         telemetry.addData("Y:", ppo.getYPosition());

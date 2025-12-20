@@ -15,7 +15,7 @@ public class Comp_TankDrive extends LinearOpMode {
 
   @Override
   public void runOpMode() throws InterruptedException {
-    drive.SwerveInit();
+    drive.init();
     odo.DoInit();
     game.InitIL();
 
@@ -24,8 +24,10 @@ public class Comp_TankDrive extends LinearOpMode {
     int count = 0;
     while (opModeIsActive()) {
       telemetry.addLine("Driving wheels");
-      drive.lfDrive.setPower(-gamepad1.left_stick_y);
-      drive.rtDrive.setPower(-gamepad1.right_stick_y);
+      drive.drive(
+          -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
+          -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
+          -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
 
       // chute setting
       telemetry.addLine("Setting chute");

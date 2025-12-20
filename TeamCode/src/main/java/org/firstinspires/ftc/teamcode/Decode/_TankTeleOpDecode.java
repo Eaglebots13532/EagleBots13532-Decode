@@ -44,7 +44,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
       telemetry.addData("Read Error", e.getMessage());
       telemetry.update();
     }
-    drive.SwerveInit();
+    drive.init();
     odo.DoInit();
     game.InitIL();
     ball.SensorInit();
@@ -69,39 +69,8 @@ public class _TankTeleOpDecode extends LinearOpMode {
   } // run Op mode
 
   public void Drive() {
-    gpLt = gamepad1.left_trigger;
-    gpLy = gamepad1.left_stick_y;
-    gpRt = gamepad1.right_trigger;
-    gpRy = gamepad1.right_stick_y;
-    // scaleRange(min, max) configure the following servo control by trigger
-    // to straf drive to finish alignment to shoot: by April tag
-    // check angle of wheel if not 180 then
-    gpLt = (1.0 - gamepad1.left_trigger) / 2.0;
-    gpRt = 0.5 - (gamepad1.right_trigger) / 2.0;
-    if (gpLt < 0.5) {
-      // turn left by servo
-      drive.lfTurn.setPosition(gpLt);
-      drive.rtTurn.setPosition(0.5);
-    } else {
-      // wheels lock 180/0
-      drive.lfTurn.setPosition(0.5);
-      drive.rtTurn.setPosition(0.5);
-    }
-    if (gpRt > 0.5) {
-      // turn right by servo
-      drive.lfTurn.setPosition(0.5);
-      drive.rtTurn.setPosition(gpRt);
-    } else {
-      // wheels lock 180/0
-      drive.lfTurn.setPosition(0.5);
-      drive.rtTurn.setPosition(0.5);
-    }
-    // determine if 90 degrees then turn and lock left
-    // determine if -90 degrees then turn and lock right
-    // drive wheels
-    drive.lfDrive.setPower(gpLy);
-    drive.rtDrive.setPower(gpRy);
-  } // drive operation
+    // TODO
+  }
 
   public void Decode() {
     double rJs = -gamepad2.left_stick_y;

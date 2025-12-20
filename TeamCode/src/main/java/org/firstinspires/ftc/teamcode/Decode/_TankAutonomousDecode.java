@@ -34,7 +34,7 @@ public class _TankAutonomousDecode extends LinearOpMode {
   @Override
   public void runOpMode() {
 
-    robot.SwerveInit();
+    robot.init();
     decode.InitIL();
     present.SensorInit();
     tag.side = 0; // this assures tag is read and wrote

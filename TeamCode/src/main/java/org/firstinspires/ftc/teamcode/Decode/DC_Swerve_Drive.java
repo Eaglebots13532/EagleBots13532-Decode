@@ -7,11 +7,12 @@ package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
+import org.firstinspires.ftc.teamcode.ODO.GoBildaPinpointDriver;
 
 public class DC_Swerve_Drive {
   private LinearOpMode myOp = null;
@@ -24,10 +25,9 @@ public class DC_Swerve_Drive {
   // *** - *** -
   // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
   private DcMotorEx[] driveMotors = new DcMotorEx[2];
-  private CRServo[] steerServos = new CRServo[2];
+  private Servo[] steerServos = new Servo[2];
   private AnalogInput[] encoders = new AnalogInput[2];
-
-  public IMU imu;
+  private GoBildaPinpointDriver pinpoint;
   // ---
   // Swerve chassis constants in inches (to be done)
   private static final double wheelDiameterMm = 96.0; // mm
@@ -59,23 +59,23 @@ public class DC_Swerve_Drive {
     driveMotors[0] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("LFM");
     driveMotors[1] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("RFM");
     driveMotors[1].setDirection(DcMotorSimple.Direction.REVERSE);
-    steerServos[0] = myOp.hardwareMap.crservo.get("LFS");
-    steerServos[1] = myOp.hardwareMap.crservo.get("RFS");
+    steerServos[0] = myOp.hardwareMap.servo.get("LFS");
+    steerServos[1] = myOp.hardwareMap.servo.get("RFS");
     encoders[0] = myOp.hardwareMap.get(AnalogInput.class, "LFP");
     encoders[1] = myOp.hardwareMap.get(AnalogInput.class, "RFP");
-    imu = myOp.hardwareMap.get(IMU.class, "imu");
+    pinpoint = myOp.hardwareMap.get(GoBildaPinpointDriver.class, "odo");
   }
 
   public void drive(
       double fieldXVelMetersPerSec, double fieldYVelMetersPerSec, double chassisOmegaRadPerSec) {
     // Convert field oriented velocities to robot oriented velocities
-    double robotYawRad = imu.getRobotYawPitchRollAngles().getYaw();
+    var inverseRobotYawRad = pinpoint.getYaw().unaryMinus();
     double chassisXVelMetersPerSec =
-        fieldXVelMetersPerSec * Math.cos(-robotYawRad)
-            - fieldYVelMetersPerSec * Math.sin(-robotYawRad);
+        fieldXVelMetersPerSec * inverseRobotYawRad.getCos()
+            - fieldYVelMetersPerSec * inverseRobotYawRad.getSin();
     double chassisYVelMetersPerSec =
-        fieldXVelMetersPerSec * Math.sin(-robotYawRad)
-            + fieldYVelMetersPerSec * Math.cos(-robotYawRad);
+        fieldXVelMetersPerSec * inverseRobotYawRad.getSin()
+            + fieldYVelMetersPerSec * inverseRobotYawRad.getCos();
 
     for (int i = 0; i < 2; i++) {
       // Calculate the X and Y velocities of each module
@@ -87,35 +87,32 @@ public class DC_Swerve_Drive {
       // Calculate the velocity vector magnitude and angle
       double targetVelocityMetersPerSec =
           Math.hypot(targetXVelMetersPerSec, targetYVelMetersPerSec);
-      double targetAngleRad = Math.atan2(targetYVelMetersPerSec, targetXVelMetersPerSec);
+      var targetAngle = new Rotation2d(targetXVelMetersPerSec, targetYVelMetersPerSec);
 
       // Calculate motor power and target steer angle
       double driveMotorPower = targetVelocityMetersPerSec * kV;
-      double currentAngleRad = encoders[i].getVoltage() / encoders[i].getMaxVoltage() * 2 * Math.PI;
+      var currentAngle =
+          Rotation2d.fromRotations(encoders[i].getVoltage() / encoders[i].getMaxVoltage());
       // If the steer angle delta is too large, flip around the direction of the target speed to
-      // avoid
-      // turning too far
-      double angleErrorRad = addAngles(targetAngleRad, -currentAngleRad);
-      if (Math.abs(angleErrorRad) > Math.PI / 2) {
+      // avoid turning too far
+      var angleError = targetAngle.minus(currentAngle);
+      if (Math.abs(angleError.getDegrees()) > 90) {
         driveMotorPower *= -1;
-        angleErrorRad = addAngles(addAngles(targetAngleRad, Math.PI), -currentAngleRad);
+        targetAngle = targetAngle.plus(Rotation2d.k180deg);
+        angleError = targetAngle.minus(currentAngle);
       }
 
-      driveMotorPower *= Math.cos(angleErrorRad);
+      driveMotorPower *= angleError.getCos();
 
       myOp.telemetry.addData("Wheel " + i + " driveMotorPower", driveMotorPower);
-      myOp.telemetry.addData("Wheel " + i + " angleErrorRad", angleErrorRad);
+      myOp.telemetry.addData("Wheel " + i + " targetAngle", targetAngle.getDegrees());
+      myOp.telemetry.addData("Wheel " + i + " currentAngle", currentAngle.getDegrees());
+      myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
 
       // Drive the motor and the steer PID here
       // ...
       driveMotors[i].setPower(driveMotorPower);
-      steerServos[i].setPower(angleErrorRad * 1);
+      steerServos[i].setPosition((angleError.getRadians() * 1) / 2 + .5);
     }
-  }
-
-  private double addAngles(double angle1Rad, double angle2Rad) {
-    return Math.atan2(
-        Math.cos(angle1Rad) * Math.sin(angle2Rad) + Math.sin(angle1Rad) * Math.cos(angle2Rad),
-        Math.cos(angle1Rad) * Math.cos(angle2Rad) - Math.sin(angle1Rad) * Math.sin(angle2Rad));
   }
 }

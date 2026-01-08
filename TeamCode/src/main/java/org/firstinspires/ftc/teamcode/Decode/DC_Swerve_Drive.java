@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
 import org.firstinspires.ftc.teamcode.ODO.GoBildaPinpointDriver;
 
 public class DC_Swerve_Drive {
-  private LinearOpMode myOp = null;
+  private final LinearOpMode myOp;
 
   // Define a constructor that allows the OpMode to pass a reference to itself.
   DC_Swerve_Drive(LinearOpMode opmode) {
@@ -44,9 +44,11 @@ public class DC_Swerve_Drive {
           / 2;
   double kV = 1.0 / maxSpeedMetersPerSec;
 
-  double[] modulesXPosMeters =
+  double[] modulesXPosMeters = new double[] {0, 0};
+  double[] modulesYPosMeters =
       new double[] {wheelBaseWidthMm * 1000 / 2, -wheelBaseWidthMm * 1000 / 2};
-  double[] modulesYPosMeters = new double[] {0, 0};
+  Rotation2d[] encoderOffsets =
+      new Rotation2d[] {Rotation2d.fromDegrees(-2.5), Rotation2d.fromDegrees(-5)};
 
   // The max rotational rate
   double drivebaseRadiusMeters =
@@ -55,28 +57,36 @@ public class DC_Swerve_Drive {
           Math.hypot(modulesXPosMeters[1], modulesYPosMeters[1]));
   double maxOmegaRadPerSec = maxSpeedMetersPerSec / drivebaseRadiusMeters;
 
+  private double lastTimeStamp;
+
   public void init() {
     driveMotors[0] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("LFM");
     driveMotors[1] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("RFM");
-    driveMotors[1].setDirection(DcMotorSimple.Direction.REVERSE);
+    driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
     steerServos[0] = myOp.hardwareMap.servo.get("LFS");
     steerServos[1] = myOp.hardwareMap.servo.get("RFS");
     encoders[0] = myOp.hardwareMap.get(AnalogInput.class, "LFP");
     encoders[1] = myOp.hardwareMap.get(AnalogInput.class, "RFP");
     pinpoint = myOp.hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+    lastTimeStamp = System.nanoTime() / 1e9;
   }
 
   public void drive(
       double fieldXVelMetersPerSec, double fieldYVelMetersPerSec, double chassisOmegaRadPerSec) {
+    pinpoint.update();
     // Convert field oriented velocities to robot oriented velocities
-    var inverseRobotYawRad = pinpoint.getYaw().unaryMinus();
+    var robotYaw = pinpoint.getYaw();
+    var inverseRobotYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVelMetersPerSec =
-        fieldXVelMetersPerSec * inverseRobotYawRad.getCos()
-            - fieldYVelMetersPerSec * inverseRobotYawRad.getSin();
+        fieldXVelMetersPerSec * inverseRobotYaw.getCos()
+            - fieldYVelMetersPerSec * inverseRobotYaw.getSin();
     double chassisYVelMetersPerSec =
-        fieldXVelMetersPerSec * inverseRobotYawRad.getSin()
-            + fieldYVelMetersPerSec * inverseRobotYawRad.getCos();
+        fieldXVelMetersPerSec * inverseRobotYaw.getSin()
+            + fieldYVelMetersPerSec * inverseRobotYaw.getCos();
+    myOp.telemetry.addData("Gyro angle", robotYaw.getDegrees());
 
+    double currentTime = System.nanoTime() / 1e9;
+    double dt = currentTime - lastTimeStamp;
     for (int i = 0; i < 2; i++) {
       // Calculate the X and Y velocities of each module
       double targetXVelMetersPerSec =
@@ -92,7 +102,8 @@ public class DC_Swerve_Drive {
       // Calculate motor power and target steer angle
       double driveMotorPower = targetVelocityMetersPerSec * kV;
       var currentAngle =
-          Rotation2d.fromRotations(encoders[i].getVoltage() / encoders[i].getMaxVoltage());
+          Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
+              .plus(encoderOffsets[i]);
       // If the steer angle delta is too large, flip around the direction of the target speed to
       // avoid turning too far
       var angleError = targetAngle.minus(currentAngle);
@@ -110,9 +121,25 @@ public class DC_Swerve_Drive {
       myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
 
       // Drive the motor and the steer PID here
-      // ...
       driveMotors[i].setPower(driveMotorPower);
-      steerServos[i].setPosition((angleError.getRadians() * 1) / 2 + .5);
+      steerServos[i].setPosition(calculateSteerPID(angleError, i, dt) / 2 + .5);
     }
+    lastTimeStamp = currentTime;
+  }
+
+  private final double[] lastErrorRad = new double[2];
+
+  private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
+    double errorRad = angleError.getRadians();
+    double kP = 1.25 / (Math.PI / 2);
+    double kD = 0.01;
+    double kS = .03;
+    double proportional = errorRad * kP;
+    double derivative = kD * (errorRad - lastErrorRad[i]) / dt;
+    myOp.telemetry.addData("Wheel " + i + " proportional", proportional);
+    myOp.telemetry.addData("Wheel " + i + " derivative", derivative);
+    lastErrorRad[i] = errorRad;
+    var output = proportional + derivative;
+    return output + kS * Math.signum(output);
   }
 }

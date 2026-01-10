@@ -18,8 +18,10 @@ public class TestServos extends LinearOpMode {
     while (opModeIsActive()) {
       leftServo.setPosition(.5);
       rightServo.setPosition(.5);
-      telemetry.addData("Left Encoder Voltage", leftEncoder.getVoltage());
-      telemetry.addData("Right Encoder Voltage", rightEncoder.getVoltage());
+      telemetry.addData(
+          "Left Encoder Angle", leftEncoder.getVoltage() / leftEncoder.getMaxVoltage() * 360);
+      telemetry.addData(
+          "Right Encoder Angle", rightEncoder.getVoltage() / rightEncoder.getMaxVoltage() * 360);
       telemetry.update();
     }
   }

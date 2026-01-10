@@ -19,6 +19,9 @@ public class SwerveTest extends LinearOpMode {
           -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
           -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
       telemetry.update();
+      if (gamepad1.a) {
+        drive.resetYaw();
+      }
     }
   }
 }

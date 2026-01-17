@@ -9,7 +9,6 @@ package org.firstinspires.ftc.teamcode.Decode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.ReadWriteFile;
 import java.io.File;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -23,10 +22,8 @@ public class _TankAutonomousDecode extends LinearOpMode {
   DC_Swerve_Drive robot = new DC_Swerve_Drive(this);
   // yep do the same
   DC_Intake_Launch decode = new DC_Intake_Launch(this);
-  // This may not be used at first since there is not a clear view of the field
-  // DC_Husky_Sensor ball = new DC_Husky_Sensor("color", this);
-  DC_Husky_Sensor tag = new DC_Husky_Sensor("april", this);
-  DC_BallSensor present = new DC_BallSensor(this);
+
+  // DC_BallSensor present = new DC_BallSensor(this);
   private ElapsedTime timeOut = new ElapsedTime();
 
   public Telemetry telemetry;
@@ -36,10 +33,8 @@ public class _TankAutonomousDecode extends LinearOpMode {
 
     robot.init();
     decode.InitIL();
-    present.SensorInit();
-    tag.side = 0; // this assures tag is read and wrote
-    // ball.initHuskyLens();
-    tag.initHuskyLens();
+    // present.SensorInit();
+    // tag.side = 0; // this assures tag is read and wrote
 
     // Wait for the DS start button to be touched.
     telemetry.addLine("Ready");
@@ -52,11 +47,11 @@ public class _TankAutonomousDecode extends LinearOpMode {
         // AppUtil.getSettingsFile() places the file in the FIRST/settings folder
         File file = AppUtil.getInstance().getSettingsFile(filename);
         // Get Match side to write to file
-        String match = String.valueOf(tag.side); // side passed from reading tag
+        // String match = String.valueOf(tag.side); // side passed from reading tag
         // --- Write the file ---
         telemetry.addData("Status", "Write Match to: " + filename);
         // Use the static method from ReadWriteFile to write the string data
-        ReadWriteFile.writeFile(file, match);
+        // ReadWriteFile.writeFile(file, match);
       } catch (Exception e) {
         telemetry.addData("Read Error", e.getMessage());
         telemetry.update();
@@ -84,7 +79,7 @@ public class _TankAutonomousDecode extends LinearOpMode {
     4. set chute they drivers have 1 sec to adjust manually
     5. spin up
     6. wait for launch command
-     */
+
     if (present.Present()) {
       decode.closeGate();
       decode.IntakeStop();
@@ -93,7 +88,7 @@ public class _TankAutonomousDecode extends LinearOpMode {
       sleep(1000);
     } // check for ball
     sleep(1000);
-    /*
+
     1. launch ball
     2. open gate
     3. start intake
@@ -101,9 +96,13 @@ public class _TankAutonomousDecode extends LinearOpMode {
     5. raise arm
     6. spin off
      */
+    decode.IntakeStop();
+    decode.chute60(); // default long range 60 deg
+    // wait for chute movement or decision for control chute
+    sleep(1000);
     decode.armPosition(1); // lower to launch
     // check for ball present or wait 2 sec
-    decode.openGate(); // ball away ready for next
+    // decode.openGate(); // ball away ready for next
     decode.Intake(); // start intake
     sleep(1000); // wait for ball to clear or check for ball
     decode.armPosition(0);

@@ -26,10 +26,10 @@ public class DC_Intake_Launch {
   // Default constructor
   public DC_Intake_Launch(LinearOpMode opmode) {
     myOp = opmode;
-    present = new DC_BallSensor(myOp);
+    // present = new DC_BallSensor(myOp);
   }
 
-  public DC_BallSensor present;
+  // public DC_BallSensor present;
 
   public DcMotorEx launch = null; // 6000 rpm motor
   public DcMotor arm = null; // 312 rpm motor
@@ -70,7 +70,7 @@ public class DC_Intake_Launch {
     // gate to stop balls from entering the chute
     gate = myOp.hardwareMap.get(Servo.class, "gate"); // todo set gate position
     tilt = myOp.hardwareMap.get(Servo.class, "tilt");
-    present.SensorInit();
+    // present.SensorInit();
     encHome = arm.getCurrentPosition(); // arm starts in home position
 
     // status = myOp.hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");

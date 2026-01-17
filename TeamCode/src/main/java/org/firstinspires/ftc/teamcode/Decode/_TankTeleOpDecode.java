@@ -17,9 +17,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
   DC_Swerve_Drive drive = new DC_Swerve_Drive(this);
   DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
   DC_Intake_Launch game = new DC_Intake_Launch(this);
-  DC_BallSensor ball = new DC_BallSensor(this);
-  // DC_Husky_Sensor ball = new DC_Husky_Sensor("color", this);
-  DC_Husky_Sensor tag = new DC_Husky_Sensor("april", this);
+  // DC_BallSensor ball = new DC_BallSensor(this);
   ElapsedTime TimeOut = new ElapsedTime();
   double gpLy = 0.0;
   double gpRy = 0.0;
@@ -38,8 +36,8 @@ public class _TankTeleOpDecode extends LinearOpMode {
       // Use the static method from ReadWriteFile to read the string data
       String match = ReadWriteFile.readFile(file);
       Integer mI = mI = Integer.valueOf(match);
-      // This tells DC_Husky_sensor which match side
-      tag.side = mI; // This is 1 for Red and 2 for Blue
+      // This tells which match side
+      // tag.side = mI; // This is 1 for Red and 2 for Blue
     } catch (Exception e) {
       telemetry.addData("Read Error", e.getMessage());
       telemetry.update();
@@ -47,8 +45,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
     drive.init();
     odo.DoInit();
     game.InitIL();
-    ball.SensorInit();
-    tag.initHuskyLens();
+    // ball.SensorInit();
 
     try {
       game.Intake(); // start intake
@@ -84,26 +81,25 @@ public class _TankTeleOpDecode extends LinearOpMode {
       5. spin up
       6. wait for launch command
        */
-      if (ball.Present()) {
-        game.closeGate();
-        game.IntakeStop();
-        game.chute60(); // default long range 60 deg
-        // wait for chute movement or decision for control chute
-        sleep(1000);
-        if (rJs > 0.1) {
-          do {
-            rJs = -gamepad2.left_stick_y / 2.0;
-            game.chutectl(rJs);
-          } while (opModeIsActive() && rJs > .1);
-        } // JoyStick control
-        TimeOut.reset();
-        // change spin-up velocity check range set velocity
-        while (opModeIsActive() && game.spinUp(4500.0) && TimeOut.seconds() < 3.0) {
-          idle();
-        }
-        telemetry.addLine("Ready to Launch - dpad_up");
-        telemetry.update();
-      } // check for ball
+      //      if (ball.Present()) {
+      //        game.IntakeStop();
+      game.chute60(); // default long range 60 deg
+      // wait for chute movement or decision for control chute
+      sleep(1000);
+      if (rJs > 0.1) {
+        do {
+          rJs = -gamepad2.left_stick_y / 2.0;
+          game.chutectl(rJs);
+        } while (opModeIsActive() && rJs > .1);
+      } // JoyStick control
+      TimeOut.reset();
+      // change spin-up velocity check range set velocity
+      while (opModeIsActive() && game.spinUp(4500.0) && TimeOut.seconds() < 3.0) {
+        idle();
+      }
+      telemetry.addLine("Ready to Launch - dpad_up");
+      telemetry.update();
+      // } // check for ball
     } // prepare to launch ball
     if (gamepad2.dpad_up) {
       /*

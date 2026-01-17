@@ -9,14 +9,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 @TeleOp
 public class UT_BallSensor_tests extends LinearOpMode {
 
-  DC_BallSensor Balls = new DC_BallSensor(this);
+  // DC_BallSensor Balls = new DC_BallSensor(this);
 
   @Override
   public void runOpMode() throws InterruptedException {
 
-    Balls.SensorInit();
+    // Balls.SensorInit();
     waitForStart();
-    while (opModeIsActive()) {
+    /*while (opModeIsActive()) {
       double BC = Balls.Sample();
       telemetry.addData("color", Balls.Sample());
       if (BC < 5.0) telemetry.addLine("No Ball");
@@ -25,6 +25,6 @@ public class UT_BallSensor_tests extends LinearOpMode {
       telemetry.addData("distance", Balls.hopper);
       telemetry.addData("distance", Balls.Present());
       telemetry.update();
-    }
+    }*/
   }
 }

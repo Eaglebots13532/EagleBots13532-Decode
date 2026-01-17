@@ -43,14 +43,14 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
   // Game devices
   // -----------------------------
   // Husky Camera - ball objects
-  DC_Husky_Sensor ball = new DC_Husky_Sensor("color", this);
+  // DC_Husky_Sensor ball = new DC_Husky_Sensor("color", this);
   // Front Camera - April tag
-  DC_Husky_Sensor tag = new DC_Husky_Sensor("april", this);
+  // DC_Husky_Sensor tag = new DC_Husky_Sensor("april", this);
   // decode motors/servos
   DC_Intake_Launch decode = new DC_Intake_Launch(this);
 
   // ball sense
-  DC_BallSensor present = new DC_BallSensor(this);
+  // DC_BallSensor present = new DC_BallSensor(this);
 
   // Game Pad controls
   double gpY = 0.0;
@@ -70,8 +70,8 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
     drive.init();
     odo.DoInit();
     decode.InitIL();
-    ball.initHuskyLens();
-    present.SensorInit();
+    // ball.initHuskyLens();
+    // present.SensorInit();
     // Wait for the DS start button to be touched.
     telemetry.addLine("Basic controlReady");
     telemetry.update();
@@ -123,13 +123,14 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
         if (dDown()) {
           if (downToggle) downToggle = !downToggle;
         }
-        if (downToggle) {
+        /*if (downToggle) {
           if (present.Present()) {
             decode.armPosition(1); // launch
           } else decode.armPosition(0); // lift
-        }
-        telemetry.addData("Top  ball", ball.getTop());
-        telemetry.addData("Left ball", ball.getLeft());
+        }*/
+        decode.armPosition(1);
+        //  telemetry.addData("Top  ball", ball.getTop());
+        // telemetry.addData("Left ball", ball.getLeft());
         telemetry.addLine(". . . . . . . . . .");
         telemetry.update();
 

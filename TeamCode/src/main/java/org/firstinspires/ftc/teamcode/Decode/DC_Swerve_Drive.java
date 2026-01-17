@@ -48,7 +48,7 @@ public class DC_Swerve_Drive {
   double[] modulesYPosMeters =
       new double[] {wheelBaseWidthMm * 1000 / 2, -wheelBaseWidthMm * 1000 / 2};
   Rotation2d[] encoderOffsets =
-      new Rotation2d[] {Rotation2d.fromDegrees(0), Rotation2d.fromDegrees(0)};
+      new Rotation2d[] {Rotation2d.fromDegrees(-2.5), Rotation2d.fromDegrees(-5)};
 
   // The max rotational rate
   double drivebaseRadiusMeters =
@@ -62,8 +62,7 @@ public class DC_Swerve_Drive {
   public void init() {
     driveMotors[0] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("LFM");
     driveMotors[1] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("RFM");
-    driveMotors[0].setDirection(DcMotorSimple.Direction.FORWARD);
-    driveMotors[1].setDirection(DcMotorSimple.Direction.FORWARD);
+    driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
     steerServos[0] = myOp.hardwareMap.servo.get("LFS");
     steerServos[1] = myOp.hardwareMap.servo.get("RFS");
     encoders[0] = myOp.hardwareMap.get(AnalogInput.class, "LFP");
@@ -75,11 +74,9 @@ public class DC_Swerve_Drive {
   public void fieldRelativeDrive(
       double fieldXVelMetersPerSec, double fieldYVelMetersPerSec, double chassisOmegaRadPerSec) {
     pinpoint.update();
-
     // Convert field oriented velocities to robot oriented velocities
     var robotYaw = pinpoint.getYaw();
-    //    var robotYaw = Rotation2d.kZero;
-    var inverseRobotYaw = robotYaw.unaryMinus();
+    var inverseRobotYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVelMetersPerSec =
         fieldXVelMetersPerSec * inverseRobotYaw.getCos()
             - fieldYVelMetersPerSec * inverseRobotYaw.getSin();
@@ -101,8 +98,6 @@ public class DC_Swerve_Drive {
 
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
-    double[] driveMotorOutputs = new double[2];
-    double[] steerServoOutputs = new double[2];
     for (int i = 0; i < 2; i++) {
       // Calculate the X and Y velocities of each module
       double targetXVelMetersPerSec =
@@ -131,38 +126,25 @@ public class DC_Swerve_Drive {
 
       driveMotorPower *= angleError.getCos();
 
-      driveMotorOutputs[i] = driveMotorPower;
-      steerServoOutputs[i] = calculateSteerPID(angleError, i, dt);
-
       myOp.telemetry.addData("Wheel " + i + " driveMotorPower", driveMotorPower);
       myOp.telemetry.addData("Wheel " + i + " targetAngle", targetAngle.getDegrees());
       myOp.telemetry.addData("Wheel " + i + " currentAngle", currentAngle.getDegrees());
       myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
+
+      // Drive the motor and the steer PID here
+      driveMotors[i].setPower(driveMotorPower);
+      steerServos[i].setPosition(calculateSteerPID(angleError, i, dt) / 2 + .5);
     }
     lastTimeStamp = currentTime;
-    double largestOutputMagnitude = 0;
-    for (int i = 0; i < 2; i++) {
-      largestOutputMagnitude = Math.max(largestOutputMagnitude, Math.abs(driveMotorOutputs[i]));
-    }
-    if (largestOutputMagnitude > 1) {
-      for (int i = 0; i < 2; i++) {
-        driveMotorOutputs[i] /= largestOutputMagnitude;
-      }
-    }
-    for (int i = 0; i < 2; i++) {
-      // Drive the motor and the steer PID here
-      driveMotors[i].setPower(driveMotorOutputs[i]);
-      steerServos[i].setPosition(steerServoOutputs[i] / 2 + .5);
-    }
   }
 
   private final double[] lastErrorRad = new double[2];
 
   private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
     double errorRad = angleError.getRadians();
-    double kP = 1.1 / (Math.PI / 2);
+    double kP = 1.25 / (Math.PI / 2);
     double kD = 0.01;
-    double kS = .02;
+    double kS = .03;
     double proportional = errorRad * kP;
     double derivative = kD * (errorRad - lastErrorRad[i]) / dt;
     myOp.telemetry.addData("Wheel " + i + " proportional", proportional);

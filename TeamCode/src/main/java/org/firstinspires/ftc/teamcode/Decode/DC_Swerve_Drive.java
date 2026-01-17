@@ -72,7 +72,7 @@ public class DC_Swerve_Drive {
     lastTimeStamp = System.nanoTime() / 1e9;
   }
 
-  public void drive(
+  public void fieldRelativeDrive(
       double fieldXVelMetersPerSec, double fieldYVelMetersPerSec, double chassisOmegaRadPerSec) {
     pinpoint.update();
 
@@ -86,9 +86,12 @@ public class DC_Swerve_Drive {
     double chassisYVelMetersPerSec =
         fieldXVelMetersPerSec * inverseRobotYaw.getSin()
             + fieldYVelMetersPerSec * inverseRobotYaw.getCos();
-    myOp.telemetry.addData("Gyro angle", robotYaw.getDegrees());
 
-    //    chassisOmegaRadPerSec += chassisYVelMetersPerSec * -.1;
+    var currentChassisOmega = pinpoint.getYawVelocityRadPerSec();
+    chassisOmegaRadPerSec += 1 * (chassisOmegaRadPerSec - currentChassisOmega);
+
+    myOp.telemetry.addData("Gyro angle", robotYaw.getDegrees());
+    myOp.telemetry.addData("Gyro omega", currentChassisOmega);
 
     var translationalMagnitude = Math.hypot(chassisXVelMetersPerSec, chassisYVelMetersPerSec);
     if (translationalMagnitude > maxSpeedMetersPerSec) {
@@ -172,4 +175,6 @@ public class DC_Swerve_Drive {
   public void resetYaw() {
     pinpoint.setHeading(Rotation2d.kZero);
   }
+
+  //  public void pidToPose(double x, double y, double )
 }

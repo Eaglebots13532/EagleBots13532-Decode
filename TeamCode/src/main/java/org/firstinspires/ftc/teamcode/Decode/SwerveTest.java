@@ -14,7 +14,7 @@ public class SwerveTest extends LinearOpMode {
     drive.init();
     waitForStart();
     while (opModeIsActive()) {
-      drive.drive(
+      drive.fieldRelativeDrive(
           -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
           -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
           -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);

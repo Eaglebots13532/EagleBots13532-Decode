@@ -91,7 +91,7 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
     while (opModeIsActive()) {
       try {
         // x & y are the drive position
-        drive.drive(
+        drive.fieldRelativeDrive(
             -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
             -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
             -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);

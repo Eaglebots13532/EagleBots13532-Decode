@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.Decode.wpilib.math.controller.PIDController;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
 import org.firstinspires.ftc.teamcode.ODO.GoBildaPinpointDriver;
 
@@ -158,5 +159,14 @@ public class DC_Swerve_Drive {
     pinpoint.setHeading(Rotation2d.kZero);
   }
 
-  //  public void pidToPose(double x, double y, double )
+  private final PIDController xController = new PIDController(1, 0, 0);
+  private final PIDController yController = new PIDController(1, 0, 0);
+  private final PIDController yawController = new PIDController(1, 0, 0);
+
+  public void pidToPose(double x, double y, double yawRad) {
+    fieldRelativeDrive(
+        xController.calculate(pinpoint.getXPosMeters(), x),
+        yController.calculate(pinpoint.getYPosMeters(), y),
+        yawController.calculate(pinpoint.getYaw().getRadians(), yawRad));
+  }
 }

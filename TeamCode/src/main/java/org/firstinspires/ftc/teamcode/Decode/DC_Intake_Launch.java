@@ -80,7 +80,7 @@ public class DC_Intake_Launch {
 
   // Servo controlled motor
   public void Intake() {
-    intake.setPower(1.0); // front intake servo motor
+    intake.setPower(-1.0); // front intake servo motor
   }
 
   public void IntakeStop() {

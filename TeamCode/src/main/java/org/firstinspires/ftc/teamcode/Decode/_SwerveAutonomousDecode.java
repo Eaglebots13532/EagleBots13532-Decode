@@ -6,16 +6,20 @@ package org.firstinspires.ftc.teamcode.Decode;
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
+import static org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver.Artboard;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import java.io.File;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 
 @Autonomous(name = "AutonomousDecode", group = "Decode", preselectTeleOp = "TeleOpDecode")
-public class _TankAutonomousDecode extends LinearOpMode {
-
+public class _SwerveAutonomousDecode extends LinearOpMode {
+  // initialize color prism display
+  GoBildaPrismDriver prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
   // get classes required
   // Create a Robot object DC_Swerve to be used to access drive hardware.
   // Prefix any hardware functions with "robot." to access this class.
@@ -62,6 +66,7 @@ public class _TankAutonomousDecode extends LinearOpMode {
       while (opModeIsActive() && decode.spinUp(4500.0) && timeOut.seconds() < 3.0) {
         idle();
       }
+      prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_0);
       Decode(); // launch first ball
       Decode(); // launch second ball
       Decode(); // launch third ball
@@ -101,6 +106,7 @@ public class _TankAutonomousDecode extends LinearOpMode {
     // wait for chute movement or decision for control chute
     sleep(1000);
     decode.armPosition(1); // lower to launch
+    prism.loadAnimationsFromArtboard(Artboard.ARTBOARD_1);
     // check for ball present or wait 2 sec
     // decode.openGate(); // ball away ready for next
     decode.Intake(); // start intake

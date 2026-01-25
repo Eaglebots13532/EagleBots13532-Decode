@@ -11,13 +11,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 import java.io.File;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 
 @TeleOp(name = "TeleOpDecode", group = "Decode")
-public class _TankTeleOpDecode extends LinearOpMode {
+public class _SwerveTeleOpDecode extends LinearOpMode {
+  // initialize color prism display
+  GoBildaPrismDriver prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
   DC_Swerve_Drive drive = new DC_Swerve_Drive(this);
   DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
   DC_Intake_Launch game = new DC_Intake_Launch(this);
-  // DC_BallSensor ball = new DC_BallSensor(this);
   ElapsedTime TimeOut = new ElapsedTime();
   double gpLy = 0.0;
   double gpRy = 0.0;
@@ -97,6 +99,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
       while (opModeIsActive() && game.spinUp(4500.0) && TimeOut.seconds() < 3.0) {
         idle();
       }
+      prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_1);
       telemetry.addLine("Ready to Launch - dpad_up");
       telemetry.update();
       // } // check for ball
@@ -114,6 +117,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
       // check for ball present or wait 2 sec
       game.openGate(); // ball away ready for next
       game.Intake(); // start intake
+      prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_0);
       sleep(1000); // wait for ball to clear or check for ball
       game.armPosition(0);
       game.spinOff(); // raise for next
@@ -126,6 +130,7 @@ public class _TankTeleOpDecode extends LinearOpMode {
       game.armPosition(3); // lower arm all the way down
       game.chuteHm();
       game.setTilt();
+      prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_7);
     }
   }
 } // tank TeleOp

@@ -17,10 +17,9 @@ chute  Servo  4 . . . . . . . . . . chute
 tilt   Servo  2 . . . . . . . . . . tilt
 gate   Servo  5 . . . . . . . . . . gate
 
-Ball   Rev Color Sensor . . . IC0 1 ballSensor
 
-April Tag  . . . . . . . . . .IC1 0 april
-Husky Camera   . . . . . . . .IC2 0 huskyLens
+ . . . . . . . . . .IC1
+     . . . . . . . .IC2
 PinPoint . . . . . . . . . . .IC3 0 odo
 
  */

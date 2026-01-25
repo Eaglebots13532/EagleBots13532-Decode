@@ -5,10 +5,12 @@ package org.firstinspires.ftc.teamcode.Decode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 
 @TeleOp(name = "_Comp Tank Drive")
 public class Comp_TankDrive extends LinearOpMode {
-
+  // initialize color prism display
+  GoBildaPrismDriver prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
   DC_Swerve_Drive drive = new DC_Swerve_Drive(this);
   DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
   DC_Intake_Launch game = new DC_Intake_Launch(this);
@@ -38,9 +40,11 @@ public class Comp_TankDrive extends LinearOpMode {
       // launcher setting
       telemetry.addLine("Setting shooter");
       game.launch.setPower(gamepad2.right_stick_x);
+      prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_1);
       // intake setting
       telemetry.addLine("Setting intake");
       game.intake.setPower(gamepad2.left_stick_x);
+      prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_0);
 
       // telemetry update for running
       telemetry.addLine("Count: " + count);

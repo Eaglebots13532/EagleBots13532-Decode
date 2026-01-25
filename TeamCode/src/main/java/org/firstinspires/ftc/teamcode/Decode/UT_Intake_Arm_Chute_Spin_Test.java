@@ -14,8 +14,12 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
 
   @Override
   public void runOpMode() {
+    // FtcDashboard dashboard = FtcDashboard.getInstance();
+    // telemetry = dashboard.getTelemetry();
 
     game.InitIL();
+    int spinVeloc = 2000;
+    double chuteDrv = 0.0;
     int armEnc = 0;
     boolean leftBump = false;
     boolean rightBump = false;
@@ -33,25 +37,38 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       }
       telemetry.addLine(". . . . . . . . . .");
       telemetry.addLine("Left Stick 2 Y");
-      telemetry.addData("Arm Encoder Position:", game.arm.getCurrentPosition());
       double armDrv = -gamepad2.left_stick_y / 1.5;
-      telemetry.addData("Arm Power:", armDrv);
       game.arm.setPower(armDrv);
       telemetry.addLine(". . . . . . . . . .");
       // chute positioning
-      telemetry.addLine("Right Stick 2 Y");
-      telemetry.addData("Chute potentiometer Position:", game.chuteVal.getVoltage());
-      double chuteDrv = -gamepad2.right_stick_y / 2.0;
-      telemetry.addData("Chute Power:", chuteDrv);
+
+      telemetry.addLine("DPad +left -right 2");
+      if (gamepad2.dpad_right) chuteDrv = .2;
+      if (gamepad2.dpad_left) chuteDrv = -.2;
+      game.chute.setPower(chuteDrv);
+      sleep(100);
+      chuteDrv = 0.0;
       game.chute.setPower(chuteDrv);
       telemetry.addLine(". . . . . . . . . .");
       // spin velocity
-      telemetry.addLine("Left Trigger 2 Y");
-      telemetry.addData("Spin Velocity:", game.launch.getVelocity());
-      int spinVeloc = (int) (gamepad2.left_trigger * 6000);
-      telemetry.addData("request Velocity:", spinVeloc);
+      telemetry.addLine("DPad +UP -down 2");
+      // int spinVeloc = (int) (gamepad2.left_trigger * 6000);
+      if (gamepad2.dpad_up) spinVeloc += 100;
+      if (gamepad2.dpad_down) spinVeloc -= 100;
+      sleep(700);
+      if (spinVeloc < 1400) spinVeloc = 1400;
+      if (spinVeloc > 2100) spinVeloc = 2100;
       game.launch.setVelocity(spinVeloc);
       telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine("right trigger lift");
+      int lift = (int) (-gamepad1.left_stick_y);
+      game.tilt.setPosition(lift);
+      telemetry.addData("request Velocity:", spinVeloc);
+      telemetry.addData("Fly Wheel Velocity:", game.launch.getVelocity());
+      telemetry.addData("Hood potentiometer:", game.chuteVal.getVoltage());
+      telemetry.addData("Arm Encoder Position:", game.arm.getCurrentPosition());
+      telemetry.addData("Arm Power:", armDrv);
+      telemetry.addData("lift", lift);
       telemetry.update();
     }
   } // run OpMode

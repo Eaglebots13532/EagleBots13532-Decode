@@ -43,29 +43,20 @@ public class DC_AprilTagLocalization {
     myOp = opmode;
   }
 
-  double kdist = 1.395;
-  double Xred = 0.0;
-  double Yred = 0.0;
-  double Zred = 0.0;
-  double Pred = 0.0;
-  double Rred = 0.0;
-  double Wred = 0.0;
-  double Xblu = 0.0;
-  double Yblu = 0.0;
-  double Zblu = 0.0;
-  double Pblu = 0.0;
-  double Rblu = 0.0;
-  double Wblu = 0.0;
+  double kdist = .95; // 1.395
+
   double UnkId = 0.0;
   double UnkX = 0.0;
   double UnkY = 0.0;
 
-  int MetaId = 0;
-  String MetaName = "";
-  double Rrange = 0.0;
-  double Rbearing = Wred;
-  double Brange = 0.0;
-  double Bbearing = Wblu;
+  public int MetaId = 0;
+  public String MetaName = "";
+  public double Rrange = 0.0;
+  public double Rpitch = 0.0;
+  public double Brange = 0.0;
+  public double Bpitch = 0.0;
+  public double range = 0.0;
+  public double bearing = 0.0;
 
   private static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 
@@ -115,7 +106,7 @@ public class DC_AprilTagLocalization {
   } // end method runOpMode()
 
   /** Initialize the AprilTag processor. */
-  private void initAprilTag() {
+  public void initAprilTag() {
 
     // Create the AprilTag processor.
     aprilTag =
@@ -182,7 +173,7 @@ public class DC_AprilTagLocalization {
   } // end method initAprilTag()
 
   /** Add telemetry about AprilTag detections. */
-  private void telemetryAprilTag() {
+  public void getAprilTag() {
 
     List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
@@ -192,23 +183,15 @@ public class DC_AprilTagLocalization {
         MetaId = detection.id;
         MetaName = detection.metadata.name;
         if (detection.id == 24) {
-          Xred = detection.robotPose.getPosition().x;
-          Yred = detection.robotPose.getPosition().y;
-          Zred = detection.robotPose.getPosition().z;
-          Pred = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
-          Rred = detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES);
-          Wred = detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
-          //        Rrange = detection.ftcPose.range;
+          Rpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+          Rrange = detection.ftcPose.range * kdist; // distance constant to correct range
         }
         if (detection.id == 20) {
-          Xblu = detection.robotPose.getPosition().x;
-          Yblu = detection.robotPose.getPosition().y;
-          Zblu = detection.robotPose.getPosition().z;
-          Pblu = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
-          Rblu = detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES);
-          Wblu = detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
-          Brange = detection.ftcPose.range;
+          Bpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+          Brange = detection.ftcPose.range * kdist; // distance constant to correct range
         }
+        range = detection.ftcPose.range * kdist;
+        bearing = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
       } else {
         UnkId = detection.id;
         UnkX = detection.center.x;

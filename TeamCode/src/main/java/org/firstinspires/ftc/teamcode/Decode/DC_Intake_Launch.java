@@ -87,24 +87,28 @@ public class DC_Intake_Launch {
     intake.setPower(0.0); // front intake servo motor
   }
 
-  public void launchVelocity() {
-    launch.setVelocity(1000.0);
-    myOp.sleep(2000);
-    myOp.telemetry.addData("Current Velocity", launch.getVelocity());
-    myOp.telemetry.update();
-    launch.setVelocity(0.0);
-  }
-
   // end motor checks
 
   public boolean spinUp(double shoot_velocity) {
-    boolean ready = true; // the not of false
+    boolean ready = false; // the not of false
     launch.setVelocity(shoot_velocity);
+    myOp.sleep(100);
+    double presVelocity = launch.getVelocity();
+    // check for ball causing stall
+    if (presVelocity < 100) {
+      spinOff();
+      myOp.sleep(50);
+      // reverse fly wheel kicking ball back and start again
+      launch.setVelocity(-500);
+      myOp.sleep(100);
+      launch.setVelocity(shoot_velocity);
+    }
     runTime.reset();
-    while (myOp.opModeIsActive() && runTime.seconds() < 1.0 && ready) {
+    // spin up fly wheel checking for reached velocity false time out
+    while (myOp.opModeIsActive() && runTime.seconds() < 5.0 && !ready) {
       myOp.telemetry.addData("Current Velocity", launch.getVelocity());
       myOp.telemetry.update();
-      if (launch.getVelocity() > shoot_velocity) ready = false;
+      if (launch.getVelocity() > shoot_velocity) ready = true;
     }
     // set status light
     return ready;
@@ -128,12 +132,10 @@ public class DC_Intake_Launch {
     double armPwr = 0.3;
 
     final int home = encHome;
-    final int launch = encHome + 20; // set + value to encoder count
-    final int endGame = encHome + 40;
+    final int endGame = encHome + 20;
 
     int move = 0;
     if (pos == 0) move = home;
-    else if (pos == 1) move = launch;
     else if (pos == 2) move = endGame;
     arm.setTargetPosition(move);
     arm.setMode(DcMotor.RunMode.RUN_TO_POSITION); // Set the run mode
@@ -147,11 +149,11 @@ public class DC_Intake_Launch {
   } // end arm position
 
   public void closeGate() {
-    gate.setPosition(0.5); // / todo set direction close power
+    gate.setPosition(1.0); // / todo set direction close power
   }
 
   public void openGate() {
-    gate.setPosition(0.3); // todo set direction open power
+    gate.setPosition(0.5); // todo set direction open power
   }
 
   public void chuteHm() {
@@ -167,7 +169,7 @@ public class DC_Intake_Launch {
     seekPos(pos);
   }
 
-  // move chute angle
+  // move chute angle by game stick
   // pos is -1 to 1 where seek volt = ((pos + 1.0)/2.0) * potMax
   private void seekPos(double pos) {
     double potMax = 3.3; // set to maximum
@@ -178,12 +180,41 @@ public class DC_Intake_Launch {
     runTime.reset();
     servoPwr = (pos > normVolt) ? servoPwr : -servoPwr;
     chute.setPower(servoPwr);
-    while (myOp.opModeIsActive() && runTime.seconds() < 2.0 && seekVolt < normVolt) {
+    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && seekVolt < normVolt) {
       normVolt = chuteVal.getVoltage() / potMax;
       chute.setPower(pos);
     }
     chute.setPower(0.0);
   } // end seek position
+
+  // auto seek set by range found by the April tag
+  public void chuteAngle(double range) {
+    double limit = 0.0;
+    // formula chute pot voltage
+    double chuteRef = (range - 6.94) / -1.418;
+    double chutePrs = chuteVal.getVoltage();
+    // the chute k position difference may be added
+    chute.setPower(Math.signum(chuteRef - chutePrs) * .8);
+    runTime.reset();
+    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && limit < .1) {
+      limit = Math.abs((chuteRef - chuteVal.getVoltage()) / chuteRef);
+    }
+  }
+
+  // might be combined
+  public void flyVelocity(double range) {
+    double velocPrs = 0.0;
+    // fly wheel velocity from range formula
+    double velocSeek = (-.007 * range * range) + 4.26 * range + 1396.6;
+    spinUp(velocSeek);
+    do {
+      velocPrs = launch.getVelocity();
+      myOp.sleep(20);
+    } while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && velocPrs > velocSeek);
+    // light indicator
+  }
+
+  public void flyVelchk(double fvelocity) {}
 
   public void setTilt() {
     tilt.setPosition(.5);

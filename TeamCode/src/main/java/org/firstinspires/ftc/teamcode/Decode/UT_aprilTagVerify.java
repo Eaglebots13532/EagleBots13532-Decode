@@ -33,7 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-public class UT_Basic_Decode_TeleOp extends LinearOpMode {
+public class UT_aprilTagVerify extends LinearOpMode {
 
   // Swerve Devices
   // -----------------------------
@@ -68,19 +68,8 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
     // Wait for the DS start button to be touched.
     telemetry.addLine("Basic controlReady");
     telemetry.update();
-    //
-
-    while (!isStarted()) { // prep the side team is on
-      if (gamepad2.xWasPressed()) side = 20; // select blue side
-      if (gamepad2.bWasPressed()) side = 24; // select red side
-      waitForStart();
-      telemetry.addData("side", side);
-      telemetry.update();
-    }
-    decode.Intake(); // start intake
-    decode.closeGate(); // wait for Balls
-    // decode.chuteAngle(130);//range in inches
-    decode.spinUp(2000); // start flywheel to reduce current
+    side = 20;
+    waitForStart();
     while (opModeIsActive()) {
       try {
         // x & y are the drive position
@@ -89,42 +78,15 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
             -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
             -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
         telemetry.addLine(". . . . . . . . . .");
-        april.getAprilTag();
         // if ready to launch set the speed according to distance
-        if (gamepad2.leftBumperWasPressed()) {
-          if (april.MetaId == side) {
-            decode.chuteAngle(april.range);
-            decode.spinUp(april.range);
-          }
-          // align robot to april with field Oriented movements
-          if (side == 20) {
-            if (april.Bpitch < 1.0) {
-              drive.fieldRelativeDrive(
-                  -0.0 * drive.maxSpeedMetersPerSec,
-                  -0.2 * drive.maxSpeedMetersPerSec,
-                  -0.0 * drive.maxOmegaRadPerSec);
-            }
-          }
-          if (side == 24) {
-            if (april.Rpitch > 1.0) {
-              drive.fieldRelativeDrive(
-                  -0.0 * drive.maxSpeedMetersPerSec,
-                  +0.2 * drive.maxSpeedMetersPerSec,
-                  -0.0 * drive.maxOmegaRadPerSec);
-            }
-          }
-          decode.openGate();
-          decode.Intake();
-          sleep(500); // wait for ball to launch
-          decode.IntakeStop();
-          decode.closeGate();
-          sleep(500); // wait for gate to close
-        }
-        telemetry.addData("Fly velocity", decode.launch.getVelocity());
+        april.getAprilTag();
+
+        // align robot to april with field Oriented movements
+        telemetry.addData(". . range", april.range);
+        telemetry.addData("bearing", april.bearing);
         telemetry.addData("Red range", april.Rrange);
         telemetry.addData("Blue range", april.Brange);
         telemetry.update();
-        decode.Intake(); // start intake
       } // end try
       catch (Exception e) {
         telemetry.addLine(", exception in gamePadTeleOP");

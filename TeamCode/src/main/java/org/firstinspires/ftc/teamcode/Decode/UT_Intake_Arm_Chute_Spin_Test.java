@@ -28,20 +28,28 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
     waitForStart();
     // arm positioning
     while (opModeIsActive()) {
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . Intake . . .");
       telemetry.addLine("Right Bumper 2 start 3 sec stop");
-      if (gamepad2.right_bumper) {
+      if (gamepad2.rightBumperWasPressed()) {
         game.Intake();
         sleep(3000);
         game.IntakeStop();
       }
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . gate . . . .");
+      telemetry.addLine(" Right Button X 2 open close gate");
+      if (gamepad2.xWasPressed()) {
+        game.openGate();
+        sleep(3000);
+        game.closeGate();
+      }
+      telemetry.addLine(". . . Arm . . . .");
       telemetry.addLine("Left Stick 2 Y");
       double armDrv = -gamepad2.left_stick_y / 1.5;
       game.arm.setPower(armDrv);
       telemetry.addLine(". . . . . . . . . .");
       // chute positioning
 
+      telemetry.addLine(". . hood . . .");
       telemetry.addLine("DPad +left -right 2");
       if (gamepad2.dpad_right) chuteDrv = .2;
       if (gamepad2.dpad_left) chuteDrv = -.2;
@@ -49,7 +57,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       sleep(100);
       chuteDrv = 0.0;
       game.chute.setPower(chuteDrv);
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . Fly Wheel . . .");
       // spin velocity
       telemetry.addLine("DPad +UP -down 2");
       // int spinVeloc = (int) (gamepad2.left_trigger * 6000);
@@ -59,7 +67,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       if (spinVeloc < 1400) spinVeloc = 1400;
       if (spinVeloc > 2100) spinVeloc = 2100;
       game.launch.setVelocity(spinVeloc);
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . lift . . . .");
       telemetry.addLine("right trigger lift");
       int lift = (int) (-gamepad1.left_stick_y);
       game.tilt.setPosition(lift);

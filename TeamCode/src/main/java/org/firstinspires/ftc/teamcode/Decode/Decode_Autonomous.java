@@ -29,12 +29,12 @@ PinPoint . . . . . . . . . . .IC3 0 odo
 April Camera   . . . . . . . . . . Webcam 1
  */
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp
-public class UT_Basic_Decode_TeleOp extends LinearOpMode {
+@Autonomous
+public class Decode_Autonomous extends LinearOpMode {
 
   // Swerve Devices
   // -----------------------------
@@ -61,6 +61,7 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
 
   @Override
   public void runOpMode() {
+    waitForStart();
     try {
       april.getAprilTag();
       if (april.MetaId == 24) side = 24;
@@ -72,58 +73,54 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
       april.initAprilTag();
 
       // Wait for the DS start button to be touched.
-      telemetry.addLine("Basic controlReady");
+      telemetry.addLine("Autonomous Ready:" + april.MetaName);
       telemetry.update();
-      //
-      waitForStart();
+      // set ange
+      april.getAprilTag();
+      sleep(100); // wait for april response
+      decode.chuteAngle(april.range); // range in inches
+      decode.spinUp(april.range); // start flywheel to reduce current
 
-      decode.Intake(); // start intake
-      decode.closeGate(); // wait for Balls
-      // decode.chuteAngle(130);//range in inches
-      decode.spinUp(2000); // start flywheel to reduce current
-
+      // adjust for bearing, may be able to remove this adjust code
       while (opModeIsActive()) {
-        // drive by game pad
-        // fieldx & fieldy are the drive position omega turn
-        drive.fieldRelativeDrive(
-            -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
-            -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
-            -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
-        telemetry.addLine(". . . . . . . . . .");
-
-        // if ready to launch set the speed according to distance
-        if (gamepad2.leftBumperWasPressed()) {
+        april.getAprilTag();
+        double bshift = april.range * Math.sin(Math.toRadians(april.bearing));
+        runTime.reset();
+        while (opModeIsActive() && runTime.seconds() < 3.0 && april.bearing > 1.0) {
           april.getAprilTag();
-          if (april.MetaId == side) { // red or blue
-            decode.chuteAngle(april.range);
-            decode.spinUp(april.range);
-            double bshift = april.range * Math.sin(Math.toRadians(april.bearing));
-            runTime.reset();
-            while (opModeIsActive() && runTime.seconds() < 3.0 && april.bearing > 1.0) {
-              april.getAprilTag();
-              // align robot to april with field oriented movements
-              double pshift = april.range * Math.sin(Math.toRadians(april.bearing));
-              double sshift = pshift / bshift; // move right if blue
-              if (side == 24) sshift = -sshift; // move left if read
-              drive.fieldRelativeDrive(
-                  -0.0 * drive.maxSpeedMetersPerSec,
-                  -sshift * drive.maxSpeedMetersPerSec,
-                  -0.0 * drive.maxOmegaRadPerSec);
-            }
-          } // end while adjust for bearing
+          // align robot to april with field oriented movements
+          double pshift = april.range * Math.sin(Math.toRadians(april.bearing));
+          double sshift =
+              pshift / bshift; // move right or left to center bearing, May need to reverse
+          // if (side == 24) sshift = -sshift; // move left if read
+          drive.fieldRelativeDrive(
+              -0.0 * drive.maxSpeedMetersPerSec,
+              -sshift * drive.maxSpeedMetersPerSec,
+              -0.0 * drive.maxOmegaRadPerSec);
+        } // end while adjust for bearing
+        for (int i = 1; i < 4; i++) {
           decode.openGate();
           decode.Intake();
-          sleep(500); // wait for ball to launch
+          sleep(1000); // wait for ball to launch
           decode.IntakeStop();
           decode.closeGate();
           sleep(500); // wait for gate to close
         }
-        telemetry.addData("Fly velocity", decode.launch.getVelocity());
-        telemetry.addData("Red range", april.Rrange);
-        telemetry.addData("Blue range", april.Brange);
         telemetry.update();
         decode.Intake(); // start intake
-      }
+        sleep(1000);
+      } // shoot 3 balls
+      decode.IntakeStop();
+      decode.spinOff();
+      drive.fieldRelativeDrive(
+          -10.0 * drive.maxSpeedMetersPerSec,
+          -(-10.0) * drive.maxSpeedMetersPerSec,
+          -0.0 * drive.maxOmegaRadPerSec);
+      sleep(1000); // robot off launch area
+      drive.fieldRelativeDrive(
+          -0.0 * drive.maxSpeedMetersPerSec,
+          -0.0 * drive.maxSpeedMetersPerSec,
+          -0.0 * drive.maxOmegaRadPerSec);
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");

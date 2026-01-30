@@ -34,7 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
-public class UT_Basic_Decode_TeleOp extends LinearOpMode {
+public class Decode_TeleOp extends LinearOpMode {
 
   // Swerve Devices
   // -----------------------------
@@ -103,8 +103,8 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
               april.getAprilTag();
               // align robot to april with field oriented movements
               double pshift = april.range * Math.sin(Math.toRadians(april.bearing));
-              double sshift = pshift / bshift; // move right if blue
-              if (side == 24) sshift = -sshift; // move left if read
+              double sshift = pshift / bshift; // move right or left
+              //if (side == 24) sshift = -sshift; // sign may need to be changed
               drive.fieldRelativeDrive(
                   -0.0 * drive.maxSpeedMetersPerSec,
                   -sshift * drive.maxSpeedMetersPerSec,

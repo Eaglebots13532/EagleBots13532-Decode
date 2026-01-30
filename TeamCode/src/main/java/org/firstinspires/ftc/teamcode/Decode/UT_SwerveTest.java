@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-public class SwerveTest extends LinearOpMode {
+public class UT_SwerveTest extends LinearOpMode {
   @Override
   public void runOpMode() throws InterruptedException {
     var drive = new DC_Swerve_Drive(this);

@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 
 @TeleOp
-public class SteerEncoderTest extends LinearOpMode {
+public class UT_SteerEncoderTest extends LinearOpMode {
   @Override
   public void runOpMode() throws InterruptedException {
     var steerServos = new Servo[2];

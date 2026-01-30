@@ -38,7 +38,7 @@ public class Comp_TankDrive extends LinearOpMode {
       telemetry.addLine("Setting arm");
       game.arm.setPower(-gamepad2.right_stick_y);
       // launcher setting
-      telemetry.addLine("Setting shooter");
+      telemetry.addLine("Setting Fly velocity");
       game.launch.setPower(gamepad2.right_stick_x);
       prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_1);
       // intake setting

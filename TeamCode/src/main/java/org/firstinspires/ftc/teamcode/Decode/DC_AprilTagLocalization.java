@@ -49,14 +49,14 @@ public class DC_AprilTagLocalization {
   double UnkX = 0.0;
   double UnkY = 0.0;
 
-  public int MetaId = 0;
-  public String MetaName = "";
+  public static int MetaId = 0;
+  public static String MetaName = "";
   public double Rrange = 0.0;
   public double Rpitch = 0.0;
   public double Brange = 0.0;
   public double Bpitch = 0.0;
-  public double range = 0.0;
-  public double bearing = 0.0;
+  public static double range = 0.0;
+  public static double bearing = 0.0;
 
   private static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 

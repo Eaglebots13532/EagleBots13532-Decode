@@ -63,14 +63,15 @@ public class Decode_Autonomous extends LinearOpMode {
   public void runOpMode() {
     waitForStart();
     try {
-      april.getAprilTag();
-      if (april.MetaId == 24) side = 24;
-      else side = 20;
+
       // Initialize class components
       drive.init();
       odo.DoInit();
       decode.InitIL();
       april.initAprilTag();
+      april.getAprilTag();
+      if (april.MetaId == 24) side = 24;
+      else side = 20;
 
       // Wait for the DS start button to be touched.
       telemetry.addLine("Autonomous Ready:" + april.MetaName);

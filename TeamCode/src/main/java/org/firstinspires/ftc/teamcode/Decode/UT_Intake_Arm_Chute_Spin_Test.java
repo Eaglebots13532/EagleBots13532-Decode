@@ -18,7 +18,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
     // telemetry = dashboard.getTelemetry();
 
     game.InitIL();
-    int spinVeloc = 2000;
+    int spinVeloc = 0;
     double chuteDrv = 0.0;
     int armEnc = 0;
     boolean leftBump = false;
@@ -64,7 +64,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       if (gamepad2.dpad_up) spinVeloc += 100;
       if (gamepad2.dpad_down) spinVeloc -= 100;
       sleep(700);
-      if (spinVeloc < 1400) spinVeloc = 1400;
+      if (spinVeloc < 1400) spinVeloc = 1350;
       if (spinVeloc > 2100) spinVeloc = 2100;
       game.launch.setVelocity(spinVeloc);
       telemetry.addLine(". . . lift . . . .");

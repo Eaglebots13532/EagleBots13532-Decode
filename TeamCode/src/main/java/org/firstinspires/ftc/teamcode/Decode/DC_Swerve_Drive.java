@@ -88,8 +88,8 @@ public class DC_Swerve_Drive {
     var currentChassisOmega = pinpoint.getYawVelocityRadPerSec();
     chassisOmegaRadPerSec += 1 * (chassisOmegaRadPerSec - currentChassisOmega);
 
-    myOp.telemetry.addData("Gyro angle", robotYaw.getDegrees());
-    myOp.telemetry.addData("Gyro omega", currentChassisOmega);
+    // myOp.telemetry.addData("Gyro angle", robotYaw.getDegrees());
+    // myOp.telemetry.addData("Gyro omega", currentChassisOmega);
 
     var translationalMagnitude = Math.hypot(chassisXVelMetersPerSec, chassisYVelMetersPerSec);
     if (translationalMagnitude > maxSpeedMetersPerSec) {
@@ -127,10 +127,10 @@ public class DC_Swerve_Drive {
 
       driveMotorPower *= angleError.getCos();
 
-      myOp.telemetry.addData("Wheel " + i + " driveMotorPower", driveMotorPower);
-      myOp.telemetry.addData("Wheel " + i + " targetAngle", targetAngle.getDegrees());
-      myOp.telemetry.addData("Wheel " + i + " currentAngle", currentAngle.getDegrees());
-      myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
+      // myOp.telemetry.addData("Wheel " + i + " driveMotorPower", driveMotorPower);
+      // myOp.telemetry.addData("Wheel " + i + " targetAngle", targetAngle.getDegrees());
+      // myOp.telemetry.addData("Wheel " + i + " currentAngle", currentAngle.getDegrees());
+      // myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
 
       // Drive the motor and the steer PID here
       driveMotors[i].setPower(driveMotorPower);
@@ -148,8 +148,8 @@ public class DC_Swerve_Drive {
     double kS = .03;
     double proportional = errorRad * kP;
     double derivative = kD * (errorRad - lastErrorRad[i]) / dt;
-    myOp.telemetry.addData("Wheel " + i + " proportional", proportional);
-    myOp.telemetry.addData("Wheel " + i + " derivative", derivative);
+    // myOp.telemetry.addData("Wheel " + i + " proportional", proportional);
+    // myOp.telemetry.addData("Wheel " + i + " derivative", derivative);
     lastErrorRad[i] = errorRad;
     var output = proportional + derivative;
     return output + kS * Math.signum(output);

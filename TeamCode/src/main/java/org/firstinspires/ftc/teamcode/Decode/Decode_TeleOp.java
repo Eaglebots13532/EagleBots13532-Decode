@@ -57,30 +57,26 @@ public class Decode_TeleOp extends LinearOpMode {
   double gpX = 0.0;
   double limitSpeed = 0.5;
   double turnDeg = .5;
-  int side = 20; // Blue
+  public int side = 20; // Blue
 
   @Override
   public void runOpMode() {
+
     try {
-      april.getAprilTag();
-      if (april.MetaId == 24) side = 24;
-      else side = 20;
       // Initialize class components
       drive.init();
       odo.DoInit();
       decode.InitIL();
       april.initAprilTag();
-
       // Wait for the DS start button to be touched.
       telemetry.addLine("Basic controlReady");
       telemetry.update();
-      //
       waitForStart();
-
+      //
       decode.Intake(); // start intake
       decode.closeGate(); // wait for Balls
       // decode.chuteAngle(130);//range in inches
-      decode.spinUp(2000); // start flywheel to reduce current
+      decode.spinUp(1850.0); // start flywheel to reduce current
 
       while (opModeIsActive()) {
         // drive by game pad
@@ -90,43 +86,47 @@ public class Decode_TeleOp extends LinearOpMode {
             -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
             -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
         telemetry.addLine(". . . . . . . . . .");
+        april.getAprilTag();
+        telemetry.addData("MetaId", DC_AprilTagLocalization.MetaId);
+        side = DC_AprilTagLocalization.MetaId;
+        telemetry.addData("Fly velocity", decode.launch.getVelocity());
+        telemetry.addData("Side", side);
+        telemetry.addData("range", DC_AprilTagLocalization.range);
+        telemetry.addData("Red range", april.Rrange);
+        telemetry.addData("Blue range", april.Brange);
+        telemetry.update();
+        double srange = DC_AprilTagLocalization.range;
+        decode.chuteAngle(srange);
+        decode.spinUp(srange);
 
         // if ready to launch set the speed according to distance
         if (gamepad2.leftBumperWasPressed()) {
-          april.getAprilTag();
-          if (april.MetaId == side) { // red or blue
-            decode.chuteAngle(april.range);
-            decode.spinUp(april.range);
-            double bshift = april.range * Math.sin(Math.toRadians(april.bearing));
-            runTime.reset();
-            while (opModeIsActive() && runTime.seconds() < 3.0 && april.bearing > 1.0) {
-              april.getAprilTag();
-              // align robot to april with field oriented movements
-              double pshift = april.range * Math.sin(Math.toRadians(april.bearing));
-              double sshift = pshift / bshift; // move right or left
-              //if (side == 24) sshift = -sshift; // sign may need to be changed
-              drive.fieldRelativeDrive(
-                  -0.0 * drive.maxSpeedMetersPerSec,
-                  -sshift * drive.maxSpeedMetersPerSec,
-                  -0.0 * drive.maxOmegaRadPerSec);
-            }
-          } // end while adjust for bearing
+          double bshift = DC_AprilTagLocalization.range * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
+          runTime.reset();
+          while (opModeIsActive() && runTime.seconds() < 3.0 && DC_AprilTagLocalization.bearing > 1.0) {
+            april.getAprilTag();
+            // align robot to april with field oriented movements
+            double pshift = DC_AprilTagLocalization.range * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
+            double sshift = pshift / bshift; // move right or left
+            // if (side == 24) sshift = -sshift; // sign may need to be changed
+            drive.fieldRelativeDrive(
+                -0.0 * drive.maxSpeedMetersPerSec,
+                -sshift * drive.maxSpeedMetersPerSec,
+                -0.0 * drive.maxOmegaRadPerSec);
+          }
           decode.openGate();
           decode.Intake();
           sleep(500); // wait for ball to launch
           decode.IntakeStop();
           decode.closeGate();
           sleep(500); // wait for gate to close
-        }
-        telemetry.addData("Fly velocity", decode.launch.getVelocity());
-        telemetry.addData("Red range", april.Rrange);
-        telemetry.addData("Blue range", april.Brange);
-        telemetry.update();
+        } // end while adjust for bearing
         decode.Intake(); // start intake
       }
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");
+      telemetry.addData("e", e);
       telemetry.update();
       sleep(2000);
       requestOpModeStop();

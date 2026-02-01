@@ -191,7 +191,7 @@ public class DC_Intake_Launch {
   public void chuteAngle(double range) {
     double limit = 0.0;
     // formula chute pot voltage
-    double chuteRef = (range - 6.94) / -1.418;
+    double chuteRef = ((0.026 * range) - 2.527) / -1.16;
     double chutePrs = chuteVal.getVoltage();
     // the chute k position difference may be added
     chute.setPower(Math.signum(chuteRef - chutePrs) * .8);
@@ -210,11 +210,11 @@ public class DC_Intake_Launch {
     do {
       velocPrs = launch.getVelocity();
       myOp.sleep(20);
-    } while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && velocPrs > velocSeek);
+    } while (myOp.opModeIsActive()
+        && runTime.seconds() < 3.0
+        && ((0.95 * velocSeek) > velocPrs ^ (1.05 * velocSeek) < velocPrs));
     // light indicator
   }
-
-  public void flyVelchk(double fvelocity) {}
 
   public void setTilt() {
     tilt.setPosition(.5);

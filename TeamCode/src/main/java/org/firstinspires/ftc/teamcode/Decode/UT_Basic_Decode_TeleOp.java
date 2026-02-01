@@ -61,6 +61,7 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
 
   @Override
   public void runOpMode() {
+    waitForStart();
     try {
       april.getAprilTag();
       if (april.MetaId == 24) side = 24;
@@ -75,7 +76,6 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
       telemetry.addLine("Basic controlReady");
       telemetry.update();
       //
-      waitForStart();
 
       decode.Intake(); // start intake
       decode.closeGate(); // wait for Balls

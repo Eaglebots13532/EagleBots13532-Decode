@@ -5,6 +5,7 @@ package org.firstinspires.ftc.teamcode.Decode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -64,6 +65,8 @@ public class UT_AprilTagLocalizationTest extends LinearOpMode {
   /** The variable to store our instance of the vision portal. */
   private VisionPortal visionPortal;
 
+  ElapsedTime runTime = new ElapsedTime();
+
   @Override
   public void runOpMode() {
 
@@ -76,11 +79,16 @@ public class UT_AprilTagLocalizationTest extends LinearOpMode {
     waitForStart();
 
     while (opModeIsActive()) {
+      runTime.reset();
 
       telemetryAprilTag();
+      telemetry.addData("Time ", runTime.seconds());
 
       // Push telemetry to the Driver Station.
       telemetry.update();
+      sleep(5000);
+
+      runTime.reset();
 
       // Save CPU resources; can resume streaming when needed.
       if (gamepad1.dpad_down) {

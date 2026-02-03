@@ -72,14 +72,17 @@ public class UT_aprilTagVerify extends LinearOpMode {
     waitForStart();
     while (opModeIsActive()) {
       try {
-        // x & y are the drive position
+        /* x & y are the drive position
         drive.fieldRelativeDrive(
             -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
             -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
             -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
+
+         */
         telemetry.addLine(". . . . . . . . . .");
         // if ready to launch set the speed according to distance
         april.getAprilTag();
+        decode.chuteAngle(april.getRange());
 
         // align robot to april with field Oriented movements
         telemetry.addData(". . range", april.range);

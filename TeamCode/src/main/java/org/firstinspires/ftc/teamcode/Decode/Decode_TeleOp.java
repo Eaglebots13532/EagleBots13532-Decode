@@ -55,8 +55,9 @@ public class Decode_TeleOp extends LinearOpMode {
   // Game Pad controls
   double gpY = 0.0;
   double gpX = 0.0;
-  double limitSpeed = 0.5;
+  double limitSpeed = 0.8;
   double turnDeg = .5;
+  public int maxFlyRPM = 1850;
   public int side = 20; // Blue
 
   @Override
@@ -69,14 +70,14 @@ public class Decode_TeleOp extends LinearOpMode {
       decode.InitIL();
       april.initAprilTag();
       // Wait for the DS start button to be touched.
-      telemetry.addLine("Basic controlReady");
+      telemetry.addLine("Basic control Ready");
       telemetry.update();
       waitForStart();
       //
       decode.Intake(); // start intake
       decode.closeGate(); // wait for Balls
       // decode.chuteAngle(130);//range in inches
-      decode.spinUp(1850.0); // start flywheel to reduce current
+      decode.spinUp(maxFlyRPM); // start flywheel to reduce current
 
       while (opModeIsActive()) {
         // drive by game pad
@@ -85,28 +86,31 @@ public class Decode_TeleOp extends LinearOpMode {
             -gamepad1.left_stick_y * drive.maxSpeedMetersPerSec,
             -gamepad1.left_stick_x * drive.maxSpeedMetersPerSec,
             -gamepad1.right_stick_x * drive.maxOmegaRadPerSec);
-        telemetry.addLine(". . . . . . . . . .");
-        april.getAprilTag();
-        telemetry.addData("MetaId", DC_AprilTagLocalization.MetaId);
-        side = DC_AprilTagLocalization.MetaId;
-        telemetry.addData("Fly velocity", decode.launch.getVelocity());
-        telemetry.addData("Side", side);
-        telemetry.addData("range", DC_AprilTagLocalization.range);
-        telemetry.addData("Red range", april.Rrange);
-        telemetry.addData("Blue range", april.Brange);
-        telemetry.update();
-        double srange = DC_AprilTagLocalization.range;
-        decode.chuteAngle(srange);
-        decode.spinUp(srange);
 
         // if ready to launch set the speed according to distance
         if (gamepad2.leftBumperWasPressed()) {
-          double bshift = DC_AprilTagLocalization.range * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
+          april.getAprilTag();
+          side = DC_AprilTagLocalization.MetaId;
+          double srange = april.getRange();
+          // does it see april tag?
+          if (april.getMetaId() == 0) {
+            srange = 30;
+          }
+          if (srange > 100) srange = 120; // max rpm
+          /*
+          // shift robot to align with april tag
+          double bshift =
+              DC_AprilTagLocalization.range
+                  * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
           runTime.reset();
-          while (opModeIsActive() && runTime.seconds() < 3.0 && DC_AprilTagLocalization.bearing > 1.0) {
+          while (opModeIsActive()
+              && runTime.seconds() < 3.0
+              && DC_AprilTagLocalization.bearing > 1.0) {
             april.getAprilTag();
             // align robot to april with field oriented movements
-            double pshift = DC_AprilTagLocalization.range * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
+            double pshift =
+                DC_AprilTagLocalization.range
+                    * Math.sin(Math.toRadians(DC_AprilTagLocalization.bearing));
             double sshift = pshift / bshift; // move right or left
             // if (side == 24) sshift = -sshift; // sign may need to be changed
             drive.fieldRelativeDrive(
@@ -114,14 +118,18 @@ public class Decode_TeleOp extends LinearOpMode {
                 -sshift * drive.maxSpeedMetersPerSec,
                 -0.0 * drive.maxOmegaRadPerSec);
           }
+          */
+          decode.chuteAngle(srange);
+          decode.flyVelocity(srange);
           decode.openGate();
           decode.Intake();
-          sleep(500); // wait for ball to launch
+          sleep(1000); // wait for ball to launch
           decode.IntakeStop();
           decode.closeGate();
           sleep(500); // wait for gate to close
         } // end while adjust for bearing
         decode.Intake(); // start intake
+        sleep(1000); // intake is running allow to release bumper
       }
     } // end try
     catch (Exception e) {

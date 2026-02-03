@@ -45,16 +45,16 @@ public class DC_AprilTagLocalization {
 
   double kdist = .95; // 1.395
 
-  double UnkId = 0.0;
+  protected double UnkId = 0.0;
   double UnkX = 0.0;
   double UnkY = 0.0;
 
   public static int MetaId = 0;
   public static String MetaName = "";
-  public double Rrange = 0.0;
-  public double Rpitch = 0.0;
-  public double Brange = 0.0;
-  public double Bpitch = 0.0;
+  protected double Rrange = 0.0;
+  protected double Rpitch = 0.0;
+  protected double Brange = 0.0;
+  protected double Bpitch = 0.0;
   public static double range = 0.0;
   public static double bearing = 0.0;
 
@@ -174,7 +174,7 @@ public class DC_AprilTagLocalization {
 
   /** Add telemetry about AprilTag detections. */
   public void getAprilTag() {
-
+    boolean notRedBlue = true;
     List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
     // Step through the list of detections and display info for each one.
@@ -185,18 +185,33 @@ public class DC_AprilTagLocalization {
         if (detection.id == 24) {
           Rpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
           Rrange = detection.ftcPose.range * kdist; // distance constant to correct range
+          notRedBlue = false;
         }
         if (detection.id == 20) {
           Bpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
           Brange = detection.ftcPose.range * kdist; // distance constant to correct range
+          notRedBlue = false;
         }
         range = detection.ftcPose.range * kdist;
         bearing = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+        if (notRedBlue) {
+          UnkId = detection.id;
+          UnkX = detection.center.x;
+          UnkY = detection.center.y;
+        }
       } else {
-        UnkId = detection.id;
-        UnkX = detection.center.x;
-        UnkY = detection.center.y;
+        MetaId = 0;
       }
     } // end for() loop
   } // end method telemetryAprilTag()
+
+  // allows range to be accessed
+  public double getRange() {
+    return range;
+  }
+
+  // allows range to be accessed
+  public int getMetaId() {
+    return MetaId;
+  }
 } // end class

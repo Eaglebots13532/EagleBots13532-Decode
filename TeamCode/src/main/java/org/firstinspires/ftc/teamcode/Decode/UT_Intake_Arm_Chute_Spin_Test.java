@@ -18,11 +18,13 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
     // telemetry = dashboard.getTelemetry();
 
     game.InitIL();
+    boolean decodeDrv = true;
     int spinVeloc = 0;
     double chuteDrv = 0.0;
     int armEnc = 0;
     boolean leftBump = false;
     boolean rightBump = false;
+    boolean chuteOnOff = true;
     int armPos = 0;
 
     waitForStart();
@@ -53,10 +55,9 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       telemetry.addLine("DPad +left -right 2");
       if (gamepad2.dpad_right) chuteDrv = .2;
       if (gamepad2.dpad_left) chuteDrv = -.2;
-      game.chute.setPower(chuteDrv);
+      if (decodeDrv) game.chute.setPower(chuteDrv);
       sleep(100);
-      chuteDrv = 0.0;
-      game.chute.setPower(chuteDrv);
+      if (decodeDrv) chuteDrv = 0.0;
       telemetry.addLine(". . . Fly Wheel . . .");
       // spin velocity
       telemetry.addLine("DPad +UP -down 2");
@@ -66,7 +67,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       sleep(700);
       if (spinVeloc < 1400) spinVeloc = 1350;
       if (spinVeloc > 2100) spinVeloc = 2100;
-      game.launch.setVelocity(spinVeloc);
+      if (decodeDrv) game.launch.setVelocity(spinVeloc);
       telemetry.addLine(". . . lift . . . .");
       telemetry.addLine("right trigger lift");
       int lift = (int) (-gamepad1.left_stick_y);

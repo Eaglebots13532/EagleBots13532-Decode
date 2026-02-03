@@ -106,8 +106,6 @@ public class DC_Intake_Launch {
     runTime.reset();
     // spin up fly wheel checking for reached velocity false time out
     while (myOp.opModeIsActive() && runTime.seconds() < 5.0 && !ready) {
-      myOp.telemetry.addData("Current Velocity", launch.getVelocity());
-      myOp.telemetry.update();
       if (launch.getVelocity() > shoot_velocity) ready = true;
     }
     // set status light
@@ -172,38 +170,55 @@ public class DC_Intake_Launch {
   // move chute angle by game stick
   // pos is -1 to 1 where seek volt = ((pos + 1.0)/2.0) * potMax
   private void seekPos(double pos) {
-    double potMax = 3.3; // set to maximum
+    double potMax = 3.22; // set to maximum
+    double error = 0.0;
+    int dsgn = 1;
     double normVolt = chuteVal.getVoltage() / potMax;
-    double seekVolt = (pos + 1.0) / 2.0; // 0 - 1
+    double seekVolt = (pos + 1.0) / 2.0; // 0 - 1 of joy-stick
     double servoPwr = .7;
     // (pos + 1.0)/2.0) * potMax
     runTime.reset();
-    servoPwr = (pos > normVolt) ? servoPwr : -servoPwr;
-    chute.setPower(servoPwr);
-    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && seekVolt < normVolt) {
+    dsgn = (pos > normVolt) ? 1 : -1;
+    chute.setPower(dsgn); // set max power in the direction
+    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && error < .2) {
       normVolt = chuteVal.getVoltage() / potMax;
-      chute.setPower(pos);
+      error = Math.abs(seekVolt - normVolt);
+      servoPwr = dsgn * error + .2; // add .2 to ensure movement
+      chute.setPower(servoPwr);
     }
     chute.setPower(0.0);
   } // end seek position
 
   // auto seek set by range found by the April tag
   public void chuteAngle(double range) {
-    double limit = 0.0;
+    double error = 0.0;
+    int dsgn = 1;
+    double potMax = 3.22;
     // formula chute pot voltage
-    double chuteRef = ((0.026 * range) - 2.527) / -1.16;
-    double chutePrs = chuteVal.getVoltage();
+    double normVolt = chuteVal.getVoltage() / potMax;
+    if (range < 20) range = 20;
+    if (range > 120) range = 120;
+    double chuteRef = -0.02382 * range + 2.7581;
+    if (chuteRef < 0.0) chuteRef = 0.2; // approximately 5"
+    chuteRef /= potMax; // Norm ref
     // the chute k position difference may be added
-    chute.setPower(Math.signum(chuteRef - chutePrs) * .8);
+    // positive Up
+    dsgn = (normVolt - chuteRef) > .05 ? 1 : -1;
+    double hoodPwr = dsgn;
     runTime.reset();
-    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && limit < .1) {
-      limit = Math.abs((chuteRef - chuteVal.getVoltage()) / chuteRef);
-    }
+    do {
+      normVolt = chuteVal.getVoltage() / potMax;
+      error = chuteRef - normVolt;
+      chute.setPower(error * dsgn); // ensure servo turns add .2
+    } while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && error < .2);
+
+    chute.setPower(0.0); // stop hood movement
   }
 
   // might be combined
   public void flyVelocity(double range) {
     double velocPrs = 0.0;
+    if (range > 120) range = 120;
     // fly wheel velocity from range formula
     double velocSeek = (-.007 * range * range) + 4.26 * range + 1396.6;
     spinUp(velocSeek);

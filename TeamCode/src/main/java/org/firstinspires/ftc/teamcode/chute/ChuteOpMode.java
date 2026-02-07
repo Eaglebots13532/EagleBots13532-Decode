@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
  *
  * <p>Hardware Config: - Motor: "chute_motor" (DcMotor) - Potentiometer: "chute_pot" (AnalogInput)
  */
-@TeleOp(name = "Chute Control")
+@TeleOp(name = "Chute function")
 public class ChuteOpMode extends LinearOpMode {
 
   boolean potage = false;

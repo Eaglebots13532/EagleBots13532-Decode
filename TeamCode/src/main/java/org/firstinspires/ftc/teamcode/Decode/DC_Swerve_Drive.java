@@ -29,6 +29,10 @@ public class DC_Swerve_Drive {
   private Servo[] steerServos = new Servo[2];
   private AnalogInput[] encoders = new AnalogInput[2];
   private GoBildaPinpointDriver pinpoint;
+
+  private double[] candidateSteerAmounts = new double[2];
+  private double[] candidatePowerAmounts = new double[2]
+
   // ---
   // Swerve chassis constants in inches (to be done)
   private static final double wheelDiameterMm = 96.0; // mm
@@ -98,6 +102,8 @@ public class DC_Swerve_Drive {
 
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
+
+    // Determine individual wheel steering angle and wheel power
     for (int i = 0; i < 2; i++) {
       // Calculate the X and Y velocities of each module
       double targetXVelMetersPerSec =
@@ -131,10 +137,21 @@ public class DC_Swerve_Drive {
       // myOp.telemetry.addData("Wheel " + i + " currentAngle", currentAngle.getDegrees());
       // myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
 
+      candidatePowerAmounts[i] = driveMotorPower;
+      candidateSteerAmounts[i] = calculateSteerPID(angleError, i, dt) / 2 + .5
+
+      // The following code is disabled so we can later lock the wheels to one another
       // Drive the motor and the steer PID here
-      driveMotors[i].setPower(driveMotorPower);
-      steerServos[i].setPosition(calculateSteerPID(angleError, i, dt) / 2 + .5);
+      // driveMotors[i].setPower(driveMotorPower);
+      // steerServos[i].setPosition(calculateSteerPID(angleError, i, dt) / 2 + .5);
     }
+
+    // For now, allow the first wheel to the be master and have the other lock to it
+    driveMotors[0].setPower(candidatePowerAmounts[0]);
+    steerServos[0].setPosition(candidateSteerAmounts[0]);
+    driveMotors[1].setPower(candidatePowerAmounts[0]);
+    steerServos[1].setPosition(candidateSteerAmounts[0]);
+
     lastTimeStamp = currentTime;
   }
 

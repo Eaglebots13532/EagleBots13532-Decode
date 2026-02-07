@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
  *
  * <p>Hardware Config: - Motor: "chute_motor" (DcMotor) - Potentiometer: "chute_pot" (AnalogInput)
  */
-@TeleOp(name = "Chute Control")
+@TeleOp(name = "Chute Control OpMode")
 public class ChuteOpMode extends LinearOpMode {
 
   private Chute chute;

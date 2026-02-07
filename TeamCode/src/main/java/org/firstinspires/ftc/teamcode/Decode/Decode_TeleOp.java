@@ -93,6 +93,8 @@ public class Decode_TeleOp extends LinearOpMode {
           side = DC_AprilTagLocalization.MetaId;
           double srange = april.getRange();
           // does it see april tag?
+          telemetry.addLine("Range: " + srange);
+          telemetry.update();
           if (april.getMetaId() == 0) {
             srange = 30;
           }

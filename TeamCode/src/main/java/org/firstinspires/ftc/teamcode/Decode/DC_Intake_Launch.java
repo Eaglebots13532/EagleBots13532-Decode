@@ -6,7 +6,6 @@ package org.firstinspires.ftc.teamcode.Decode;
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -15,7 +14,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 public class DC_Intake_Launch {
   /* Declare OpMode members.
@@ -42,18 +40,9 @@ public class DC_Intake_Launch {
   private ElapsedTime runTime = new ElapsedTime();
   // global variables
   public int encHome = 0;
+  public double hoodHome = 0.0;
 
   // status light
-  private final RevBlinkinLedDriver status = null;
-  private final RevBlinkinLedDriver.BlinkinPattern pattern = null;
-  private Deadline ledCycleDeadline;
-
-  DisplayKind displayKind;
-
-  protected enum DisplayKind {
-    MANUAL,
-    AUTO
-  }
 
   public void InitIL() {
 
@@ -72,10 +61,25 @@ public class DC_Intake_Launch {
     tilt = myOp.hardwareMap.get(Servo.class, "tilt");
     // present.SensorInit();
     encHome = arm.getCurrentPosition(); // arm starts in home position
+    homeHood();
 
     // status = myOp.hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
     // pattern = RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE;
     // status.setPattern(pattern);
+  }
+
+  public void homeHood() {
+    boolean homeHood = true;
+    runTime.reset();
+    chute.setPower(-.2); // run chute down
+    double HoodPot = chuteVal.getVoltage();
+    myOp.sleep(100);
+    do {
+      hoodHome = chuteVal.getVoltage();
+      if (hoodHome - HoodPot < .1) {
+        homeHood = false;
+      } else HoodPot = hoodHome;
+    } while (myOp.opModeIsActive() && runTime.seconds() < 2.0 && homeHood);
   }
 
   // Servo controlled motor
@@ -194,6 +198,8 @@ public class DC_Intake_Launch {
     double error = 0.0;
     int dsgn = 1;
     double potMax = 3.22;
+    double maxHeight = 5.5;
+    double hoodMaxVolt = maxHeight * .9;
     // formula chute pot voltage
     double normVolt = chuteVal.getVoltage() / potMax;
     if (range < 20) range = 20;
@@ -203,11 +209,16 @@ public class DC_Intake_Launch {
     chuteRef /= potMax; // Norm ref
     // the chute k position difference may be added
     // positive Up
-    dsgn = (normVolt - chuteRef) > .05 ? 1 : -1;
+    if ((normVolt - chuteRef) > .05) {
+      dsgn = (normVolt - chuteRef) > 0.0 ? 1 : -1;
+    }
     double hoodPwr = dsgn;
+    //    myOp.telemetry.addData("sign", dsgn);
+
     runTime.reset();
     do {
       normVolt = chuteVal.getVoltage() / potMax;
+      myOp.sleep(10); // wait for a/d to settle
       error = chuteRef - normVolt;
       chute.setPower(error * dsgn); // ensure servo turns add .2
     } while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && error < .2);

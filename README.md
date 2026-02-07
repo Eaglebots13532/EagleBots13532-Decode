@@ -1,6 +1,6 @@
 ## NOTICE
 
-This repository contains the public FTC SDK for the INTO THE DEEP (2024-2025) competition season.
+This repository contains the public FTC SDK for the DECODE (2025-2026) competition season.
 
 ## Welcome!
 This GitHub repository contains the source code that is used to build an Android app to control a *FIRST* Tech Challenge competition robot.  To use this SDK, download/clone the entire project to your local computer.
@@ -59,6 +59,103 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
 
 # Release Information
 
+## Version 11.1 (20251231-104637)
+
+### Enhancements
+
+* Gamepad triggers can now be accessed as booleans and have edge detection supported.
+* GoBildaPinpointDriver now supports Pinpoint v2 functionality
+* Adds webcam calibrations for goBILDA's USB camera.
+
+### Bug Fixes
+* Fixes issue [1654](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1654) in GoBildaPinpointDriver that caused error if resolution was set in other than MM
+* Fixes issue [1628](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1628) Blocks editor displays incorrect Java code for gamepad edge detection blocks.
+* Fixes possible race condition issue [1884](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1884) on Driver Station startup when Driver Station name doesn't match the Robot Controller name.
+* Fixes issue [1863](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1863) - Incorrect package paths in samples.
+* Fixes an issue where an OnBotJava filename that begins with a lowercase character would fail to properly rename the file if the user tried to rename it so that it begins with an uppercase character.
+
+## Version 11.0 (20250827-105138)
+
+### Enhancements
+
+* OnBotJava now has the concept of a project.  
+  A project is a collection of related files.  A project may be chosen by selecting 'Example Project'
+  from the 'File type:' dropdown.  Doing so will populate the dropdown to the immediate right with 
+  a list of projects to choose from.
+  When selecting a project all of the related files appear in the left pane of the workspace 
+  underneath a directory with the chosen project name.
+  This is useful for example for ConceptExternalHardwareClass which has a dependency upon
+  RobotHardware.  This feature simplifies the usage of this Concept example by automatically
+  pulling in dependent classes.
+* Adds support for AndyMark ToF, IMU, and Color sensors.
+* The Driver Station app indicates if WiFi is disabled on the device.
+* Adds several features to the Color Processing software:
+  * DECODE colors `ARTIFACT_GREEN` and `ARTIFACT_PURPLE`
+  * Choice of the order of pre-processing steps Erode and Dilate
+  * Best-fit preview shape called `circleFit`, an alternate to the existing `boxFit`
+  * Sample OpMode `ConceptVisionColorLocator_Circle`, an alternate to the renamed `ConceptVisionColorLocator_Rectangle`
+* The Driver Station app play button has a green background with a white play symbol if
+  * the driver station and robot controller are connected and have the same team number
+  * there is at least one gamepad attached
+  * the timer is enabled (for an Autonomous OpMode)
+* Updated AprilTag Library for DECODE. Notably, getCurrentGameTagLibrary() now returns DECODE tags.
+  * Since the AprilTags on the Obelisk should not be used for localization, the ConceptAprilTagLocalization samples only use those tags without the name 'Obelisk' in them.
+* OctoQuad I2C driver updated to support firmware v3.x 
+  * Adds support for odometry localizer on MK2 hardware revision
+  * Adds ability to track position for an absolute encoder across multiple rotations
+  * Note that some driver APIs have changed; minor updates to user software may be required
+  * Requires firmware v3.x. For instructions on updating firmware, see
+    https://github.com/DigitalChickenLabs/OctoQuad/blob/master/documentation/OctoQuadDatasheet_Rev_3.0C.pdf
+
+
+## Version 10.3 (20250625-090416)
+
+### Breaking Changes
+* The behavior of setGlobalErrorMsg() is changed.  Note that this is an SDK internal method that is not 
+  meant to be used by team software or third party libraries.  Teams or libraries using this method should
+  find another means to communicate failure.  The design intent of setGlobalErrorMsg() is to report an 
+  error and force the user to restart the robot, which in certain circumstances when used inappropriately
+  could cause a robot to continue running while Driver Station controls are disabled.  To prevent this,
+  processing of a call to setGlobalErrorMsg() is deferred until the robot is in a known safe state.  This may
+  mean that a call to setGlobalErrorMsg() that does not also result in stopping a running OpMode will appear
+  as though nothing happened until the robot is stopped, at which point, if clearGlobalErrorMsg() has not 
+  been called the message will appear on the Driver Station and a restart will be required.
+  Addresses issue [1381](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1381)
+* Fixes getLatestResult in Limelight3A so if the Limelight hasn't provided data yet, it still returns an LLResult but valid will be false
+  * If you previously used to check and see if this was `null` to see if the Limelight had been contacted, you now need to use `isValid()` on the result.  That is because now it always returns an LLResult even before it talks to the Limelight, but if it doesn't have valid data, the `isValid()` will be `false`.
+* Changed all omni samples to use front_left_drive, front_right_drive, back_left_drive, back_right_drive
+  * This is only breaking for you if you copy one of the changed samples to your own project and expect to use the same robot configuration as before.
+
+### Known Issues
+* The redesigned OnBotJava new file workflow allows the user to use a lowercase letter as the first character of a filename.
+  This is a regression from 10.2 which required the first character to be uppercase.  Software will build, but if the user tries
+  to rename the file, the rename will fail.
+
+### Enhancements
+* Improved the OBJ new file creation flow workflow. The new flow allows you to easily use samples, craft new custom OpModes and make new Java classes.
+* Added support for gamepad edge detection.
+  * A new sample program `ConceptGamepadEdgeDetection` demonstrates its use.
+* Adds a blackboard member to the Opmode that maintains state between opmodes (but not between robot resets).  See the ConceptBlackboard sample for how to use it.
+* Updated PredominantColorProcessor to also return the predominant color in RGB, HSV and YCrCb color spaces.  Updated ConceptVisionColorSensor sample OpMode to display the getAnalysis() result in all three color spaces.
+* Adds support for the GoBilda Pinpoint 
+  * Also adds `SensorGoBildaPinpoint` sample to show how to use it
+* Added `getArcLength()` and `getCircularity()` to ColorBlobLocatorProcessor.Blob.  Added BY_ARC_LENGTH and BY_CIRCULARITY as additional BlobCriteria.
+* Added `filterByCriteria()` and `sortByCriteria()` to ColorBlobLocatorProcessor.Util.
+  * The filter and sort methods for specific criteria have been deprecated.
+  * The updated sample program `ConceptVisionColorLocator` provides more details on the new syntax.
+* Add Help menu item and Help page that is available when connected to the robot controller via Program and Manage. The Help page has links to team resources such as [FTC Documentation](https://ftc-docs.firstinspires.org/), [FTC Discussion Forums](https://ftc-community.firstinspires.org), [Java FTC SDK API Documentation](https://javadoc.io/doc/org.firstinspires.ftc), and [FTC Game Information](https://ftc.game/).
+* Self inspection changes:
+  * List both the Driver Station Name and Robot Controller Name when inspecting the Driver Station.
+  * Report if the team number portion of the device names do not match.
+  * -rc is no longer valid as part of a Robot Controller name, must be -RC.
+  * Use Robot Controller Name or Driver Station Name labels on the inspection screens instead of WIFI Access Point or WIFI Direct Name.
+
+### Bug Fixes
+* Fixes issue [1478](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1478) in AnnotatedHooksClassFilter that ignored exceptions if they occur in one of the SDK app hooks.
+* Fix initialize in distance sensor (Rev 2m) to prevent bad data in first call to getDistance.
+* Fixes issue [1470](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1470) Scaling a servo range is now irrespective of reverse() being called.  For example, if you set the scale range to [0.0, 0.5] and the servo is reversed, it will be from 0.5 to 0.0, NOT 1.0 to 0.5.
+* Fixes issue [1232](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1232), a rare race condition where using the log rapidly along with other telemetry could cause a crash.
+
 ## Version 10.2 (20250121-174034)
 
 ### Enhancements
@@ -75,14 +172,14 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
 
 ### Breaking Changes
 
-* Support for Android Studio Ladybug.  Requires Android Studio Ladybug.
+* Support for Android Studio Ladybug.  Requires Android Studio Ladybug.  
 
 ### Known Issues
 
 * Android Studio Ladybug's bundled JDK is version 21.  JDK 21 has deprecated support for Java 1.8, and Ladybug will warn on this deprecation.
-  OnBotJava only supports Java 1.8, therefore, in order to ensure that software developed using Android Studio will
+  OnBotJava only supports Java 1.8, therefore, in order to ensure that software developed using Android Studio will 
   run within the OnBotJava environment, the targetCompatibility and sourceCompatibility versions for the SDK have been left at VERSION_1_8.
-  FIRST has decided that until it can devote the resources to migrating OnBotJava to a newer version of Java, the deprecation is the
+  FIRST has decided that until it can devote the resources to migrating OnBotJava to a newer version of Java, the deprecation is the 
   lesser of two non-optimal situations.
 
 ### Enhancements
@@ -725,9 +822,9 @@ Version 5.5 requires Android Studio 4.0 or later.
     * REV Hub is running outdated firmware (older than version 1.8.2)
 * Adds support for Sony PS4 gamepad, and reworks how gamepads work on the Driver Station
     * Removes preference which sets gamepad type based on driver position. Replaced with menu which allows specifying type for gamepads with unknown VID and PID
-  * Attempts to auto-detect gamepad type based on USB VID and PID
-  * If gamepad VID and PID is not known, use type specified by user for that VID and PID
-  * If gamepad VID and PID is not known AND the user has not specified a type for that VID and PID, an educated guess is made about how to map the gamepad
+	* Attempts to auto-detect gamepad type based on USB VID and PID
+	* If gamepad VID and PID is not known, use type specified by user for that VID and PID
+	* If gamepad VID and PID is not known AND the user has not specified a type for that VID and PID, an educated guess is made about how to map the gamepad
 * Driver Station will now attempt to automatically recover from a gamepad disconnecting, and re-assign it to the position it was assigned to when it dropped
     * If only one gamepad is assigned and it drops: it can be recovered
     * If two gamepads are assigned, and have **different** VID/PID signatures, and only one drops: it will be recovered
@@ -810,7 +907,7 @@ Version 5.5 requires Android Studio 4.0 or later.
 * Allows a Driver Station to connect to a Robot Controller after another has disconnected
 * Improves generation of fake serial numbers for UVC cameras which do not provide a real serial number
     * Previously some devices would assign such cameras a serial of `0:0` and fail to open and start streaming
-  * Fixes [ftc_app issue #638](https://github.com/ftctechnh/ftc_app/issues/638).
+	* Fixes [ftc_app issue #638](https://github.com/ftctechnh/ftc_app/issues/638).
 * Fixes a slew of bugs with the Vuforia camera monitor including:
     * Fixes bug where preview could be displayed with a wonky aspect ratio
     * Fixes bug where preview could be cut off in landscape
@@ -1003,8 +1100,8 @@ Changes include:
     - User can upload calibration files from Program and Manage web interface.
     - UVC cameras seem to draw a fair amount of electrical current from the USB bus.
          + This does not appear to present any problems for the REV Robotics Control Hub.
-   + This does seem to create stability problems when using some cameras with an Android phone-based Robot Controller.
-   + FTC Tech Team is investigating options to mitigate this issue with the phone-based Robot Controllers.
+	 + This does seem to create stability problems when using some cameras with an Android phone-based Robot Controller.
+	 + FTC Tech Team is investigating options to mitigate this issue with the phone-based Robot Controllers.
     - Updated sample Vuforia Navigation and VuMark OpModes to demonstrate how to use an internal phone-based camera and an external UVC webcam.
 
  * Support for improved motor control.
@@ -1017,23 +1114,23 @@ Changes include:
  * Wireless
     - Added 5GHz support for wireless channel changing for those devices that support it.
         + Tested with Moto G5 and E4 phones.
-  + Also tested with other (currently non-approved) phones such as Samsung Galaxy S8.
+	+ Also tested with other (currently non-approved) phones such as Samsung Galaxy S8.
 
 * Improved Expansion Hub firmware update support in Robot Controller app
     - Changes to make the system more robust during the firmware update process (when performed through Robot Controller app).
     - User no longer has to disconnect a downstream daisy-chained Expansion Hub when updating an Expansion Hub's firmware.
         + If user is updating an Expansion Hub's firmware through a USB connection, he/she does not have to disconnect RS485 connection to other Expansion Hubs.
-  + The user still must use a USB connection to update an Expansion Hub's firmware.
-  + The user cannot update the Expansion Hub firmware for a downstream device that is daisy chained through an RS485 connection.
+	+ The user still must use a USB connection to update an Expansion Hub's firmware.
+	+ The user cannot update the Expansion Hub firmware for a downstream device that is daisy chained through an RS485 connection.
     - If an Expansion Hub accidentally gets "bricked" the Robot Controller app is now more likely to recognize the Hub when it scans the USB bus.
         + Robot Controller app should be able to detect an Expansion Hub, even if it accidentally was bricked in a previous update attempt.
-  + Robot Controller app should be able to install the firmware onto the Hub, even if if accidentally was bricked in a previous update attempt.
+	+ Robot Controller app should be able to install the firmware onto the Hub, even if if accidentally was bricked in a previous update attempt.
 
  * Resiliency
     - FTC software can detect and enable an FTDI reset feature that is available with REV Robotics v1.8 Expansion Hub firmware and greater.
         + When enabled, the Expansion Hub can detect if it hasn't communicated with the Robot Controller over the FTDI (USB) connection.
-  + If the Hub hasn't heard from the Robot Controller in a while, it will reset the FTDI connection.
-  + This action helps system recover from some ESD-induced disruptions.
+	+ If the Hub hasn't heard from the Robot Controller in a while, it will reset the FTDI connection.
+	+ This action helps system recover from some ESD-induced disruptions.
     - Various fixes to improve reliability of FTC software.
 
  * Blocks
@@ -1049,19 +1146,19 @@ Changes include:
     - Added support for a REV Touch Sensor (no longer have to configure as a generic digital device).
     - Added blocks for DcMotorEx methods.
         + These are enhanced methods that you can use when supported by the motor controller hardware.
-  + The REV Robotics Expansion Hub supports these enhanced methods.
-  + Enhanced methods include methods to get/set motor velocity (in encoder pulses per second), get/set PIDF coefficients, etc..
+	+ The REV Robotics Expansion Hub supports these enhanced methods.
+	+ Enhanced methods include methods to get/set motor velocity (in encoder pulses per second), get/set PIDF coefficients, etc..
 
  * Modest Improvements in Logging
     - Decrease frequency of battery checker voltage statements.
     - Removed non-FTC related log statements (wherever possible).
     - Introduced a "Match Logging" feature.
         + Under "Settings" a user can enable/disable this feature (it's disabled by default).
-  + If enabled, user provides a "Match Number" through the Driver Station user interface (top of the screen).
-      * The Match Number is used to create a log file specifically with log statements from that particular OpMode run.
-      * Match log files are stored in /sdcard/FIRST/matlogs on the Robot Controller.
-      * Once an OpMode run is complete, the Match Number is cleared.
-      * This is a convenient way to create a separate match log with statements only related to a specific OpMode run.
+	+ If enabled, user provides a "Match Number" through the Driver Station user interface (top of the screen).
+	    * The Match Number is used to create a log file specifically with log statements from that particular OpMode run.
+	    * Match log files are stored in /sdcard/FIRST/matlogs on the Robot Controller.
+	    * Once an OpMode run is complete, the Match Number is cleared.
+	    * This is a convenient way to create a separate match log with statements only related to a specific OpMode run.
 
  * New Devices
     - Support for REV Robotics Blinkin LED Controller.
@@ -1083,14 +1180,14 @@ Known issues:
  * Initial support for UVC compatible cameras
     - UVC cameras seem to draw significant amount of current from the USB bus.
         + This does not appear to present any problems for the REV Robotics Control Hub.
-  + This does seem to create stability problems when using some cameras with an Android phone-based Robot Controller.
-  + FTC Tech Team is investigating options to mitigate this issue with the phone-based Robot Controllers.
+	+ This does seem to create stability problems when using some cameras with an Android phone-based Robot Controller.
+	+ FTC Tech Team is investigating options to mitigate this issue with the phone-based Robot Controllers.
     - There might be a possible deadlock which causes the RC to become unresponsive when using a UVC webcam with a Nougat Android Robot Controller.
 
  * Wireless
     - When user selects a wireless channel, this channel does not necessarily persist if the phone is power cycled.
         + Tech Team is hoping to eventually address this issue in a future release.
-  + Issue has been present since apps were introduced (i.e., it is not new with the v4.0 release).
+	+ Issue has been present since apps were introduced (i.e., it is not new with the v4.0 release).
     - Wireless channel is not currently displayed for Wi-Fi Direct connections.
 
  * Miscellaneous

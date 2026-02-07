@@ -5,12 +5,12 @@ package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13
 
 // All rights reserved.
 
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import org.firstinspires.ftc.teamcode.Decode.odo.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.math.controller.PIDController;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
@@ -31,7 +31,7 @@ public class DC_Swerve_Drive {
   private GoBildaPinpointDriver pinpoint;
 
   private double[] candidateSteerAmounts = new double[2];
-  private double[] candidatePowerAmounts = new double[2]
+  private double[] candidatePowerAmounts = new double[2];
 
   // ---
   // Swerve chassis constants in inches (to be done)
@@ -138,7 +138,7 @@ public class DC_Swerve_Drive {
       // myOp.telemetry.addData("Wheel " + i + " angleError", angleError.getDegrees());
 
       candidatePowerAmounts[i] = driveMotorPower;
-      candidateSteerAmounts[i] = calculateSteerPID(angleError, i, dt) / 2 + .5
+      candidateSteerAmounts[i] = calculateSteerPID(angleError, i, dt) / 2 + .5;
 
       // The following code is disabled so we can later lock the wheels to one another
       // Drive the motor and the steer PID here

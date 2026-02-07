@@ -5,8 +5,8 @@ package org.firstinspires.ftc.teamcode.Decode; // Copyright (c) 2024-2025 FTC 13
 
 // All rights reserved.
 
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import org.firstinspires.ftc.teamcode.Decode.odo.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;

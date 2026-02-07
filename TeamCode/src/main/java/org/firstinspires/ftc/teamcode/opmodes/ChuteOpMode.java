@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import org.firstinspires.ftc.teamcode.subsystems.chute.Chute;
-import org.firstinspires.ftc.teamcode.subsystems.chute.ChuteController;
-import org.firstinspires.ftc.teamcode.subsystems.chute.FtcMotor;
-import org.firstinspires.ftc.teamcode.subsystems.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.chute.Chute;
+import org.firstinspires.ftc.teamcode.chute.ChuteController;
+import org.firstinspires.ftc.teamcode.chute.FtcMotor;
+import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
 
 /**
  * Example OpMode demonstrating chute control with real hardware.

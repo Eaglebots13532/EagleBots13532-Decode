@@ -3,11 +3,11 @@
 
 package org.firstinspires.ftc.teamcode.Decode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 /*
  * This OpMode illustrates how to use the GoBildaPinpoint

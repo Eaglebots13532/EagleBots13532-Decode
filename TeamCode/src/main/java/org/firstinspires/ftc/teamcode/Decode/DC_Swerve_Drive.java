@@ -46,6 +46,8 @@ public class DC_Swerve_Drive {
   // Half the wheelbase in meters -- used for differential rotation
   private static final double halfWheelbaseMeters = wheelBaseWidthMm / 1000.0 / 2.0;
 
+  public double maxOmegaRadPerSec = maxSpeedMetersPerSec / halfWheelbaseMeters;
+
   // Per-wheel analog encoder offsets (calibrated so 0 deg = forward)
   Rotation2d[] encoderOffsets =
       new Rotation2d[] {Rotation2d.fromDegrees(-2.5), Rotation2d.fromDegrees(-5)};

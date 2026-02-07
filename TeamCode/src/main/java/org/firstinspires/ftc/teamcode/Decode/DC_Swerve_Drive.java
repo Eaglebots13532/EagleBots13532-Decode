@@ -27,10 +27,11 @@ public class DC_Swerve_Drive {
   private GoBildaPinpointDriver pinpoint;
 
   // Physical constants
-  private static final double wheelDiameterMm = 75.0;
+  private static final double wheelDiameterMm = 96.0;
   private static final double motorMaxRPM = 1150;
   private static final double gearRatio = 3;
   private static final double wheelBaseWidthMm = 355.5;
+  public static final double mEnc = 537.7; // PPR
 
   // Derived: max wheel speed in m/s
   //   wheelRadiusMeters = (diameter_mm / 1000) / 2
@@ -46,11 +47,20 @@ public class DC_Swerve_Drive {
   // Half the wheelbase in meters -- used for differential rotation
   private static final double halfWheelbaseMeters = wheelBaseWidthMm / 1000.0 / 2.0;
 
+  // Max rotation rate (rad/s) when both wheels are fully dedicated to turning
+  // (one full forward, one full reverse, no translation)
   public double maxOmegaRadPerSec = maxSpeedMetersPerSec / halfWheelbaseMeters;
 
-  // Per-wheel analog encoder offsets (calibrated so 0 deg = forward)
+  // Per-wheel analog encoder offsets (calibrated so 0 deg = forward).
+  // Adjust these until both wheels point straight ahead when the joystick is
+  // pushed forward. If a wheel aims too far left, increase its value.
+  private static final double leftEncoderOffsetDeg = -2.5;
+  private static final double rightEncoderOffsetDeg = -5.0;
   Rotation2d[] encoderOffsets =
-      new Rotation2d[] {Rotation2d.fromDegrees(-2.5), Rotation2d.fromDegrees(-5)};
+      new Rotation2d[] {
+        Rotation2d.fromDegrees(leftEncoderOffsetDeg),
+        Rotation2d.fromDegrees(rightEncoderOffsetDeg)
+      };
 
   // Tracks the last steering direction so wheels hold position when joystick is released
   private Rotation2d lastTargetAngle = Rotation2d.kZero;
@@ -85,7 +95,7 @@ public class DC_Swerve_Drive {
     // --- Step 1: Field-to-robot frame rotation ---
     // "Yaw" is the robot's rotation as seen from above -- imagine looking straight
     // down at the field. 0 deg = the direction the robot faced at startup. Turning
-    // left increases yaw, turning right decreases it.
+    // left increases yaw, turning right decreases it (counter-clockwise positive).
     //
     // The problem: the joystick gives us a direction relative to the FIELD (push up
     // = move away from the driver, always). But the wheels are attached to the ROBOT,
@@ -97,6 +107,9 @@ public class DC_Swerve_Drive {
     // Rotating by -90 deg converts field-forward into robot-right. That's what the
     // matrix multiply below does for any angle.
     //
+    // The math (standard 2D rotation matrix with angle = -yaw):
+    //   [cos(-t)  -sin(-t)] [vx_field]   =  [vx_robot]
+    //   [sin(-t)   cos(-t)] [vy_field]      [vy_robot]
     var inverseYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVel =
         fieldXVelMetersPerSec * inverseYaw.getCos()
@@ -149,10 +162,6 @@ public class DC_Swerve_Drive {
       basePower + rotationDelta // right wheel
     };
 
-    // Track how much time has passed since the last call (in seconds).
-    // The steering PID's derivative term needs this -- it divides the change
-    // in error by dt so that the correction is based on how fast the error
-    // is changing, not how fast the loop happens to run.
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
 

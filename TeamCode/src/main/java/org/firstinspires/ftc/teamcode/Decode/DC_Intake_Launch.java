@@ -7,7 +7,6 @@ package org.firstinspires.ftc.teamcode.Decode;
 // All rights reserved.
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -31,16 +30,15 @@ public class DC_Intake_Launch {
 
   public DcMotorEx launch = null; // 6000 rpm motor
   public DcMotor arm = null; // 312 rpm motor
-  public CRServo chute = null;
+
   public CRServo intake = null; // intake motor controller
   public Servo gate = null; // intake gate
-  public AnalogInput chuteVal = null; // chute servo potentiometer
   public Servo tilt = null; // tilt robot up
+
   // time out timer
   private ElapsedTime runTime = new ElapsedTime();
   // global variables
   public int encHome = 0;
-  public double hoodHome = 0.0;
 
   // status light
 
@@ -52,8 +50,7 @@ public class DC_Intake_Launch {
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // prepare use velocity
     arm = myOp.hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD); // todo set arm direction
-    chute = myOp.hardwareMap.get(CRServo.class, "chute"); //  todo set chute home
-    chuteVal = myOp.hardwareMap.get(AnalogInput.class, "CP");
+
     // Define and Initialize Servo
     intake = myOp.hardwareMap.get(CRServo.class, "intake");
     // gate to stop balls from entering the chute
@@ -61,25 +58,6 @@ public class DC_Intake_Launch {
     tilt = myOp.hardwareMap.get(Servo.class, "tilt");
     // present.SensorInit();
     encHome = arm.getCurrentPosition(); // arm starts in home position
-    homeHood();
-
-    // status = myOp.hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
-    // pattern = RevBlinkinLedDriver.BlinkinPattern.RAINBOW_RAINBOW_PALETTE;
-    // status.setPattern(pattern);
-  }
-
-  public void homeHood() {
-    boolean homeHood = true;
-    runTime.reset();
-    chute.setPower(-.2); // run chute down
-    double HoodPot = chuteVal.getVoltage();
-    myOp.sleep(100);
-    do {
-      hoodHome = chuteVal.getVoltage();
-      if (hoodHome - HoodPot < .1) {
-        homeHood = false;
-      } else HoodPot = hoodHome;
-    } while (myOp.opModeIsActive() && runTime.seconds() < 2.0 && homeHood);
   }
 
   // Servo controlled motor
@@ -158,73 +136,7 @@ public class DC_Intake_Launch {
     gate.setPosition(0.5); // todo set direction open power
   }
 
-  public void chuteHm() {
-    seekPos(3.2);
-  }
-
-  public void chute60() {
-    seekPos(0.5);
-  }
-
-  // chute is controlled by driver (teleOp)
-  public void chutectl(double pos) {
-    seekPos(pos);
-  }
-
-  // move chute angle by game stick
-  // pos is -1 to 1 where seek volt = ((pos + 1.0)/2.0) * potMax
-  private void seekPos(double pos) {
-    double potMax = 3.22; // set to maximum
-    double error = 0.0;
-    int dsgn = 1;
-    double normVolt = chuteVal.getVoltage() / potMax;
-    double seekVolt = (pos + 1.0) / 2.0; // 0 - 1 of joy-stick
-    double servoPwr = .7;
-    // (pos + 1.0)/2.0) * potMax
-    runTime.reset();
-    dsgn = (pos > normVolt) ? 1 : -1;
-    chute.setPower(dsgn); // set max power in the direction
-    while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && error < .2) {
-      normVolt = chuteVal.getVoltage() / potMax;
-      error = Math.abs(seekVolt - normVolt);
-      servoPwr = dsgn * error + .2; // add .2 to ensure movement
-      chute.setPower(servoPwr);
-    }
-    chute.setPower(0.0);
-  } // end seek position
-
   // auto seek set by range found by the April tag
-  public void chuteAngle(double range) {
-    double error = 0.0;
-    int dsgn = 1;
-    double potMax = 3.22;
-    double maxHeight = 5.5;
-    double hoodMaxVolt = maxHeight * .9;
-    // formula chute pot voltage
-    double normVolt = chuteVal.getVoltage() / potMax;
-    if (range < 20) range = 20;
-    if (range > 120) range = 120;
-    double chuteRef = -0.02382 * range + 2.7581;
-    if (chuteRef < 0.0) chuteRef = 0.2; // approximately 5"
-    chuteRef /= potMax; // Norm ref
-    // the chute k position difference may be added
-    // positive Up
-    if ((normVolt - chuteRef) > .05) {
-      dsgn = (normVolt - chuteRef) > 0.0 ? 1 : -1;
-    }
-    double hoodPwr = dsgn;
-    //    myOp.telemetry.addData("sign", dsgn);
-
-    runTime.reset();
-    do {
-      normVolt = chuteVal.getVoltage() / potMax;
-      myOp.sleep(10); // wait for a/d to settle
-      error = chuteRef - normVolt;
-      chute.setPower(error * dsgn); // ensure servo turns add .2
-    } while (myOp.opModeIsActive() && runTime.seconds() < 3.0 && error < .2);
-
-    chute.setPower(0.0); // stop hood movement
-  }
 
   // might be combined
   public void flyVelocity(double range) {

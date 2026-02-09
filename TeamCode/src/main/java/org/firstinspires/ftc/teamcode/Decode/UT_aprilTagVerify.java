@@ -82,7 +82,7 @@ public class UT_aprilTagVerify extends LinearOpMode {
         telemetry.addLine(". . . . . . . . . .");
         // if ready to launch set the speed according to distance
         april.getAprilTag();
-        decode.chuteAngle(april.getRange());
+        // decode.chuteAngle(april.getRange());
 
         // align robot to april with field Oriented movements
         telemetry.addData(". . range", april.range);

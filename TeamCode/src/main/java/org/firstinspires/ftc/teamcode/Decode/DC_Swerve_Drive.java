@@ -51,12 +51,12 @@ public class DC_Swerve_Drive {
   // Per-wheel analog encoder offsets (calibrated so 0 deg = forward).
   // Adjust these until both wheels point straight ahead when the joystick is
   // pushed forward. If a wheel aims too far left, increase its value.
-  private static final double leftEncoderOffsetDeg = -2.5;
-  private static final double rightEncoderOffsetDeg = -5.0;
+  // more neg clockwise
+  private static final double leftEncoderOffsetDeg = -75.0; // -2.5
+  private static final double rightEncoderOffsetDeg = -86.0; // -5.0
   Rotation2d[] encoderOffsets =
       new Rotation2d[] {
-        Rotation2d.fromDegrees(leftEncoderOffsetDeg),
-        Rotation2d.fromDegrees(rightEncoderOffsetDeg)
+        Rotation2d.fromDegrees(leftEncoderOffsetDeg), Rotation2d.fromDegrees(rightEncoderOffsetDeg)
       };
 
   // Tracks the last steering direction so wheels hold position when joystick is released
@@ -106,11 +106,9 @@ public class DC_Swerve_Drive {
     //
     var inverseYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVel =
-        fieldXVelMetersPerSec * inverseYaw.getCos()
-            - fieldYVelMetersPerSec * inverseYaw.getSin();
+        fieldXVelMetersPerSec * inverseYaw.getCos() - fieldYVelMetersPerSec * inverseYaw.getSin();
     double chassisYVel =
-        fieldXVelMetersPerSec * inverseYaw.getSin()
-            + fieldYVelMetersPerSec * inverseYaw.getCos();
+        fieldXVelMetersPerSec * inverseYaw.getSin() + fieldYVelMetersPerSec * inverseYaw.getCos();
 
     // --- Step 2: Clamp movement speed to motor limits ---
     // "speed" is how fast the robot is sliding across the field (ignoring rotation).

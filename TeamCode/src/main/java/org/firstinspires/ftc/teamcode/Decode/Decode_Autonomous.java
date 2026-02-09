@@ -79,7 +79,7 @@ public class Decode_Autonomous extends LinearOpMode {
       // set ange
       april.getAprilTag();
       sleep(100); // wait for april response
-      decode.chuteAngle(april.range); // range in inches
+      // decode.chuteAngle(april.range); // range in inches
       decode.spinUp(april.range); // start flywheel to reduce current
 
       // adjust for bearing, may be able to remove this adjust code

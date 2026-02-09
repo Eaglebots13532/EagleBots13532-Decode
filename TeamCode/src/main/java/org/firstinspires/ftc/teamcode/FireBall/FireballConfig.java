@@ -61,10 +61,10 @@ public class FireballConfig {
 
   public void init() {
     // Define and Initialize Motors (note: need to use reference to actual OpMode).
-    FLMotor = myOpMode.hardwareMap.get(DcMotor.class, "LMotor");
-    BLMotor = myOpMode.hardwareMap.get(DcMotor.class, "BMotor");
-    BRMotor = myOpMode.hardwareMap.get(DcMotor.class, "RMotor");
-    FRMotor = myOpMode.hardwareMap.get(DcMotor.class, "FMotor");
+    FLMotor = myOpMode.hardwareMap.get(DcMotor.class, "LFMotor");
+    BLMotor = myOpMode.hardwareMap.get(DcMotor.class, "RFBMotor");
+    BRMotor = myOpMode.hardwareMap.get(DcMotor.class, "LRMotor");
+    FRMotor = myOpMode.hardwareMap.get(DcMotor.class, "RRMotor");
 
     // Resets encoder
     FLMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

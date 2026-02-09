@@ -95,7 +95,7 @@ public class UT_Basic_Decode_TeleOp extends LinearOpMode {
         if (gamepad2.leftBumperWasPressed()) {
           april.getAprilTag();
           if (april.MetaId == side) { // red or blue
-            decode.chuteAngle(april.range);
+            // decode.chuteAngle(april.range);
             decode.spinUp(april.range);
             double bshift = april.range * Math.sin(Math.toRadians(april.bearing));
             runTime.reset();

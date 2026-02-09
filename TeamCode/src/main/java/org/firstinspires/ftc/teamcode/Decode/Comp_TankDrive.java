@@ -33,7 +33,7 @@ public class Comp_TankDrive extends LinearOpMode {
 
       // chute setting
       telemetry.addLine("Setting chute");
-      game.chute.setPower(-gamepad2.left_stick_y);
+      // game.chute.setPower(-gamepad2.left_stick_y);
       // arm setting
       telemetry.addLine("Setting arm");
       game.arm.setPower(-gamepad2.right_stick_y);

@@ -121,7 +121,7 @@ public class Decode_TeleOp extends LinearOpMode {
                 -0.0 * drive.maxOmegaRadPerSec);
           }
           */
-          decode.chuteAngle(srange);
+          // decode.chuteAngle(srange);
           decode.flyVelocity(srange);
           decode.openGate();
           decode.Intake();

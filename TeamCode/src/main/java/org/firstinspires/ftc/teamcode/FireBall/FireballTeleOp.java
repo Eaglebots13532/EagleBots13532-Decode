@@ -8,10 +8,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
 	Motor Config
-	0 - Lmotor white
-	1 - RMotor black
-	2 - FMotor red
-	3 - BMotor blue
+	0 - LFmotor white
+	1 - RFMotor black
+	2 - RFMotor red
+	3 - RRMotor blue
 	4 - LiftMotor
 
 	Servo Config

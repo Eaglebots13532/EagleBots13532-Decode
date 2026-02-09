@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 @TeleOp
 public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
   private final DC_Intake_Launch game = new DC_Intake_Launch(this);
+  private final DC_chuteControl chute = new DC_chuteControl(this);
 
   @Override
   public void runOpMode() {
@@ -18,6 +19,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
     // telemetry = dashboard.getTelemetry();
 
     game.InitIL();
+    chute.initHood();
     int spinVeloc = 2000;
     double chuteDrv = 0.0;
     int armEnc = 0;
@@ -27,30 +29,30 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
     boolean turnOffDrv = true;
 
     waitForStart();
+    chute.HoodHome();
+    sleep(500);
     // arm positioning
     while (opModeIsActive()) {
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . Intake . . .");
       telemetry.addLine("Right Bumper 2 start 3 sec stop");
       if (gamepad2.right_bumper) {
         game.Intake();
         sleep(3000);
         game.IntakeStop();
       }
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . Arm . . . .");
       telemetry.addLine("Left Stick 2 Y");
       double armDrv = -gamepad2.left_stick_y / 1.5;
       game.arm.setPower(armDrv);
-      telemetry.addLine(". . . . . . . . . .");
-      // chute positioning
-
+      telemetry.addLine(". . . Hood . . . .");
+      // Hood positioning
       telemetry.addLine("DPad +left -right 2");
-      if (gamepad2.dpad_right) chuteDrv = .2;
-      if (gamepad2.dpad_left) chuteDrv = -.2;
-      game.chute.setPower(chuteDrv);
+      if (gamepad2.dpad_right) chuteDrv += 10.0;
+      if (gamepad2.dpad_left) chuteDrv += -10.0;
+      telemetry.addData("Hood Position request:", chuteDrv);
+      if (chuteDrv > 0.0) chute.HoodPosition(chuteDrv);
       sleep(100);
-      chuteDrv = 0.0;
-      if (turnOffDrv) game.chute.setPower(chuteDrv);
-      telemetry.addLine(". . . . . . . . . .");
+      telemetry.addLine(". . . Fly Velocity . . .");
       // spin velocity
       telemetry.addLine("DPad +UP -down 2");
       // int spinVeloc = (int) (gamepad2.left_trigger * 6000);
@@ -66,7 +68,7 @@ public class UT_Intake_Arm_Chute_Spin_Test extends LinearOpMode {
       game.tilt.setPosition(lift);
       telemetry.addData("request Velocity:", spinVeloc);
       telemetry.addData("Fly Wheel Velocity:", game.launch.getVelocity());
-      telemetry.addData("Hood potentiometer:", game.chuteVal.getVoltage());
+      telemetry.addData("Hood potentiometer:", chute.lastVolt);
       telemetry.addData("Arm Encoder Position:", game.arm.getCurrentPosition());
       telemetry.addData("Arm Power:", armDrv);
       telemetry.addData("lift", lift);

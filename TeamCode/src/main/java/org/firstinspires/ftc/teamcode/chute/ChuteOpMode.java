@@ -23,6 +23,7 @@ public class ChuteOpMode extends LinearOpMode {
   // does hoodPos = home position
   double hoodPos = 0.0;
   private Chute chute;
+  int count = 0;
 
   // Pot configuration - change this if your pot has different range
   private static final double POT_WRAP_AMOUNT = 6.16;
@@ -30,9 +31,9 @@ public class ChuteOpMode extends LinearOpMode {
   // Position presets (in radians)
   private static final double HOME = 0.0;
   private static final double LOW = Math.PI;
-  private static final double MID = Math.PI;
-  private static final double HIGH = Math.PI;
-  private static final double MAX = 2 * Math.PI;
+  private static final double MID = 2 * Math.PI;
+  private static final double HIGH = 3 * Math.PI;
+  private static final double MAX = 4 * Math.PI;
 
   final double STEP_SIZE = 1.8;
   double minChutePos = 0.0;
@@ -84,7 +85,7 @@ public class ChuteOpMode extends LinearOpMode {
     }
     correctedChutePos = absChutePos - minChutePos;
 
-    telemetry.addLine("Pot: " + newVoltpot);
+    telemetry.addLine("Potentiometer: " + newVoltpot);
     telemetry.addLine("Loop ct: " + majorLoopCt);
     telemetry.addLine("-- Transition: " + maxPot / 2.0);
     if (inUpperRegion) {
@@ -94,6 +95,7 @@ public class ChuteOpMode extends LinearOpMode {
     }
     telemetry.addLine("Chute POS: " + absChutePos);
     telemetry.addLine("Corrected POS: " + correctedChutePos);
+    telemetry.addData("Potentiometer", pot.getVoltage());
     telemetry.update();
 
     prevVoltPot = newVoltpot;
@@ -171,7 +173,7 @@ public class ChuteOpMode extends LinearOpMode {
       }
       lastVolt = home; // sets the present position of pot
       hoodpwr = .8;
-
+      // toggle between booth while loops
       boolean goToTargetPos = true;
 
       while (opModeIsActive()) {
@@ -181,63 +183,27 @@ public class ChuteOpMode extends LinearOpMode {
           updatePos(true, home, pot);
 
           // FIXME: 11.0 is the max, which can be increased, recommend that this be a constant
-          if (correctedChutePos >= 11.0) {
+          if (correctedChutePos >= 8.0) {
             chuteMotor.setPower(0.0);
-            sleep(500);
+            sleep(2000);
             goToTargetPos = false;
           }
         } else {
-
           // Run chute to home position, this method blocks until chute is at home pos
           // if chute is broken, this will be an infinite loop
           // FIXME: Include a counter to prevent infinite loop
           runToHomePos(chuteMotor, home, pot);
+          if (home > 0) chuteMotor.setPower(0.0);
+          if (count > 10) chuteMotor.setPower(0.0);
+          count = count++;
+          telemetry.addData("Power", chuteMotor.getPower());
+          telemetry.addData("home", home);
+          telemetry.update();
           sleep(500);
+          // loop back to top
           goToTargetPos = true;
-        }
-        //
-        //                // Update chute (50Hz)
-        //                chute.update(0.02);// sample rate ??
-        //
-        //                if (forceDirectionUp) {
-        //                    chuteMotor.setPower(STEP_SIZE);
-        //                } else {
-        //                    chuteMotor.setPower(-STEP_SIZE);
-        //                }
-        //
-        //
-        //                voltpot = Math.abs(pot.getVoltage());
-        //                // going up pot is less than last
-        //                if (lastVolt > 6.1 && voltpot < .05)
-        //                    step = (maxPot - lastVolt) + voltpot;
-        //                else {
-        //                    step = lastVolt - voltpot;
-        //                    if(step < 0.0 && hoodpwr > 0.0) step = 0.0;
-        //                }
-        //                lastVolt = voltpot;
-        //                if(hoodpwr > 0.0){
-        //                    hoodPos += step;
-        //                } else hoodPos -= step;
-        //                // + power is hood up
-        //                if (hoodPos > 10) {
-        //                    hoodpwr = -STEP_SIZE;
-        //                    forceDirectionUp = false;
-        //                }
-        //                if (hoodPos < .1) {
-        //                    hoodpwr = STEP_SIZE;
-        //                    forceDirectionUp = true;
-        //                }
-        //                telemetry.addData("Hood Position", hoodPos);
-        //                telemetry.addData("potentiometer voltage:", voltpot);
-        //                telemetry.addData(". . . . .last voltage:", lastVolt);
-        //                telemetry.addData(". . . Maximum Voltage:", maxPot);
-        //                telemetry.addData(". . .step Delta:", step);
-        //                telemetry.addData(". . . . .Home Voltage:", home);
-        //                telemetry.update();
-        //                sleep(20);
-        //                chuteMotor.setPower(0.0);
-        //                sleep(500);
-      }
+        } // if else
+      } // while
     }
   }
 

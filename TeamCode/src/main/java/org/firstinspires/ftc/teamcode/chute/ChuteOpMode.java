@@ -115,15 +115,20 @@ public class ChuteOpMode extends LinearOpMode {
       updatePos(false, home, pot);
 
       // See if we've stalled, if so, increase a count and make sure
-      if (correctedChutePos == prevChutePos) {
+      if ((int) correctedChutePos == (int) prevChutePos) {
         stallCount++;
       } else {
         stallCount = 0;
       }
 
       prevChutePos = correctedChutePos;
-    } while (stallCount <= 30); // Loop until we stall at home
+      telemetry.addLine("Looking for home");
+      telemetry.update();
+      sleep(10);
+    } while (stallCount <= 50); // Loop until we stall at home
 
+    telemetry.addLine("Found home");
+    telemetry.update();
     // Reset minChutePos to the new home position
     minChutePos = absChutePos;
 
@@ -176,6 +181,8 @@ public class ChuteOpMode extends LinearOpMode {
       // toggle between booth while loops
       boolean goToTargetPos = true;
 
+      runToHomePos(chuteMotor, home, pot);
+
       while (opModeIsActive()) {
 
         if (goToTargetPos) {
@@ -183,7 +190,7 @@ public class ChuteOpMode extends LinearOpMode {
           updatePos(true, home, pot);
 
           // FIXME: 11.0 is the max, which can be increased, recommend that this be a constant
-          if (correctedChutePos >= 8.0) {
+          if (correctedChutePos >= 11.0) {
             chuteMotor.setPower(0.0);
             sleep(2000);
             goToTargetPos = false;

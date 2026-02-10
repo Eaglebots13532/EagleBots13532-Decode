@@ -78,6 +78,7 @@ public class DC_Swerve_Drive {
   }
 
   Optional<Rotation2d> startingYawAngle = Optional.empty();
+  Optional<Boolean> leadingWheelEast = Optional.empty();
 
   /**
    * Field-centric parallel-wheel swerve drive.
@@ -139,6 +140,11 @@ public class DC_Swerve_Drive {
     Rotation2d targetAngle;
     double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
 
+    Rotation2d yawRotationalDrift = new Rotation2d();
+    if (startingYawAngle.isPresent()) {
+      yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
+    }
+
     if (speed > 0.01) {
       // atan2(y, x) gives the angle of the velocity vector
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
@@ -183,9 +189,9 @@ public class DC_Swerve_Drive {
       myOp.telemetry.addLine("Starting yaw: --");
     } else {
       myOp.telemetry.addLine("Starting yaw: " + startingYawAngle);
-      Rotation2d yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
       myOp.telemetry.addLine("Yaw drift: " + yawRotationalDrift);
       myOp.telemetry.addLine("Look here: " + yawRotationalDrift.getRadians());
+
       if (yawRotationalDrift.getRadians() > 0.01) {
         // Apply more power to right motor
         myOp.telemetry.addLine("AHH IT'S TURNING RIGHT!");
@@ -196,6 +202,33 @@ public class DC_Swerve_Drive {
         myOp.telemetry.addLine("AHH IT'S TURNING LEFT!");
         rotationDriftPowerCompensationRight = 0.0;
         rotationDriftPowerCompensationLeft = 0.5;
+      }
+
+      // If requestedTranslationAngle is close to zero or close to +/- pi, the robot is driving
+      // toward the bow (forward) or stern (reverse). In that case, small adjustments in rotational
+      // speed can be applied to prevent yaw rotation due to drag.
+      // If however requestedTranslationAngle exceeds amounts causing the robot translation to move
+      // toward the port (left) or starboard (right), then the leading wheel needs to maintain
+      // the appropriate direction of travel while the trailing wheel acts as a rudder to make
+      // yaw rotation corrections.
+      //
+      // Determine if robot is moving toward bow (forward)
+      if (requestedTranslationAngle <= 0.5 // Left joystick = NW tolerance
+          && requestedTranslationAngle >= -0.5) { // Left joystick = NE tolerance
+        myOp.telemetry.addLine("-- DIRECTION: NORTH");
+      } else if (requestedTranslationAngle >= 3.0 // Left joystick = SW tolerance
+          || requestedTranslationAngle <= -3.0) { // Left joystick = SE tolerance
+        myOp.telemetry.addLine("-- DIRECTION: SOUTH");
+      } else if (requestedTranslationAngle > 0.0) { // Left joystick = W tolerance
+        myOp.telemetry.addLine("-- DIRECTION: WEST");
+        rotationDriftPowerCompensationRight = 0.0;
+        rotationDriftPowerCompensationLeft = 0.0;
+        leadingWheelEast = Optional.of(false);
+      } else { // Left joystick = E tolerance
+        myOp.telemetry.addLine("-- DIRECTION: EAST");
+        rotationDriftPowerCompensationRight = 0.0;
+        rotationDriftPowerCompensationLeft = 0.0;
+        leadingWheelEast = Optional.of(true);
       }
     }
     myOp.telemetry.update();
@@ -244,7 +277,30 @@ public class DC_Swerve_Drive {
       //   pid = -1 -> servo = 0.0 (full one direction)
       //   pid =  0 -> servo = 0.5 (centered)
       //   pid =  1 -> servo = 1.0 (full other direction)
-      steerServos[i].setPosition(calculateSteerPID(angleError, i, dt) / 2 + 0.5);
+      double steeringAngle = calculateSteerPID(angleError, i, dt) / 2 + 0.5;
+      double candidateRudderCorrection = 0.0;
+      double rudderCorrection = 0.0;
+      if (leadingWheelEast.isPresent()) {
+        if (yawRotationalDrift.getRadians() > 0.01) {
+          // Apply more power to right motor
+          candidateRudderCorrection = -0.1;
+        } else if (yawRotationalDrift.getRadians() < -0.01) {
+          // Apply more power to left motor
+          candidateRudderCorrection = 0.1;
+        }
+        if (leadingWheelEast.get()) {
+          // Leading wheel is East (right)
+          if (i == 0) {
+            rudderCorrection = candidateRudderCorrection;
+          }
+        } else {
+          // Leading wheel is West (left)
+          if (i == 1) {
+            rudderCorrection = candidateRudderCorrection;
+          }
+        }
+      }
+      steerServos[i].setPosition(steeringAngle + rudderCorrection);
     }
 
     lastTimeStamp = currentTime;

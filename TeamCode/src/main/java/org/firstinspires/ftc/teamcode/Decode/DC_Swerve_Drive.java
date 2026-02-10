@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import java.util.Optional;
 import org.firstinspires.ftc.teamcode.Decode.odo.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.Decode.wpilib.math.controller.PIDController;
@@ -72,8 +73,11 @@ public class DC_Swerve_Drive {
     encoders[0] = myOp.hardwareMap.get(AnalogInput.class, "LFP");
     encoders[1] = myOp.hardwareMap.get(AnalogInput.class, "RFP");
     pinpoint = myOp.hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+    pinpoint.resetPosAndIMU();
     lastTimeStamp = System.nanoTime() / 1e9;
   }
+
+  Optional<Rotation2d> startingYawAngle = Optional.empty();
 
   /**
    * Field-centric parallel-wheel swerve drive.
@@ -137,12 +141,21 @@ public class DC_Swerve_Drive {
       // atan2(y, x) gives the angle of the velocity vector
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
       lastTargetAngle = targetAngle;
+
+      // FIXME: The starting yaw angle needs to be updated if the joystick changes
+      if (startingYawAngle.isEmpty()) {
+        Rotation2d leftJoyRotation = new Rotation2d(fieldXVelMetersPerSec, fieldYVelMetersPerSec);
+        //        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromDegrees(-90));
+        startingYawAngle = Optional.of(leftJoyRotation);
+      }
     } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
       // No translation but rotation requested -- orient wheels forward so
       // differential speed can spin the robot in place
       targetAngle = Rotation2d.kZero;
+      startingYawAngle = Optional.empty();
     } else {
       targetAngle = lastTargetAngle;
+      startingYawAngle = Optional.empty();
     }
 
     // --- Step 4: Compute per-wheel drive power ---
@@ -155,10 +168,40 @@ public class DC_Swerve_Drive {
     //      v_right = v_base + omega * wheelbase/2
     double basePower = speed * kV;
     double rotationDelta = chassisOmegaRadPerSec * halfWheelbaseMeters * kV;
+    double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
+
+    double rotationDriftPowerCompensationRight = 0.0;
+    double rotationDriftPowerCompensationLeft = 0.0;
+
+    // TODO: Factor in yaw rotation caused by drag and make final adjustment to rotationDelta to
+    // ensure robot moves properly
+    myOp.telemetry.addLine("Yaw: " + inverseYaw);
+    myOp.telemetry.addLine("Target angle: " + targetAngle);
+    myOp.telemetry.addLine("Requested translation: " + requestedTranslationAngle);
+    if (startingYawAngle.isEmpty()) {
+      myOp.telemetry.addLine("Starting yaw: --");
+    } else {
+      myOp.telemetry.addLine("Starting yaw: " + startingYawAngle);
+      Rotation2d yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
+      myOp.telemetry.addLine("Yaw drift: " + yawRotationalDrift);
+      myOp.telemetry.addLine("Look here: " + yawRotationalDrift.getRadians());
+      if (yawRotationalDrift.getRadians() > 0.01) {
+        // Apply more power to right motor
+        myOp.telemetry.addLine("AHH IT'S TURNING RIGHT!");
+        rotationDriftPowerCompensationRight = 0.5;
+        rotationDriftPowerCompensationLeft = 0.0;
+      } else if (yawRotationalDrift.getRadians() < -0.01) {
+        // Apply more power to left motor
+        myOp.telemetry.addLine("AHH IT'S TURNING LEFT!");
+        rotationDriftPowerCompensationRight = 0.0;
+        rotationDriftPowerCompensationLeft = 0.5;
+      }
+    }
+    myOp.telemetry.update();
 
     double[] drivePowers = {
-      basePower - rotationDelta, // left wheel
-      basePower + rotationDelta // right wheel
+      basePower - rotationDelta + rotationDriftPowerCompensationLeft, // left wheel
+      basePower + rotationDelta + rotationDriftPowerCompensationRight // right wheel
     };
 
     // Track how much time has passed since the last call (in seconds).

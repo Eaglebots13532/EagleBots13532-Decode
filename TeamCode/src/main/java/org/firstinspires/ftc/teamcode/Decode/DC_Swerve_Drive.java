@@ -52,8 +52,8 @@ public class DC_Swerve_Drive {
   // Adjust these until both wheels point straight ahead when the joystick is
   // pushed forward. If a wheel aims too far left, increase its value.
   // more neg clockwise
-  private static final double leftEncoderOffsetDeg = -75.0; // -2.5
-  private static final double rightEncoderOffsetDeg = -86.0; // -5.0
+  private static final double leftEncoderOffsetDeg = -70.0; // -2.5
+  private static final double rightEncoderOffsetDeg = -82.0; // -5.0
   Rotation2d[] encoderOffsets =
       new Rotation2d[] {
         Rotation2d.fromDegrees(leftEncoderOffsetDeg), Rotation2d.fromDegrees(rightEncoderOffsetDeg)

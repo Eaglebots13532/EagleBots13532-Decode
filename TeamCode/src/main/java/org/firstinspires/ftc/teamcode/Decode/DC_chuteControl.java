@@ -129,16 +129,10 @@ public class DC_chuteControl {
 
   public void initHood() {
     // Get hardware from config
-    CRServo chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute");
-    AnalogInput chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP");
-
-    // Create hardware adapters
-    FtcCRServo motor = new FtcCRServo(chuteMotor);
-    FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
-
-    // Create chute controller with real hardware
-    ChuteController controller = new ChuteController(motor, pot, MAX);
-    chute = new Chute(controller, motor, pot);
+    FtcCRServo motor = new FtcCRServo(myOp.hardwareMap.get(CRServo.class, "chute"));
+    FtcPotentiometer pot = new FtcPotentiometer(myOp.hardwareMap.get(AnalogInput.class, "CP"));
+    ChuteController controller = new ChuteController(motor, pot, 4 * Math.PI);
+    Chute chute = new Chute(controller, motor, pot);
   }
 
   public void setHome() {
@@ -150,10 +144,11 @@ public class DC_chuteControl {
 
     chute.update(0.02);
     chute.setTargetPosition(target);
-    while (myOp.opModeIsActive() && chute.isAtTarget()) {
-      chute.getPosition();
-      chute.update(.02);
-    }
+    // if not at target moving
+    chute.update(.02);
+    chute.getPosition();
+    myOp.telemetry.addData("target", chute.isAtTarget());
+    myOp.telemetry.addData("stopping", chute.getPosition());
     chute.stop();
   }
 

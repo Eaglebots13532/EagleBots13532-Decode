@@ -137,6 +137,8 @@ public class DC_Swerve_Drive {
     // point the wheels straight forward on the robot body. This lets the differential
     // speed spin the robot in place -- one wheel forward, one wheel backward.
     Rotation2d targetAngle;
+    double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
+
     if (speed > 0.01) {
       // atan2(y, x) gives the angle of the velocity vector
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
@@ -145,7 +147,7 @@ public class DC_Swerve_Drive {
       // FIXME: The starting yaw angle needs to be updated if the joystick changes
       if (startingYawAngle.isEmpty()) {
         Rotation2d leftJoyRotation = new Rotation2d(fieldXVelMetersPerSec, fieldYVelMetersPerSec);
-        //        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromDegrees(-90));
+        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromRadians(requestedTranslationAngle));
         startingYawAngle = Optional.of(leftJoyRotation);
       }
     } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
@@ -168,7 +170,6 @@ public class DC_Swerve_Drive {
     //      v_right = v_base + omega * wheelbase/2
     double basePower = speed * kV;
     double rotationDelta = chassisOmegaRadPerSec * halfWheelbaseMeters * kV;
-    double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
 
     double rotationDriftPowerCompensationRight = 0.0;
     double rotationDriftPowerCompensationLeft = 0.0;

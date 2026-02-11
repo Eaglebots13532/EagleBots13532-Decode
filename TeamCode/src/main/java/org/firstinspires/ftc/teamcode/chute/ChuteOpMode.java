@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import java.util.Optional;
 
 /**
  * Example OpMode demonstrating chute control with real hardware.
@@ -135,6 +136,8 @@ public class ChuteOpMode extends LinearOpMode {
     chuteMotor.setPower(0.0);
   }
 
+  Optional<Double> chutePos = Optional.empty();
+
   @Override
   public void runOpMode() {
     // Get hardware from config
@@ -184,32 +187,33 @@ public class ChuteOpMode extends LinearOpMode {
       runToHomePos(chuteMotor, home, pot);
 
       while (opModeIsActive()) {
+        handleControls();
+        if (chutePos.isPresent()) {
+          if (chutePos.get() > 0.001) {
+            chuteMotor.setPower(0.8);
+            updatePos(true, home, pot);
 
-        if (goToTargetPos) {
-          chuteMotor.setPower(0.8);
-          updatePos(true, home, pot);
-
-          // FIXME: 11.0 is the max, which can be increased, recommend that this be a constant
-          if (correctedChutePos >= 11.0) {
-            chuteMotor.setPower(0.0);
-            sleep(2000);
-            goToTargetPos = false;
-          }
-        } else {
-          // Run chute to home position, this method blocks until chute is at home pos
-          // if chute is broken, this will be an infinite loop
-          // FIXME: Include a counter to prevent infinite loop
-          runToHomePos(chuteMotor, home, pot);
-          if (home > 0) chuteMotor.setPower(0.0);
-          if (count > 10) chuteMotor.setPower(0.0);
-          count = count++;
-          telemetry.addData("Power", chuteMotor.getPower());
-          telemetry.addData("home", home);
-          telemetry.update();
-          sleep(500);
-          // loop back to top
-          goToTargetPos = true;
-        } // if else
+            // FIXME: 11.0 is the max, which can be increased, recommend that this be a constant
+            double desiredChutePos = chutePos.get();
+            if (correctedChutePos >= desiredChutePos) {
+              chuteMotor.setPower(0.0);
+              sleep(2000);
+              chutePos = Optional.empty();
+            }
+          } else {
+            // Run chute to home position, this method blocks until chute is at home pos
+            // if chute is broken, this will be an infinite loop
+            // FIXME: Include a counter to prevent infinite loop
+            runToHomePos(chuteMotor, home, pot);
+            if (home > 0) chuteMotor.setPower(0.0);
+            if (count > 10) chuteMotor.setPower(0.0);
+            count = count++;
+            telemetry.addData("Power", chuteMotor.getPower());
+            telemetry.addData("home", home);
+            telemetry.update();
+            chutePos = Optional.empty();
+          } // if else
+        }
       } // while
     }
   }
@@ -217,7 +221,7 @@ public class ChuteOpMode extends LinearOpMode {
   private void handleControls() {
     // Manual homing
     if (gamepad1.a) {
-      chute.home();
+      chutePos = Optional.of(0.0);
     }
 
     // Emergency stop
@@ -227,16 +231,16 @@ public class ChuteOpMode extends LinearOpMode {
 
     // Position presets
     if (gamepad1.dpad_down) {
-      chute.setTargetPosition(HOME);
+      chutePos = Optional.of(0.0);
     }
     if (gamepad1.dpad_left) {
-      chute.setTargetPosition(LOW);
+      chutePos = Optional.of(3.0);
     }
     if (gamepad1.dpad_right) {
-      chute.setTargetPosition(MID);
+      chutePos = Optional.of(8.0);
     }
     if (gamepad1.dpad_up) {
-      chute.setTargetPosition(HIGH);
+      chutePos = Optional.of(11.0);
     }
 
     // Fine control with triggers

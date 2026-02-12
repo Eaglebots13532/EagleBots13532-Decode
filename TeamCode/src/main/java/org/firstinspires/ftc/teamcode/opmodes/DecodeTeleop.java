@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.chute.ChuteController;
 import org.firstinspires.ftc.teamcode.chute.FtcMotor;
 import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
 
-@TeleOp(name = "Decode OpMode")
-public class DecodeOpMode extends LinearOpMode {
+@TeleOp(name = "Decode Teleop")
+public class DecodeTeleop extends LinearOpMode {
 
   @Override
   public void runOpMode() {
@@ -21,7 +21,7 @@ public class DecodeOpMode extends LinearOpMode {
     waitForStart();
 
     while (opModeIsActive()) {
-      
+
 
       sleep(20); // 50Hz loop
     }

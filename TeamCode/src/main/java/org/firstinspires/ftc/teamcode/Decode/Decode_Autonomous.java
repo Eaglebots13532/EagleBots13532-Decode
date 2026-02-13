@@ -43,24 +43,17 @@ public class Decode_Autonomous extends LinearOpMode {
   DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
   // Game devices
   // -----------------------------
-  // Husky Camera - ball objects
-  // DC_Husky_Sensor ball = new DC_Husky_Sensor("color", this);
-  // Front Camera - April tag
-  // DC_Husky_Sensor tag = new DC_Husky_Sensor("april", this);
   // decode motors/servos
   DC_Intake_Launch decode = new DC_Intake_Launch(this);
   DC_AprilTagLocalization april = new DC_AprilTagLocalization(this);
   ElapsedTime runTime = new ElapsedTime();
 
-  // Game Pad controls
-  double gpY = 0.0;
-  double gpX = 0.0;
-  double limitSpeed = 0.5;
-  double turnDeg = .5;
   int side = 20; // Blue
 
   @Override
   public void runOpMode() {
+    telemetry.addLine("Set hood height at 7 inches");
+    telemetry.addLine("Fly wheel velocity 1900");
     waitForStart();
     try {
 
@@ -73,10 +66,13 @@ public class Decode_Autonomous extends LinearOpMode {
       if (april.MetaId == 24) side = 24;
       else side = 20;
 
+      //  decode.runToHomePos(decode.chuteMotor, decode.home,decode.pot);
+
       // Wait for the DS start button to be touched.
       telemetry.addLine("Autonomous Ready:" + april.MetaName);
       telemetry.update();
-      // set ange
+      // set angle
+      /*
       april.getAprilTag();
       sleep(100); // wait for april response
       // decode.chuteAngle(april.range); // range in inches
@@ -99,29 +95,37 @@ public class Decode_Autonomous extends LinearOpMode {
               -sshift * drive.maxSpeedMetersPerSec,
               -0.0 * drive.maxOmegaRadPerSec);
         } // end while adjust for bearing
-        for (int i = 1; i < 4; i++) {
-          decode.openGate();
-          decode.Intake();
-          sleep(1000); // wait for ball to launch
-          decode.IntakeStop();
-          decode.closeGate();
-          sleep(500); // wait for gate to close
-        }
-        telemetry.update();
-        decode.Intake(); // start intake
-        sleep(1000);
-      } // shoot 3 balls
+
+         */
+      decode.spinUp(1900);
+
+      sleep(1000);
+      for (int i = 1; i < 4; i++) {
+        decode.openGate();
+        decode.Intake();
+        sleep(1000); // wait for ball to launch
+        decode.IntakeStop();
+        decode.closeGate();
+        sleep(500); // wait for gate to close
+      }
+      telemetry.update();
+      decode.Intake(); // start intake
+      sleep(1000);
+      // shoot 3 balls
       decode.IntakeStop();
       decode.spinOff();
+      /*
       drive.fieldRelativeDrive(
-          -10.0 * drive.maxSpeedMetersPerSec,
-          -(-10.0) * drive.maxSpeedMetersPerSec,
+          1.0 * drive.maxSpeedMetersPerSec,
+          -(-0.0) * drive.maxSpeedMetersPerSec,
           -0.0 * drive.maxOmegaRadPerSec);
-      sleep(1000); // robot off launch area
+      sleep(5000); // robot off launch area
       drive.fieldRelativeDrive(
           -0.0 * drive.maxSpeedMetersPerSec,
           -0.0 * drive.maxSpeedMetersPerSec,
           -0.0 * drive.maxOmegaRadPerSec);
+
+       */
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");

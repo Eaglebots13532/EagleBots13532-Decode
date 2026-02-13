@@ -1,7 +1,7 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.chute;
+package org.firstinspires.ftc.teamcode.Decode.chute;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
@@ -10,16 +10,16 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
  * MockPotentiometer. Use this to connect the chute controller to actual hardware.
  */
 public class FtcPotentiometer extends MockPotentiometer {
-  private final AnalogInput pot;
+  private final AnalogInput crspot;
   private final double maxVoltage;
 
   /**
    * Create potentiometer adapter with default 2pi wraparound.
    *
-   * @param pot The real FTC analog input from hardwareMap
+   * @param crspot The real FTC analog input from hardwareMap
    */
-  public FtcPotentiometer(AnalogInput pot) {
-    this(pot, 2 * Math.PI);
+  public FtcPotentiometer(AnalogInput crspot) {
+    this(crspot, 2 * Math.PI);
   }
 
   /**
@@ -30,14 +30,14 @@ public class FtcPotentiometer extends MockPotentiometer {
    */
   public FtcPotentiometer(AnalogInput pot, double wrapAmount) {
     super(wrapAmount);
-    this.pot = pot;
-    this.maxVoltage = pot.getMaxVoltage(); // Usually 3.3V
+    this.crspot = pot;
+    this.maxVoltage = pot.getMaxVoltage(); // Usually 6.18V
   }
 
   @Override
   public double getVoltage() {
     // Read actual voltage from hardware
-    double rawVoltage = pot.getVoltage();
+    double rawVoltage = crspot.getVoltage();
 
     // Scale to [0, wrapAmount] range
     // Assumes pot uses full voltage range (0 to maxVoltage)

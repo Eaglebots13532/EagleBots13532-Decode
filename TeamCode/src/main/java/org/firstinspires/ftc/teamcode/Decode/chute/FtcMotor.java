@@ -1,31 +1,35 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.chute;
+package org.firstinspires.ftc.teamcode.Decode.chute;
 
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
  * Adapter that wraps a real FTC DcMotor and makes it look like a MockMotor. Use this to connect the
  * chute controller to actual hardware.
  */
-public class FtcCRServo extends MockMotor {
-  private final CRServo crservo;
+public class FtcMotor extends MockMotor {
+  private final DcMotor motor;
 
   /**
-   * Create crservo adapter.
+   * Create motor adapter.
    *
-   * @param crservo The real FTC crservo from hardwareMap
+   * @param motor The real FTC motor from hardwareMap
    */
-  public FtcCRServo(CRServo crservo) {
+  public FtcMotor(DcMotor motor) {
     super();
-    this.crservo = crservo;
+    this.motor = motor;
+
+    // Configure motor
+    motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
   }
 
   @Override
   public void setPower(double power) {
     super.setPower(power); // Track power in parent
-    crservo.setPower(power); // Send to real motor
+    motor.setPower(power); // Send to real motor
   }
 
   @Override

@@ -1,25 +1,24 @@
 /* Copyright (c) 2024-2025 FTC 13532
--- All rights reserved.
+----  All rights reserved.
 - - - - -  eaglebots configuration -
 Left   Motor  0 . . . . . . . . .  LFM
 Right  Motor  1 . . . . . . . . .  RFM
 Left   Servo  0 . . . . . . . . .  LFS
 Right  Servo  1 . . . . . . . . .  RFS
 
-Left   Analog  . . . . .  Analog 0 LFP [one cable
-Right  Analog  . . . . . .Analog 1 RFP  for both]
-chute  Analog  . . . . . .Analog 3 CP
+Left   Analog 0 . . . . . . . . .  LFP [one cable
+Right  Analog 1 . . . . . . . . .  RFP  for both]
+chute  Analog 2 . . . . . . . . .
+       Analog 3 . . . . . . . . .  CP
+Arm    Motor  3 . . . . . . . . .  arm
+Spin   Motor  2 . . . . . . . . .  launch
+Intake Servo  3 . . . . . . . . .  intake
+chute  Servo  4 . . . . . . . . .  chute
+tilt   Servo  2 . . . . . . . . .  tilt
+gate   Servo  5 . . . . . . . . .  gate
 
-Arm    Motor  3 . . . . . . . . . . arm
-Spin   Motor  2 . . . . . . . . . . launch
-Intake Servo  3 . . . . . . . . . . intake
-chute  Servo  4 . . . . . . . . . . chute
-tilt   Servo  2 . . . . . . . . . . tilt
-gate   Servo  5 . . . . . . . . . . gate
-
-
- . . . . . . . . . .IC1
-     . . . . . . . .IC2
-PinPoint . . . . . . . . . . .IC3 0 odo
+          IC  1 . . . . . . . . . .
+          IC  2 . . . . . . . . . .
+PinPoint  IC  3 . 0 . . . . . . . . odo
 
  */

@@ -7,12 +7,18 @@ package org.firstinspires.ftc.teamcode.Decode;
 // All rights reserved.
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import java.util.Optional;
+import org.firstinspires.ftc.teamcode.Decode.chute.Chute;
+import org.firstinspires.ftc.teamcode.Decode.chute.ChuteController;
+import org.firstinspires.ftc.teamcode.Decode.chute.FtcCRServo;
+import org.firstinspires.ftc.teamcode.Decode.chute.FtcPotentiometer;
 
 public class DC_Intake_Launch {
   /* Declare OpMode members.
@@ -30,15 +36,40 @@ public class DC_Intake_Launch {
 
   public DcMotorEx launch = null; // 6000 rpm motor
   public DcMotor arm = null; // 312 rpm motor
+  public Chute chute;
 
   public CRServo intake = null; // intake motor controller
   public Servo gate = null; // intake gate
   public Servo tilt = null; // tilt robot up
+  public CRServo chuteMotor = null;
+  public AnalogInput chutePot = null;
 
   // time out timer
   private ElapsedTime runTime = new ElapsedTime();
   // global variables
   public int encHome = 0;
+  boolean potage = false;
+  double maxPot = 2.0 * Math.PI; // Was 6.16
+  double lastVolt = 0.0;
+  double home = 0.0; // start voltage
+  // does hoodPos = home position
+  double hoodPos = 0.0;
+  int count = 0;
+  // hood parameters
+  private static final double POT_WRAP_AMOUNT = 6.16;
+  private static final double MAX = 4 * Math.PI;
+  double minChutePos = 0.0;
+  boolean homePosSet = false;
+  boolean inUpperRegion = false;
+  double prevVoltPot = 0.0;
+  int majorLoopCt = 0;
+  double absChutePos = 0.0;
+
+  // potentiometer voltage change
+  double hoodpwr = 0.0;
+  double step = 0.0;
+  double voltpot = 0.0;
+  double correctedChutePos = 0.0;
 
   // status light
 
@@ -46,10 +77,10 @@ public class DC_Intake_Launch {
 
     // Define and Initialize Motor.
     launch = myOp.hardwareMap.get(DcMotorEx.class, "launch");
-    launch.setDirection(DcMotorSimple.Direction.FORWARD); // todo set launch direction
+    launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // prepare use velocity
     arm = myOp.hardwareMap.get(DcMotor.class, "arm");
-    arm.setDirection(DcMotorSimple.Direction.FORWARD); // todo set arm direction
+    arm.setDirection(DcMotorSimple.Direction.FORWARD);
 
     // Define and Initialize Servo
     intake = myOp.hardwareMap.get(CRServo.class, "intake");
@@ -58,6 +89,17 @@ public class DC_Intake_Launch {
     tilt = myOp.hardwareMap.get(Servo.class, "tilt");
     // present.SensorInit();
     encHome = arm.getCurrentPosition(); // arm starts in home position
+    // initialize hood components
+    chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute");
+    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP");
+
+    // Create hardware adapters
+    FtcCRServo motor = new FtcCRServo(chuteMotor);
+    FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
+
+    // Create chute controller with real hardware
+    ChuteController controller = new ChuteController(motor, pot, MAX);
+    chute = new Chute(controller, motor, pot);
   }
 
   // Servo controlled motor
@@ -152,6 +194,95 @@ public class DC_Intake_Launch {
         && runTime.seconds() < 3.0
         && ((0.95 * velocSeek) > velocPrs ^ (1.05 * velocSeek) < velocPrs));
     // light indicator
+  }
+
+  void runToHomePos(CRServo chuteMotor, double home, FtcPotentiometer pot) {
+    double newVoltpot = Math.abs(pot.getVoltage());
+    int stallCount = 0;
+    double prevChutePos = 0.0;
+
+    do {
+      if (correctedChutePos < 2.0) {
+        chuteMotor.setPower(-0.3);
+      } else {
+        chuteMotor.setPower(-0.8);
+      }
+      updatePos(false, home, pot);
+
+      // See if we've stalled, if so, increase a count and make sure
+      if ((int) correctedChutePos == (int) prevChutePos) {
+        stallCount++;
+      } else {
+        stallCount = 0;
+      }
+
+      prevChutePos = correctedChutePos;
+
+      myOp.sleep(10);
+    } while (stallCount <= 50); // Loop until we stall at home
+
+    myOp.telemetry.addLine("Found home");
+    myOp.telemetry.update();
+    // Reset minChutePos to the new home position
+    minChutePos = absChutePos;
+
+    chuteMotor.setPower(0.0);
+  }
+
+  Optional<Double> chutePos = Optional.empty();
+
+  private void updatePos(boolean directionUp, double home, FtcPotentiometer pot) {
+    double newVoltpot = Math.abs(pot.getVoltage());
+
+    if (directionUp) {
+      if (newVoltpot >= maxPot / 2.0) {
+        if (!inUpperRegion) {
+          inUpperRegion = true;
+          majorLoopCt += 1;
+        }
+      }
+      if (newVoltpot < maxPot / 2.0) {
+        if (inUpperRegion) {
+          inUpperRegion = false;
+        }
+      }
+    } else {
+      if (newVoltpot >= maxPot / 2.0) {
+        if (!inUpperRegion) {
+          inUpperRegion = true;
+        }
+      }
+      if (newVoltpot < maxPot / 2.0) {
+        if (inUpperRegion) {
+          inUpperRegion = false;
+          majorLoopCt -= 1;
+        }
+      }
+    }
+
+    absChutePos = (maxPot * majorLoopCt) + (maxPot - newVoltpot);
+    if (!homePosSet) {
+      homePosSet = true;
+      minChutePos = absChutePos;
+    }
+    correctedChutePos = absChutePos - minChutePos;
+    /*
+           telemetry.addLine("Potentiometer: " + newVoltpot);
+           telemetry.addLine("Loop ct: " + majorLoopCt);
+           telemetry.addLine("-- Transition: " + maxPot / 2.0);
+           if (inUpperRegion) {
+               telemetry.addLine("Region: UPPER");
+           } else {
+               telemetry.addLine("Region: LOWER");
+           }
+           telemetry.addLine("Chute POS: " + absChutePos);
+           telemetry.addLine("Corrected POS: " + correctedChutePos);
+           telemetry.addData("Potentiometer", pot.getVoltage());
+           telemetry.update();
+
+    */
+
+    prevVoltPot = newVoltpot;
   }
 
   public void setTilt() {

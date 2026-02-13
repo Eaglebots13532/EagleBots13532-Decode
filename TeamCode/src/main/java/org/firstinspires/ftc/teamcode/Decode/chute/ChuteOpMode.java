@@ -1,7 +1,7 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.chute;
+package org.firstinspires.ftc.teamcode.Decode.chute;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -50,7 +50,7 @@ public class ChuteOpMode extends LinearOpMode {
   double voltpot = 0.0;
   double correctedChutePos = 0.0;
 
-  private void updatePos(boolean directionUp, double home, FtcPotentiometer pot) {
+  private void updatePos(boolean directionUp, double hoodhome, FtcPotentiometer pot) {
     double newVoltpot = Math.abs(pot.getVoltage());
 
     if (directionUp) {

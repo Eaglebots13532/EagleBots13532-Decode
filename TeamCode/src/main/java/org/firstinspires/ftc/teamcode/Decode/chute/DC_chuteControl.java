@@ -1,17 +1,11 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode;
+package org.firstinspires.ftc.teamcode.Decode.chute;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import org.firstinspires.ftc.teamcode.chute.Chute;
-import org.firstinspires.ftc.teamcode.chute.ChuteController;
-import org.firstinspires.ftc.teamcode.chute.FtcCRServo;
-import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
-import org.firstinspires.ftc.teamcode.chute.MockMotor;
-import org.firstinspires.ftc.teamcode.chute.MockPotentiometer;
 
 /**
  * Example OpMode demonstrating chute control with real hardware.

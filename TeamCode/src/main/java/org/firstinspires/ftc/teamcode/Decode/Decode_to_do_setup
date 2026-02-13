@@ -1,4 +1,34 @@
-/* Decode season 2025 - 2026
+
+/* Eaglebots 13532 - Decode season 2025 - 2026
+-------------------------
+Robot todo list
+-------------------------
+Remaining Software Tasks
+
+General / Integration
+    • Create a new opmode file that consolidates all fragmented functionality
+    • Raise/lower tilt stand from controller input
+
+Drive
+    • Support override function that switches to tank mode to support fault tolerance and provide an alternate means of movement
+    • Fix tank mode to tie to existing settings/connections
+    • Stretch goal: fix bug in current rudder movement on trailing wheel to ensure yaw orientation is taken into full account
+
+Chute
+    • Organize code into a chute class that can be called by new opmode file
+    • Include additional check in hood movement to ensure it can never exceed maximum
+    • Include timeout in homing check in the event hood becomes damaged
+    • Remove pause after hood completes movement so it can immediately move again
+    • Enable/disable flywheel from controller input
+    • Raise/lower flywheel from controller input
+
+Intake
+    • Enable intake in new opmode file
+
+Camera
+    • Stretch goal: Isolate camera functionality to a class so it can be callable by new opmode file
+    • Stretch goal: Adjust chute based on distance report
+
 -------------------------
 Robot setup task list
 -------------------------
@@ -43,6 +73,4 @@ T1. UT_TestColorBall
 Field Odometry
 T1. UT_TestPinpoint_odometry
 
-
-have a great day!
 */

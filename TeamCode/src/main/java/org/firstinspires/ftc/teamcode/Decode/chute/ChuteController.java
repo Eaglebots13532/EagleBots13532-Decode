@@ -1,7 +1,7 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.chute;
+package org.firstinspires.ftc.teamcode.Decode.chute;
 
 /** Simple chute controller with homing and position control. */
 public class ChuteController {

@@ -9,28 +9,82 @@ public class InputStateMachine {
   private Gamepad gamepad1;
   private Gamepad gamepad2;
 
+  // Previous frame state for edge detection
+  private boolean prevA, prevB;
+  private boolean prevDpadUp, prevDpadDown, prevDpadLeft, prevDpadRight;
+  private boolean prevLeftTrigger, prevRightTrigger;
+
+  // Action flags
+  public boolean togglePrimary = false; // A
+  public boolean toggleSecondary = false; // B
+  public boolean incrementUp = false; // dpad_up
+  public boolean incrementDown = false; // dpad_down
+  public boolean cycleLeft = false; // dpad_left
+  public boolean cycleRight = false; // dpad_right
+  public boolean modifierLeft = false; // left_trigger
+  public boolean modifierRight = false; // right_trigger
+
+  public interface StateListener {
+    void onTogglePrimary(boolean active);
+
+    void onToggleSecondary(boolean active);
+
+    void onIncrementUp();
+
+    void onIncrementDown();
+
+    void onCycleLeft();
+
+    void onCycleRight();
+
+    void onModifierLeft(float value);
+
+    void onModifierRight(float value);
+  }
+
+  private StateListener listener;
+
   public InputStateMachine(Gamepad gamepad1, Gamepad gamepad2) {
     this.gamepad1 = gamepad1;
     this.gamepad2 = gamepad2;
   }
 
-  public void captureInputs() {
-    if (gamepad1.a) {}
-
-    if (gamepad1.b) {}
-
-    if (gamepad1.dpad_down) {}
-
-    if (gamepad1.dpad_left) {}
-
-    if (gamepad1.dpad_right) {}
-
-    if (gamepad1.dpad_up) {}
-
-    if (gamepad1.left_trigger > 0.1) {}
-
-    if (gamepad1.right_trigger > 0.1) {}
+  public void setListener(StateListener listener) {
+    this.listener = listener;
   }
 
-  public void processState() {}
+  public void captureInputs() {
+    // Rising edge detection - flag only on the frame the button is first pressed
+    togglePrimary = gamepad1.a && !prevA;
+    toggleSecondary = gamepad1.b && !prevB;
+    incrementUp = gamepad1.dpad_up && !prevDpadUp;
+    incrementDown = gamepad1.dpad_down && !prevDpadDown;
+    cycleLeft = gamepad1.dpad_left && !prevDpadLeft;
+    cycleRight = gamepad1.dpad_right && !prevDpadRight;
+    modifierLeft = gamepad1.left_trigger > 0.1;
+    modifierRight = gamepad1.right_trigger > 0.1;
+
+    // Store current state for next frame
+    prevA = gamepad1.a;
+    prevB = gamepad1.b;
+    prevDpadUp = gamepad1.dpad_up;
+    prevDpadDown = gamepad1.dpad_down;
+    prevDpadLeft = gamepad1.dpad_left;
+    prevDpadRight = gamepad1.dpad_right;
+    prevLeftTrigger = modifierLeft;
+    prevRightTrigger = modifierRight;
+  }
+
+  public void processState() {
+    if (listener == null) return;
+
+    if (togglePrimary) listener.onTogglePrimary(true);
+    if (toggleSecondary) listener.onToggleSecondary(true);
+    if (incrementUp) listener.onIncrementUp();
+    if (incrementDown) listener.onIncrementDown();
+    if (cycleLeft) listener.onCycleLeft();
+    if (cycleRight) listener.onCycleRight();
+    if (modifierLeft) listener.onModifierLeft(gamepad1.left_trigger);
+    if (modifierRight) listener.onModifierRight(gamepad1.right_trigger);
+  }
 }

@@ -17,9 +17,42 @@ public class DecodeTeleop extends LinearOpMode {
     waitForStart();
     while (opModeIsActive()) {
 
-      // Capture gamepad inputs by asserting appropriate flags for later processing
-      sm.captureInputs();
-      sm.processState();
+      sm.setListener(
+          new InputStateMachine.StateListener() {
+            // Fired on A button press (rising edge)
+            @Override
+            public void onTogglePrimary(boolean active) {}
+
+            // Fired on B button press (rising edge)
+            @Override
+            public void onToggleSecondary(boolean active) {}
+
+            // Fired on dpad up press (rising edge)
+            @Override
+            public void onIncrementUp() {}
+
+            // Fired on dpad down press (rising edge)
+            @Override
+            public void onIncrementDown() {}
+
+            // Fired on dpad left press (rising edge)
+            @Override
+            public void onCycleLeft() {}
+
+            // Fired on dpad right press (rising edge)
+            @Override
+            public void onCycleRight() {}
+
+            // Fired while left trigger is held past deadzone - value is raw trigger position
+            // (0.0–1.0)
+            @Override
+            public void onModifierLeft(float value) {}
+
+            // Fired while right trigger is held past deadzone - value is raw trigger position
+            // (0.0–1.0)
+            @Override
+            public void onModifierRight(float value) {}
+          });
 
       sleep(20); // 50Hz loop
     }

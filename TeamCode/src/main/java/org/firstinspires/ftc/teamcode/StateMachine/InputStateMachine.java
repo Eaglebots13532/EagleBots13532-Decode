@@ -10,13 +10,15 @@ public class InputStateMachine {
   private Gamepad gamepad2;
 
   // Previous frame state for edge detection
-  private boolean prevA, prevB;
+  private boolean prevA, prevB, prevX, prevY;
   private boolean prevDpadUp, prevDpadDown, prevDpadLeft, prevDpadRight;
   private boolean prevLeftTrigger, prevRightTrigger;
 
   // Action flags
   public boolean togglePrimary = false; // A
   public boolean toggleSecondary = false; // B
+  public boolean actionX = false; // X
+  public boolean actionY = false; // Y
   public boolean incrementUp = false; // dpad_up
   public boolean incrementDown = false; // dpad_down
   public boolean cycleLeft = false; // dpad_left
@@ -28,6 +30,10 @@ public class InputStateMachine {
     void onTogglePrimary(boolean active);
 
     void onToggleSecondary(boolean active);
+
+    void onActionX();
+
+    void onActionY();
 
     void onIncrementUp();
 
@@ -54,9 +60,11 @@ public class InputStateMachine {
   }
 
   public void captureInputs() {
-    // Rising edge detection - flag only on the frame the button is first pressed
+    // Rising edge detection -- flag only on the frame the button is first pressed
     togglePrimary = gamepad1.a && !prevA;
     toggleSecondary = gamepad1.b && !prevB;
+    actionX = gamepad1.x && !prevX;
+    actionY = gamepad1.y && !prevY;
     incrementUp = gamepad1.dpad_up && !prevDpadUp;
     incrementDown = gamepad1.dpad_down && !prevDpadDown;
     cycleLeft = gamepad1.dpad_left && !prevDpadLeft;
@@ -67,6 +75,8 @@ public class InputStateMachine {
     // Store current state for next frame
     prevA = gamepad1.a;
     prevB = gamepad1.b;
+    prevX = gamepad1.x;
+    prevY = gamepad1.y;
     prevDpadUp = gamepad1.dpad_up;
     prevDpadDown = gamepad1.dpad_down;
     prevDpadLeft = gamepad1.dpad_left;
@@ -80,6 +90,8 @@ public class InputStateMachine {
 
     if (togglePrimary) listener.onTogglePrimary(true);
     if (toggleSecondary) listener.onToggleSecondary(true);
+    if (actionX) listener.onActionX();
+    if (actionY) listener.onActionY();
     if (incrementUp) listener.onIncrementUp();
     if (incrementDown) listener.onIncrementDown();
     if (cycleLeft) listener.onCycleLeft();

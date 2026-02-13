@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import org.firstinspires.ftc.teamcode.Decode.DriveManager;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.chute.ChuteDriver;
 import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
@@ -21,13 +22,15 @@ public class DecodeTeleop extends LinearOpMode {
 
   @Override
   public void runOpMode() {
-    // --- Hardware ---
+    // --- Subsystems ---
+    DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
+
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
     AnalogInput chutePot = hardwareMap.get(AnalogInput.class, "CP");
     FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
-
-    // --- Subsystems ---
     ChuteDriver chute = new ChuteDriver(chuteMotor, pot, telemetry);
+
+    // --- Input ---
     InputStateMachine sm = new InputStateMachine(gamepad1, gamepad2);
 
     // --- Chute completion callbacks ---
@@ -107,9 +110,11 @@ public class DecodeTeleop extends LinearOpMode {
             }
           }
 
-          // Fired on dpad left press (rising edge)
+          // Fired on dpad left press (rising edge) -- toggle drive mode
           @Override
-          public void onCycleLeft() {}
+          public void onCycleLeft() {
+            driveManager.toggleMode();
+          }
 
           // Fired on dpad right press (rising edge)
           @Override
@@ -125,6 +130,7 @@ public class DecodeTeleop extends LinearOpMode {
         });
 
     telemetry.addLine("Initialized -- waiting for start");
+    telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 
     waitForStart();
@@ -141,8 +147,19 @@ public class DecodeTeleop extends LinearOpMode {
 
     // --- Main loop ---
     while (opModeIsActive()) {
+      // Discrete button events
       sm.captureInputs();
       sm.processState();
+
+      // Joysticks polled directly -- all four axes passed,
+      // DriveManager picks which ones matter based on mode
+      driveManager.drive(
+          -gamepad1.left_stick_x,
+          -gamepad1.left_stick_y,
+          -gamepad1.right_stick_x,
+          -gamepad1.right_stick_y);
+
+      // Subsystem updates
       chute.update();
       telemetry.update();
       sleep(20);

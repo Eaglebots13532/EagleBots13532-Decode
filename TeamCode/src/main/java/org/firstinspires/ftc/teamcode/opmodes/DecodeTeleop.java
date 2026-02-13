@@ -16,7 +16,44 @@ public class DecodeTeleop extends LinearOpMode {
 
     while (opModeIsActive()) {
 
+      // Handle gamepad input
+      handleControls()
+
       sleep(20); // 50Hz loop
+    }
+  }
+
+  private void handleControls() {
+    if (gamepad1.a) {
+      
+    }
+
+    if (gamepad1.b) {
+      
+    }
+
+    if (gamepad1.dpad_down) {
+      
+    }
+  
+    if (gamepad1.dpad_left) {
+      
+    }
+  
+    if (gamepad1.dpad_right) {
+      
+    }
+  
+    if (gamepad1.dpad_up) {
+
+    }
+
+    if (gamepad1.left_trigger > 0.1) {
+      
+    }
+  
+    if (gamepad1.right_trigger > 0.1) {
+
     }
   }
 }

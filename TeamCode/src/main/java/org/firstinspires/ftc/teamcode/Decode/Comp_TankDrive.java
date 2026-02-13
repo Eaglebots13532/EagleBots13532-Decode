@@ -6,6 +6,7 @@ package org.firstinspires.ftc.teamcode.Decode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
+import org.firstinspires.ftc.teamcode.drivers.DC_Swerve_Drive;
 
 @TeleOp(name = "_Comp Tank Drive")
 public class Comp_TankDrive extends LinearOpMode {
@@ -39,7 +40,7 @@ public class Comp_TankDrive extends LinearOpMode {
       game.arm.setPower(-gamepad2.right_stick_y);
       // launcher setting
       telemetry.addLine("Setting Fly velocity");
-      game.launch.setPower(gamepad2.right_stick_x);
+      game.launch.setPower((gamepad2.right_stick_x + 1) * 1000);
       prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_1);
       // intake setting
       telemetry.addLine("Setting intake");

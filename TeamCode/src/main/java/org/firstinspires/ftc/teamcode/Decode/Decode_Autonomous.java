@@ -32,6 +32,7 @@ April Camera   . . . . . . . . . . Webcam 1
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.drivers.DC_Swerve_Drive;
 
 @Autonomous
 public class Decode_Autonomous extends LinearOpMode {
@@ -114,7 +115,7 @@ public class Decode_Autonomous extends LinearOpMode {
       // shoot 3 balls
       decode.IntakeStop();
       decode.spinOff();
-      /*
+
       drive.fieldRelativeDrive(
           1.0 * drive.maxSpeedMetersPerSec,
           -(-0.0) * drive.maxSpeedMetersPerSec,
@@ -125,7 +126,7 @@ public class Decode_Autonomous extends LinearOpMode {
           -0.0 * drive.maxSpeedMetersPerSec,
           -0.0 * drive.maxOmegaRadPerSec);
 
-       */
+
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");

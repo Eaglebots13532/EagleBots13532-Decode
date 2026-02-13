@@ -1,7 +1,7 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode;
+package org.firstinspires.ftc.teamcode.drivers;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
 public class DC_Swerve_Drive {
   private final LinearOpMode myOp;
 
-  DC_Swerve_Drive(LinearOpMode opmode) {
+  public DC_Swerve_Drive(LinearOpMode opmode) {
     myOp = opmode;
   }
 
@@ -38,7 +38,7 @@ public class DC_Swerve_Drive {
   //   wheelAngularVel = RPM_at_wheel * 2*pi / 60
   //   linearVel = wheelAngularVel * wheelRadius
   private static final double wheelRadiusMeters = wheelDiameterMm / 1000.0 / 2.0;
-  double maxSpeedMetersPerSec =
+  public double maxSpeedMetersPerSec =
       Units.rotationsPerMinuteToRadiansPerSecond(motorMaxRPM / gearRatio) * wheelRadiusMeters;
 
   // kV maps m/s -> motor power [0..1].  power = speed * kV

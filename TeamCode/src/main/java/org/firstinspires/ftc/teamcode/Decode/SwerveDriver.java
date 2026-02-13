@@ -19,7 +19,6 @@ import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
  *
  * <p>Two drive modes: - Field-centric swerve: wheels steer freely, translation is field-relative -
  * Tank drive: wheels lock forward, left/right joysticks control wheel speeds
- * 
  */
 public class SwerveDriver {
 

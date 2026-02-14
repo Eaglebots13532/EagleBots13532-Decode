@@ -39,11 +39,9 @@ public class UT_chkDevices extends LinearOpMode {
       telemetry.addData("Hood Servo", turnOnHood);
       telemetry.addLine(". . . . Intake . . . .");
       telemetry.addLine("Right Bumper 2 start 3 sec stop");
-      if (gamepad2.right_bumper) {
-        game.Intake();
-        sleep(3000);
-        game.IntakeStop();
-      }
+      if (gamepad2.right_bumper) game.Intake();
+      if (gamepad2.left_bumper) game.IntakeStop();
+
       telemetry.addLine(". . . . gate. . . .");
       telemetry.addLine("b button 2 open 1 sec close 1 sec");
       if (gamepad2.bWasPressed()) {

@@ -31,20 +31,28 @@ April Camera   . . . . . . . . . . Webcam 1
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.drivers.DC_Swerve_Drive;
 
 @Autonomous
-public class Decode_Autonomous extends LinearOpMode {
+public class Red_Decode_Autonomous extends LinearOpMode {
 
   // Swerve Devices
   // -----------------------------
-  DC_Swerve_Drive drive = new DC_Swerve_Drive(this);
+  // DC_Swerve_Drive drive = new DC_Swerve_Drive(this);
   // pinpoint
-  DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
+  // DC_Odometry_Sensor odo = new DC_Odometry_Sensor(this);
   // Game devices
   // -----------------------------
   // decode motors/servos
+  private DcMotorEx driveLF = null;
+  private DcMotorEx driveRT = null;
+  private Servo servoLF = null;
+  private Servo servoRT = null;
+  private AnalogInput potLF = null;
+  private AnalogInput potRT = null;
   DC_Intake_Launch decode = new DC_Intake_Launch(this);
   DC_AprilTagLocalization april = new DC_AprilTagLocalization(this);
   ElapsedTime runTime = new ElapsedTime();
@@ -53,14 +61,22 @@ public class Decode_Autonomous extends LinearOpMode {
 
   @Override
   public void runOpMode() {
+    driveLF = (DcMotorEx) hardwareMap.dcMotor.get("LFM");
+    driveRT = (DcMotorEx) hardwareMap.dcMotor.get("RFM");
+    // driveLF.setDirection(DcMotorSimple.Direction.REVERSE);
+    servoLF = hardwareMap.servo.get("LFS");
+    servoRT = hardwareMap.servo.get("RFS");
+    potLF = hardwareMap.get(AnalogInput.class, "LFP");
+    potRT = hardwareMap.get(AnalogInput.class, "RFP");
+
     telemetry.addLine("Set hood height at 7 inches");
     telemetry.addLine("Fly wheel velocity 1900");
     waitForStart();
     try {
 
       // Initialize class components
-      drive.init();
-      odo.DoInit();
+      // drive.init();
+      // odo.DoInit();
       decode.InitIL();
       april.initAprilTag();
       april.getAprilTag();
@@ -70,7 +86,7 @@ public class Decode_Autonomous extends LinearOpMode {
       //  decode.runToHomePos(decode.chuteMotor, decode.home,decode.pot);
 
       // Wait for the DS start button to be touched.
-      telemetry.addLine("Autonomous Ready:" + april.MetaName);
+      telemetry.addLine("Autonomous Ready:" + side);
       telemetry.update();
       // set angle
       /*
@@ -99,39 +115,32 @@ public class Decode_Autonomous extends LinearOpMode {
 
          */
       decode.spinUp(1900);
-
-      sleep(1000);
-      for (int i = 1; i < 4; i++) {
-        decode.openGate();
-        decode.Intake();
-        sleep(1000); // wait for ball to launch
-        decode.IntakeStop();
-        decode.closeGate();
-        sleep(500); // wait for gate to close
-      }
-      telemetry.update();
-      decode.Intake(); // start intake
       sleep(1000);
       // shoot 3 balls
+      decode.openGate();
+      for (int i = 1; i < 4; i++) {
+        decode.Intake();
+        sleep(1500); // wait for ball to launch
+        decode.IntakeStop();
+        sleep(500); // wait for gate to close
+      }
       decode.IntakeStop();
+      decode.closeGate();
+      sleep(1000);
       decode.spinOff();
-
-      drive.fieldRelativeDrive(
-          1.0 * drive.maxSpeedMetersPerSec,
-          -(-0.0) * drive.maxSpeedMetersPerSec,
-          -0.0 * drive.maxOmegaRadPerSec);
-      sleep(5000); // robot off launch area
-      drive.fieldRelativeDrive(
-          -0.0 * drive.maxSpeedMetersPerSec,
-          -0.0 * drive.maxSpeedMetersPerSec,
-          -0.0 * drive.maxOmegaRadPerSec);
-
-
+      servoLF.setPosition(0.5);
+      servoRT.setPosition(0.5);
+      sleep(500);
+      driveRT.setPower(.5);
+      driveLF.setPower(.5);
+      sleep(2000);
+      driveLF.setPower(.0);
+      driveRT.setPower(.0);
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");
       telemetry.update();
-      sleep(2000);
+      sleep(2200);
       requestOpModeStop();
     } // catch exception
   } // run op mode

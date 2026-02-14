@@ -171,11 +171,11 @@ public class DC_Intake_Launch {
   } // end arm position
 
   public void closeGate() {
-    gate.setPosition(1.0); // / todo set direction close power
+    gate.setPosition(0.5); // / todo set direction close power
   }
 
   public void openGate() {
-    gate.setPosition(0.5); // todo set direction open power
+    gate.setPosition(1.0); // todo set direction open power
   }
 
   // auto seek set by range found by the April tag

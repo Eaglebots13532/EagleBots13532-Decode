@@ -23,7 +23,7 @@ public class DriveManager {
 
   private final SwerveDriver swerve;
   private final Telemetry telemetry;
-  private DriveMode mode = DriveMode.FIELD_CENTRIC;
+  private DriveMode mode = DriveMode.TANK;
 
   public DriveManager(HardwareMap hardwareMap, Telemetry telemetry) {
     this.telemetry = telemetry;

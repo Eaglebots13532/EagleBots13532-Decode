@@ -66,21 +66,18 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onTogglePrimary(boolean active) {
             telemetry.addLine("INPUT: A");
-            telemetry.update();
           }
 
           // Fired on B button press (rising edge)
           @Override
           public void onToggleSecondary(boolean active) {
             telemetry.addLine("INPUT: B");
-            telemetry.update();
           }
 
           // Fired on X button press (rising edge) -- send chute home
           @Override
           public void onActionX() {
             telemetry.addLine("INPUT: X");
-            telemetry.update();
             if (!chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goHome();
@@ -91,7 +88,6 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onActionY() {
             telemetry.addLine("INPUT: Y");
-            telemetry.update();
             chute.stop();
           }
 
@@ -100,7 +96,6 @@ public class DecodeTeleop extends LinearOpMode {
           public void onIncrementUp() {
             if (!chuteInputsLocked) {
               telemetry.addLine("INPUT: D-PAD UP");
-              telemetry.update();
               chuteInputsLocked = true;
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
             }
@@ -110,7 +105,6 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onIncrementDown() {
             telemetry.addLine("INPUT: D-PAD DOWN");
-            telemetry.update();
             if (!chuteInputsLocked) {
               chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
@@ -126,28 +120,24 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onCycleLeft() {
             telemetry.addLine("INPUT: D-PAD LEFT");
-            telemetry.update();
           }
 
           // Fired on dpad right press (rising edge)
           @Override
           public void onCycleRight() {
             telemetry.addLine("INPUT: D-PAD RIGHT");
-            telemetry.update();
           }
 
           // Fired while left trigger is held past deadzone
           @Override
           public void onModifierLeft(float value) {
             telemetry.addLine("INPUT: LEFT TRIGGER: " + value);
-            telemetry.update();
           }
 
           // Fired while right trigger is held past deadzone
           @Override
           public void onModifierRight(float value) {
             telemetry.addLine("INPUT: RIGHT TRIGGER: " + value);
-            telemetry.update();
           }
         });
 

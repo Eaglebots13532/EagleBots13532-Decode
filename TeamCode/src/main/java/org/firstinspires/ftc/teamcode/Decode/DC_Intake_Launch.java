@@ -76,22 +76,32 @@ public class DC_Intake_Launch {
   public void InitIL() {
 
     // Define and Initialize Motor.
-    launch = myOp.hardwareMap.get(DcMotorEx.class, "launch");
+    launch = myOp.hardwareMap.get(DcMotorEx.class, "launch"); // Flywheel
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // prepare use velocity
-    arm = myOp.hardwareMap.get(DcMotor.class, "arm");
+    arm =
+        myOp.hardwareMap.get(
+            DcMotor.class,
+            "arm"); // Bar attached to flywheel, defaults to correct tilt at start of match, needs
+    // to lower at end of match
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
 
     // Define and Initialize Servo
-    intake = myOp.hardwareMap.get(CRServo.class, "intake");
+    intake =
+        myOp.hardwareMap.get(
+            CRServo.class, "intake"); // Rubberband bar and rubber gears to pull ball toward gate
     // gate to stop balls from entering the chute
-    gate = myOp.hardwareMap.get(Servo.class, "gate"); // todo set gate position
-    tilt = myOp.hardwareMap.get(Servo.class, "tilt");
+    gate =
+        myOp.hardwareMap.get(
+            Servo.class, "gate"); // Servo located in front of shooter to control hopper
+    tilt =
+        myOp.hardwareMap.get(
+            Servo.class, "tilt"); // Bar attached to camera (not used for this software feature)
     // present.SensorInit();
-    encHome = arm.getCurrentPosition(); // arm starts in home position
+    encHome = arm.getCurrentPosition(); // Not used for this software feature
     // initialize hood components
-    chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute");
-    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP");
+    chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute"); // Not used for this software feature
+    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP"); // Not used for this software feature
 
     // Create hardware adapters
     FtcCRServo motor = new FtcCRServo(chuteMotor);

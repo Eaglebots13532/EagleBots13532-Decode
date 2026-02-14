@@ -149,14 +149,25 @@ public class ChuteDriver {
   // -----------------------------------------------------------------------
 
   private void updateMovingToTarget() {
-    updatePos(true);
+    boolean goingUp = targetPos > correctedChutePos;
+    updatePos(goingUp);
 
-    if (correctedChutePos >= targetPos) {
-      chuteMotor.setPower(0.0);
-      mode = Mode.IDLE;
-      if (listener != null) listener.onTargetReached(correctedChutePos);
+    if (goingUp) {
+      if (correctedChutePos >= targetPos) {
+        chuteMotor.setPower(0.0);
+        mode = Mode.IDLE;
+        if (listener != null) listener.onTargetReached(correctedChutePos);
+      } else {
+        chuteMotor.setPower(0.8);
+      }
     } else {
-      chuteMotor.setPower(0.8);
+      if (correctedChutePos <= targetPos) {
+        chuteMotor.setPower(0.0);
+        mode = Mode.IDLE;
+        if (listener != null) listener.onTargetReached(correctedChutePos);
+      } else {
+        chuteMotor.setPower(-0.8);
+      }
     }
   }
 

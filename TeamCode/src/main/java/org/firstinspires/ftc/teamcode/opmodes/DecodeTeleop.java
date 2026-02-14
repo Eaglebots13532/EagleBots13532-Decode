@@ -64,42 +64,38 @@ public class DecodeTeleop extends LinearOpMode {
     // --- Input callbacks ---
     sm.setListener(
         new InputStateMachine.StateListener() {
-          // Fired on A button press (rising edge)
           @Override
-          public void onTogglePrimary(boolean active) {}
+          public void onTogglePrimary(int gamepad, boolean active) {}
 
-          // Fired on B button press (rising edge)
           @Override
-          public void onToggleSecondary(boolean active) {}
+          public void onToggleSecondary(int gamepad, boolean active) {}
 
-          // Fired on X button press (rising edge) -- send chute home
           @Override
-          public void onActionX() {
-            if (!chuteInputsLocked) {
+          public void onActionX(int gamepad) {
+            if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goHome();
             }
           }
 
-          // Fired on Y button press (rising edge) -- emergency stop, always fires
           @Override
-          public void onActionY() {
-            chute.stop();
+          public void onActionY(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
+            }
           }
 
-          // Fired on dpad up press (rising edge) -- extend chute by CHUTE_STEP
           @Override
-          public void onIncrementUp() {
-            if (!chuteInputsLocked) {
+          public void onIncrementUp(int gamepad) {
+            if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
             }
           }
 
-          // Fired on dpad down press (rising edge) -- retract chute by CHUTE_STEP
           @Override
-          public void onIncrementDown() {
-            if (!chuteInputsLocked) {
+          public void onIncrementDown(int gamepad) {
+            if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
               if (target < 0.001) {
@@ -110,23 +106,21 @@ public class DecodeTeleop extends LinearOpMode {
             }
           }
 
-          // Fired on dpad left press (rising edge) -- toggle drive mode
           @Override
-          public void onCycleLeft() {
-            driveManager.toggleMode();
+          public void onCycleLeft(int gamepad) {
+            if (gamepad == 1) {
+              driveManager.toggleMode();
+            }
           }
 
-          // Fired on dpad right press (rising edge)
           @Override
-          public void onCycleRight() {}
+          public void onCycleRight(int gamepad) {}
 
-          // Fired while left trigger is held past deadzone
           @Override
-          public void onModifierLeft(float value) {}
+          public void onModifierLeft(int gamepad, float value) {}
 
-          // Fired while right trigger is held past deadzone
           @Override
-          public void onModifierRight(float value) {}
+          public void onModifierRight(int gamepad, float value) {}
         });
 
     telemetry.addLine("Initialized -- waiting for start");

@@ -7,12 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-
 import org.firstinspires.ftc.teamcode.Decode.DriveManager;
 import org.firstinspires.ftc.teamcode.Decode.chute.FtcPotentiometer;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
-import org.firstinspires.ftc.teamcode.drivers.SwerveDriver;
 
 @TeleOp(name = "Decode Teleop")
 public class DecodeTeleop extends LinearOpMode {
@@ -28,7 +26,7 @@ public class DecodeTeleop extends LinearOpMode {
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
     AnalogInput chutePot = hardwareMap.get(AnalogInput.class, "CP");
     FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
-    DriveManager drive = new DriveManager(hardwareMap,telemetry);
+    DriveManager drive = new DriveManager(hardwareMap, telemetry);
     // --- Subsystems ---
     ChuteDriver chute = new ChuteDriver(chuteMotor, pot, telemetry);
     InputStateMachine sm = new InputStateMachine(gamepad1, gamepad2);
@@ -66,15 +64,23 @@ public class DecodeTeleop extends LinearOpMode {
         new InputStateMachine.StateListener() {
           // Fired on A button press (rising edge)
           @Override
-          public void onTogglePrimary(boolean active) {}
+          public void onTogglePrimary(boolean active) {
+            telemetry.addLine("INPUT: A");
+            telemetry.update();
+          }
 
           // Fired on B button press (rising edge)
           @Override
-          public void onToggleSecondary(boolean active) {}
+          public void onToggleSecondary(boolean active) {
+            telemetry.addLine("INPUT: B");
+            telemetry.update();
+          }
 
           // Fired on X button press (rising edge) -- send chute home
           @Override
           public void onActionX() {
+            telemetry.addLine("INPUT: X");
+            telemetry.update();
             if (!chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goHome();
@@ -84,6 +90,8 @@ public class DecodeTeleop extends LinearOpMode {
           // Fired on Y button press (rising edge) -- emergency stop, always fires
           @Override
           public void onActionY() {
+            telemetry.addLine("INPUT: Y");
+            telemetry.update();
             chute.stop();
           }
 
@@ -91,6 +99,8 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onIncrementUp() {
             if (!chuteInputsLocked) {
+              telemetry.addLine("INPUT: D-PAD UP");
+              telemetry.update();
               chuteInputsLocked = true;
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
             }
@@ -99,6 +109,8 @@ public class DecodeTeleop extends LinearOpMode {
           // Fired on dpad down press (rising edge) -- retract chute by CHUTE_STEP
           @Override
           public void onIncrementDown() {
+            telemetry.addLine("INPUT: D-PAD DOWN");
+            telemetry.update();
             if (!chuteInputsLocked) {
               chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
@@ -112,19 +124,31 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Fired on dpad left press (rising edge)
           @Override
-          public void onCycleLeft() {}
+          public void onCycleLeft() {
+            telemetry.addLine("INPUT: D-PAD LEFT");
+            telemetry.update();
+          }
 
           // Fired on dpad right press (rising edge)
           @Override
-          public void onCycleRight() {}
+          public void onCycleRight() {
+            telemetry.addLine("INPUT: D-PAD RIGHT");
+            telemetry.update();
+          }
 
           // Fired while left trigger is held past deadzone
           @Override
-          public void onModifierLeft(float value) {}
+          public void onModifierLeft(float value) {
+            telemetry.addLine("INPUT: LEFT TRIGGER: " + value);
+            telemetry.update();
+          }
 
           // Fired while right trigger is held past deadzone
           @Override
-          public void onModifierRight(float value) {}
+          public void onModifierRight(float value) {
+            telemetry.addLine("INPUT: RIGHT TRIGGER: " + value);
+            telemetry.update();
+          }
         });
 
     telemetry.addLine("Initialized -- waiting for start");

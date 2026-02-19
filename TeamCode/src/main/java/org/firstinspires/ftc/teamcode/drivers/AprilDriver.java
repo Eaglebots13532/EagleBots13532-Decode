@@ -1,11 +1,9 @@
 // Copyright (c) 2024-2025 FTC 13532
 // All rights reserved.
 
-package org.firstinspires.ftc.teamcode.Decode;
+package org.firstinspires.ftc.teamcode.drivers;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -19,19 +17,46 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 /*
- * This OpMode illustrates the basics of AprilTag based localization
+ * This OpMode illustrates the basics of AprilTag based localization.
+ *
+ * For an introduction to AprilTags, see the FTC-DOCS link below:
  * https://ftc-docs.firstinspires.org/en/latest/apriltag/vision_portal/apriltag_intro/apriltag-intro.html
  *
+ * In this sample, any visible tag ID will be detected and displayed, but only tags that are included in the default
+ * "TagLibrary" will be used to compute the robot's location and orientation.  This default TagLibrary contains
+ * the current Season's AprilTags and a small set of "test Tags" in the high number range.
+ *
+ * When an AprilTag in the TagLibrary is detected, the SDK provides location and orientation of the robot, relative to the field origin.
+ * This information is provided in the "robotPose" member of the returned "detection".
  *
  * To learn about the Field Coordinate System that is defined for FTC (and used by this OpMode), see the FTC-DOCS link below:
  * https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html
  *
- *  */
-// @TeleOp(name = "Decode:AprilTag Localization")
-@Disabled
-public class UT_AprilTagLocalizationTest extends LinearOpMode {
+ * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
+ * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
+ */
 
-  double kdist = 0.0;
+public class AprilDriver {
+  private LinearOpMode myOp = null;
+
+  public AprilDriver(LinearOpMode opmode) {
+    myOp = opmode;
+  }
+
+  double kdist = .95; // 1.395
+
+  protected double UnkId = 0.0;
+  double UnkX = 0.0;
+  double UnkY = 0.0;
+
+  public static int MetaId = 0;
+  public static String MetaName = "";
+  protected double Rrange = 0.0;
+  protected double Rpitch = 0.0;
+  protected double Brange = 0.0;
+  protected double Bpitch = 0.0;
+  public static double range = 0.0;
+  public static double bearing = 0.0;
 
   private static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 
@@ -66,48 +91,22 @@ public class UT_AprilTagLocalizationTest extends LinearOpMode {
   /** The variable to store our instance of the vision portal. */
   private VisionPortal visionPortal;
 
-  ElapsedTime runTime = new ElapsedTime();
+  public void stopStream() {
+    // Save CPU resources; can resume streaming when needed.
+    visionPortal.stopStreaming();
+  }
 
-  @Override
-  public void runOpMode() {
+  public void startStream() {
+    visionPortal.resumeStreaming();
+  }
 
-    initAprilTag();
-
-    // Wait for the DS start button to be touched.
-    telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
-    telemetry.addData(">", "Touch START to start OpMode");
-    telemetry.update();
-    waitForStart();
-
-    while (opModeIsActive()) {
-      runTime.reset();
-
-      telemetryAprilTag();
-      telemetry.addData("Time ", runTime.seconds());
-
-      // Push telemetry to the Driver Station.
-      telemetry.update();
-      sleep(5000);
-
-      runTime.reset();
-
-      // Save CPU resources; can resume streaming when needed.
-      if (gamepad1.dpad_down) {
-        visionPortal.stopStreaming();
-      } else if (gamepad1.dpad_up) {
-        visionPortal.resumeStreaming();
-      }
-
-      // Share the CPU.
-      sleep(20);
-    }
-
+  public void closePortal() {
     // Save more CPU resources when camera is no longer needed.
     visionPortal.close();
   } // end method runOpMode()
 
   /** Initialize the AprilTag processor. */
-  private void initAprilTag() {
+  public void initAprilTag() {
 
     // Create the AprilTag processor.
     aprilTag =
@@ -143,7 +142,7 @@ public class UT_AprilTagLocalizationTest extends LinearOpMode {
 
     // Set the camera (webcam vs. built-in RC phone camera).
     if (USE_WEBCAM) {
-      builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+      builder.setCamera(myOp.hardwareMap.get(WebcamName.class, "Webcam 1"));
     } else {
       builder.setCamera(BuiltinCameraDirection.BACK);
     }
@@ -174,37 +173,45 @@ public class UT_AprilTagLocalizationTest extends LinearOpMode {
   } // end method initAprilTag()
 
   /** Add telemetry about AprilTag detections. */
-  private void telemetryAprilTag() {
-
+  public void getAprilTag() {
+    boolean notRedBlue = true;
     List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-    telemetry.addData("# AprilTags Detected", currentDetections.size());
 
     // Step through the list of detections and display info for each one.
     for (AprilTagDetection detection : currentDetections) {
       if (detection.metadata != null) {
-        telemetry.addLine(
-            String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-        telemetry.addLine(
-            String.format(
-                "XYZ %6.1f %6.1f %6.1f  (inch)",
-                detection.robotPose.getPosition().x,
-                detection.robotPose.getPosition().y,
-                detection.robotPose.getPosition().z));
-        telemetry.addLine(
-            String.format(
-                "PRY %6.1f %6.1f %6.1f  (deg)",
-                detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
-                detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
-                detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
+        MetaId = detection.id;
+        MetaName = detection.metadata.name;
+        if (detection.id == 24) {
+          Rpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+          Rrange = detection.ftcPose.range * kdist; // distance constant to correct range
+          notRedBlue = false;
+        }
+        if (detection.id == 20) {
+          Bpitch = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+          Brange = detection.ftcPose.range * kdist; // distance constant to correct range
+          notRedBlue = false;
+        }
+        range = detection.ftcPose.range * kdist;
+        bearing = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+        if (notRedBlue) {
+          UnkId = detection.id;
+          UnkX = detection.center.x;
+          UnkY = detection.center.y;
+        }
       } else {
-        telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-        telemetry.addLine(
-            String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+        MetaId = 0;
       }
     } // end for() loop
-
-    // Add "key" information to telemetry
-    telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-    telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
   } // end method telemetryAprilTag()
+
+  // allows range to be accessed
+  public double getRange() {
+    return range;
+  }
+
+  // allows range to be accessed
+  public int getMetaId() {
+    return MetaId;
+  }
 } // end class

@@ -65,7 +65,7 @@ public class UT_chkDevices extends LinearOpMode {
         chuteDrv = -.2;
         if (turnOnHood) game.chuteMotor.setPower(chuteDrv);
       }
-      sleep(100);
+
       game.chuteMotor.setPower(0.0);
       telemetry.addLine(". . . Fly Wheel . . . .");
       telemetry.addLine("DPad +UP -down 2");

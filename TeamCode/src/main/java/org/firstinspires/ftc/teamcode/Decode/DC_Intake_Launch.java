@@ -15,10 +15,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.Optional;
-import org.firstinspires.ftc.teamcode.Decode.chute.Chute;
-import org.firstinspires.ftc.teamcode.Decode.chute.ChuteController;
-import org.firstinspires.ftc.teamcode.Decode.chute.FtcCRServo;
-import org.firstinspires.ftc.teamcode.Decode.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.drivers.chute.Chute;
+import org.firstinspires.ftc.teamcode.drivers.chute.ChuteController;
+import org.firstinspires.ftc.teamcode.drivers.chute.FtcCRServo;
+import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 
 public class DC_Intake_Launch {
   /* Declare OpMode members.

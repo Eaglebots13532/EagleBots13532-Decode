@@ -5,14 +5,13 @@ package org.firstinspires.ftc.teamcode.drivers;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.util.Optional;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Decode.odo.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.Decode.wpilib.geometry.Rotation2d;
-import org.firstinspires.ftc.teamcode.Decode.wpilib.util.Units;
+import org.firstinspires.ftc.teamcode.drivers.odo.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.util.Units;
 
 /**
  * Standalone parallel-wheel swerve driver.
@@ -71,7 +70,7 @@ public class SwerveDriver {
 
     driveMotors[0] = (DcMotorEx) hardwareMap.dcMotor.get("LFM");
     driveMotors[1] = (DcMotorEx) hardwareMap.dcMotor.get("RFM");
-    driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
+    // driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
 
     steerServos[0] = hardwareMap.servo.get("LFS");
     steerServos[1] = hardwareMap.servo.get("RFS");

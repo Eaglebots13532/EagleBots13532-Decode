@@ -7,8 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import org.firstinspires.ftc.teamcode.Decode.DriveManager;
-import org.firstinspires.ftc.teamcode.Decode.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.DriveManager;
+import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.chute.ChuteDriver;
 import org.firstinspires.ftc.teamcode.chute.FtcPotentiometer;
@@ -21,6 +21,8 @@ public class DecodeTeleop extends LinearOpMode {
 
   private boolean chuteInputsLocked = false;
   private boolean gateOpen = false;
+
+  private double flywheelPower = 0.0;
 
   @Override
   public void runOpMode() {
@@ -42,7 +44,7 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onTargetReached(double position) {
             chuteInputsLocked = false;
-            telemetry.addLine("Chute reached: " + position);
+            // telemetry.addLine("Chute reached: " +  managerposition);
           }
 
           @Override
@@ -133,11 +135,25 @@ public class DecodeTeleop extends LinearOpMode {
           public void onCycleLeft(int gamepad) {
             if (gamepad == 1) {
               driveManager.toggleMode();
+            } else if (gamepad == 2) {
+              flywheelPower -= 0.1;
+              if (flywheelPower < 0.1) {
+                flywheelPower = 0.0;
+              }
+              game.setLaunchPower(flywheelPower);
             }
           }
 
           @Override
-          public void onCycleRight(int gamepad) {}
+          public void onCycleRight(int gamepad) {
+            if (gamepad == 2) {
+              flywheelPower += 0.1;
+              if (flywheelPower > 9.0) {
+                flywheelPower = 0.95;
+              }
+              game.setLaunchPower(flywheelPower);
+            }
+          }
 
           @Override
           public void onModifierLeft(int gamepad, float value) {}
@@ -157,7 +173,9 @@ public class DecodeTeleop extends LinearOpMode {
 
     waitForStart();
 
-    // --- Home the chute before entering main loop ---
+    /* --- Home the chute before entering main loop ---
+     *
+
     telemetry.addLine("Homing chute...");
     telemetry.update();
     chute.goHome();
@@ -166,6 +184,7 @@ public class DecodeTeleop extends LinearOpMode {
       telemetry.update();
       sleep(20);
     }
+    */
 
     // --- Main loop ---
     while (opModeIsActive()) {

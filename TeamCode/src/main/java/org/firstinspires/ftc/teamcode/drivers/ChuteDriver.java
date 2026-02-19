@@ -5,7 +5,7 @@ package org.firstinspires.ftc.teamcode.drivers;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Decode.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 
 public class ChuteDriver {
 

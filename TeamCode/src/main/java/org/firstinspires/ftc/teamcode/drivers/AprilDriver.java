@@ -58,7 +58,7 @@ public class AprilDriver {
   public static double range = 0.0;
   public static double bearing = 0.0;
 
-  private static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
+  public static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 
   /**
    * Variables to store the position and orientation of the camera on the robot. Setting these

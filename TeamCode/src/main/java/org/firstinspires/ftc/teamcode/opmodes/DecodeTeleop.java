@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
-import org.firstinspires.ftc.teamcode.drivers.DriveManager;
-import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
+import org.firstinspires.ftc.teamcode.drivers.DriveManager;
+import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 
 @TeleOp(name = "Decode Teleop")

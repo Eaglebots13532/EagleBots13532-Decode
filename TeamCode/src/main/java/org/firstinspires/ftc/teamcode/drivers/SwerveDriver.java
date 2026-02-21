@@ -211,7 +211,14 @@ public class SwerveDriver {
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
 
-    // --- Step 5: Per-wheel steering PID and flip optimization ---
+    // --- Step 5: Zero drive motors when stationary, but always steer ---
+    boolean isStationary = (speed <= 0.01 && Math.abs(omegaRadPerSec) <= 0.01);
+    if (isStationary) {
+      driveMotors[0].setPower(0);
+      driveMotors[1].setPower(0);
+    }
+
+    // --- Step 6: Per-wheel steering PID and flip optimization ---
     for (int i = 0; i < 2; i++) {
       var currentAngle =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
@@ -229,7 +236,9 @@ public class SwerveDriver {
       // Cosine scaling: reduce power while wheel is mid-turn
       power *= angleError.getCos();
 
-      driveMotors[i].setPower(power);
+      if (!isStationary) {
+        driveMotors[i].setPower(power);
+      }
 
       // Steering PID -> servo position
       double steeringAngle = calculateSteerPID(angleError, i, dt) / 2 + 0.5;
@@ -266,7 +275,14 @@ public class SwerveDriver {
 
   private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
     double errorRad = angleError.getRadians();
-    double kP = 1.25 / (Math.PI / 2); // full output at 90 deg error
+
+    // Deadband: ignore encoder noise, but fight real disturbances
+    if (Math.abs(errorRad) < Math.toRadians(2.0)) {
+      lastErrorRad[i] = 0;
+      return 0.0;
+    }
+
+    double kP = 2.0 / (Math.PI / 2); // stiffer hold against disturbances
     double kD = 0.01;
     double kS = 0.03; // static friction compensation
 

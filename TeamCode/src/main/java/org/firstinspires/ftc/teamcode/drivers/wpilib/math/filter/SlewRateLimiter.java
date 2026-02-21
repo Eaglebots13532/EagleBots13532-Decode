@@ -3,8 +3,8 @@
 
 package org.firstinspires.ftc.teamcode.drivers.wpilib.math.filter;
 
-import org.firstinspires.ftc.teamcode.drivers.wpilib.MathUtil;
 import org.firstinspires.ftc.teamcode.Utils;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.MathUtil;
 
 public class SlewRateLimiter {
   private final double m_positiveRateLimit;

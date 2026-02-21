@@ -241,7 +241,7 @@ public class SwerveDriver {
       }
 
       // Steering PID -> servo position
-      double steeringAngle = calculateSteerPID(angleError, i, dt) / 2 + 0.5;
+      double steeringAngle = -calculateSteerPID(angleError, i, dt) / 2 + 0.5;
 
       double rudderCorrection = 0.0;
       if (leadingWheelEast.isPresent()) {

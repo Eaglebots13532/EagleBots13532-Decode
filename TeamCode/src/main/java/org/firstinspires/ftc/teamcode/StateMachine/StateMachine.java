@@ -4,18 +4,29 @@
 package org.firstinspires.ftc.teamcode.StateMachine;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
+import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
+import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 
-public class StateMachine {
+public class StateMachine extends GameDriver {
+  public StateMachine(HardwareMap hardwareMap, Telemetry telemetry) {
+    super(hardwareMap, telemetry);
+  }
+
+  public AprilDriver april;
+
+  public ChuteDriver chute;
 
   enum State {
-    Find,
+    Intake,
     Approach,
-    Aim,
+    RangeSet,
     Shoot
   }
 
-  public State currentState = State.Find;
+  public State currentState = State.Intake;
   public LinearOpMode opMode;
   public Telemetry telemetry;
 
@@ -27,9 +38,11 @@ public class StateMachine {
   public void run() {
 
     switch (currentState) {
-      case Find:
-        telemetry.addLine("State Machine: Find");
+      case Intake:
+        telemetry.addLine("State Machine: Intake");
         // do stuff in here
+        super.intakeOn();
+        super.closeGate();
 
         currentState = State.Approach;
         break;
@@ -37,13 +50,19 @@ public class StateMachine {
       case Approach:
         telemetry.addLine("State Machine: Approach");
         // do stuff in here
+        super.intakeOff();
+        super.closeGate();
 
-        currentState = State.Aim;
+        currentState = State.RangeSet;
         break;
 
-      case Aim:
-        telemetry.addLine("State Machine: Aim");
+      case RangeSet:
+        telemetry.addLine("State Machine: RangeSet");
         // do stuff in here
+        april.getAprilTag();
+        double range = april.getRange();
+        super.setLaunchVelocity(range);
+        chute.goToPosition(range); // range 0 to 11
 
         currentState = State.Shoot;
         break;
@@ -51,8 +70,9 @@ public class StateMachine {
       case Shoot:
         telemetry.addLine("State Machine: Shoot");
         // do stuff in here
-
-        currentState = State.Find;
+        super.openGate();
+        super.intakeOn();
+        currentState = State.Intake;
         break;
 
       default:

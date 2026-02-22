@@ -231,4 +231,8 @@ public class ChuteDriver {
 
     prevVoltPot = newVoltpot;
   }
+
+  public void setHoodPwr(double pow) {
+    chuteMotor.setPower(pow);
+  }
 }

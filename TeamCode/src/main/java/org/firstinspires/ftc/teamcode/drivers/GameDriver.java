@@ -113,9 +113,17 @@ public class GameDriver {
     arm.setPower(power);
   }
 
+  public double getArmPosition() {
+    return arm.getCurrentPosition();
+  }
+
   // -----------------------------------------------------------------------
   // Launcher
   // -----------------------------------------------------------------------
+  // feedback flywheel velocity
+  public double flyVelocity() {
+    return launch.getVelocity();
+  }
 
   /** Set flywheel power directly (pass joystick value). */
   public void setLaunchPower(double power) {

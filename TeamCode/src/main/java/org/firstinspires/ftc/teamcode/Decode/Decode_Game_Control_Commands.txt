@@ -1,0 +1,30 @@
+Gamepad	Input	           Type	       Action
+|   1  | Left stick X+Y |  Polled   | Drive trnslation(field centric or left wheel tank
+|   1  | Right stick X  |  Polled   | Drive rotaion (field Centric)
+|   1  | Right stick Y  |  Polled   | Right wheel power (tank)
+|   1  | Dpad left      |Rising Edge| Toggle drive mode (Tank, default Field-centric
+|   1  | Dpad right     |Rising Edge| Unassigned
+|   1  | Dpad up        |Rising Edge| Unassigned
+|   1  | Dpad down      |Rising Edge| Unassigned
+|   1  | A              |Rising Edge| Unassigned
+|   1  | B              |Rising Edge| Unassigned
+|   1  | X              |Rising Edge| Unassigned
+|   1  | Y              |Rising Edge| Unassigned
+|   1  | Left trigger   |   Held    | Unassigned
+|   1  | Right trigger  |   Held    | Unassigned
+___________________________________________________________________________________________
+Gamepad	Input	           Type	       Action
+|   2  | Left stick X   |  Polled   | unassigned
+|   2  | Left stick Y   |  Polled   | Tilt bat position (mapped 0.0 - 1.0
+|   2  | Right stick X  |  Polled   | unassigned
+|   2  | Right stick Y  |  Polled   | Arm power
+|   2  | Dpad left      |Rising Edge| Hood up +2
+|   2  | Dpad right     |Rising Edge| Hood down -2
+|   2  | Dpad up        |Rising Edge| Flywheel + velocity
+|   2  | Dpad down      |Rising Edge| Flywheel - velocity
+|   2  | A              |Rising Edge| Toggle gate open / closed
+|   2  | B              |Rising Edge| Toggle intake on / off
+|   2  | X              |Rising Edge| Send Hood home
+|   2  | Y              |Rising Edge| Emergency stop Hood
+|   2  | Left trigger   |   Held    | Unassigned
+|   2  | Right trigger  |   Held    | Flywheel speed (propotinal 0.0 - 1.0)

@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.StateMachine.StateMachine;
+import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
@@ -31,6 +32,8 @@ public class DecodeTeleopApril extends LinearOpMode {
   @Override
   public void runOpMode() {
     // --- Subsystems ---
+    AprilDriver april = new AprilDriver(this);
+    april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
     StateMachine LaunchCtl = new StateMachine(hardwareMap, telemetry);
@@ -77,12 +80,8 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void onTogglePrimary(int gamepad, boolean active) {
             if (gamepad == 2) {
-              gateOpen = !gateOpen;
-              if (gateOpen) {
-                game.openGate();
-              } else {
-                game.closeGate();
-              }
+              game.closeGate();
+              game.toggleIntake();
             }
           }
 
@@ -90,6 +89,7 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void onToggleSecondary(int gamepad, boolean active) {
             if (gamepad == 2) {
+              game.openGate();
               game.toggleIntake();
             }
           }
@@ -111,18 +111,61 @@ public class DecodeTeleopApril extends LinearOpMode {
             }
           }
 
-          // Dpad up -- gamepad2: extend chute
+          // Dpad right -- gamepad2: extend chute
           @Override
-          public void onIncrementUp(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
-              chute.goToPosition(chute.getPosition() + CHUTE_STEP);
+          public void onCycleRight(int gamepad) {
+            double flyvelocity = 1500;
+            boolean istag = true;
+            double range = 90; // average distance
+            if (gamepad == 2) {
+              game.intakeOff();
+              april.getAprilTag();
+              range = april.getRange();
+              int tag = april.getMetaId();
+              istag = tag != 20 || tag != 24;
+              telemetry.addData("April range", april.getRange());
+              telemetry.addData("April tag", april.getMetaId());
+              telemetry.update();
+              if (istag) {
+                // in teleOp we are facing the correct april tag
+                // at present there is no check for match tag
+                flyvelocity = (1.6374 * range) + 1506;
+                game.setLaunchVelocity(flyvelocity);
+                // check hood position
+              }
+            } else {
+              // the robot is close for launching set default 1500
+              game.setLaunchVelocity(flyvelocity);
+            }
+            // check hood position
+            // range loses scope so initialize range or use default
+            if (istag) range = april.getRange();
+            if (range <= 50) {
+              if (chute.getPosition() < 3.0) {
+                chute.goHome();
+                sleep(500);
+                chute.goToPosition(3.0);
+              }
+            } else if (range <= 90) {
+              if (chute.getPosition() < 5.0) {
+                chute.goHome();
+                sleep(600);
+                chute.goToPosition(5.0);
+              } else if (range <= 150) {
+                if (chute.getPosition() < 7.0) {
+                  chute.goHome();
+                  sleep(700);
+                  chute.goToPosition(7.0);
+                }
+              }
+              game.openGate();
+              game.intakeOn();
             }
           }
 
-          // Dpad down -- gamepad2: retract chute
+          // Dpad left -- gamepad2: retract chute
           @Override
-          public void onIncrementDown(int gamepad) {
+          public void onCycleLeft(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
@@ -134,9 +177,9 @@ public class DecodeTeleopApril extends LinearOpMode {
             }
           }
 
-          // Dpad left -- gamepad1: toggle drive mode
+          // Dpad down -- gamepad1: toggle drive mode
           @Override
-          public void onCycleLeft(int gamepad) {
+          public void onIncrementDown(int gamepad) {
             if (gamepad == 1) {
               driveManager.toggleMode();
             } else if (gamepad == 2) {
@@ -150,7 +193,7 @@ public class DecodeTeleopApril extends LinearOpMode {
           }
 
           @Override
-          public void onCycleRight(int gamepad) {
+          public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {
               flywheelPower += 50.0;
               if (flywheelPower > 2100) {
@@ -161,11 +204,17 @@ public class DecodeTeleopApril extends LinearOpMode {
             }
           }
 
+          // Left trigger -- gamepad2: Hood positon (proportional)
           @Override
           public void onModifierLeft(int gamepad, float value) {
+            final double hoodMax = 11.0;
             if (gamepad == 2) {
-              LaunchCtl.setState(State.Approach);
-              LaunchCtl.run();
+              double target = Math.min(Math.max(value * hoodMax, 0.0), hoodMax);
+              if (target < chute.getPosition()) {
+                chute.goHome();
+                sleep(1000);
+              }
+              chute.goToPosition(target);
             }
           }
 
@@ -183,19 +232,6 @@ public class DecodeTeleopApril extends LinearOpMode {
     telemetry.update();
 
     waitForStart();
-
-    /* --- Home the chute before entering main loop ---
-     *
-
-    telemetry.addLine("Homing chute...");
-    telemetry.update();
-    chute.goHome();
-    while (opModeIsActive() && chute.isBusy()) {
-      chute.update();
-      telemetry.update();
-      sleep(20);
-    }
-    */
 
     // --- Main loop ---
     while (opModeIsActive()) {

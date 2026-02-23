@@ -45,50 +45,48 @@ public class StateMachine extends GameDriver {
     double theRange = april.getRange();
     telemetry.addData("Range", theRange);
     telemetry.update();
-    /*
-       switch (currentState) {
-         case Intake:
-           telemetry.addLine("State Machine: Intake");
-           // do stuff in here
-           super.intakeOn();
-           super.closeGate();
 
-           currentState = State.Approach;
-           break;
+    switch (currentState) {
+      case Intake:
+        telemetry.addLine("State Machine: Intake");
+        // do stuff in here
+        super.intakeOn();
+        super.closeGate();
 
-         case Approach:
-           telemetry.addLine("State Machine: Approach");
-           // do stuff in here
-           super.intakeOff();
-           super.closeGate();
+        currentState = State.Approach;
+        break;
 
-           currentState = State.RangeSet;
-           break;
+      case Approach:
+        telemetry.addLine("State Machine: Approach");
+        // do stuff in here
+        super.intakeOff();
+        super.closeGate();
 
-         case RangeSet:
-           telemetry.addLine("State Machine: RangeSet");
-           // do stuff in here
-           april.getAprilTag();
-           double range = april.getRange();
-           super.setLaunchVelocity(range);
-           chute.goToPosition(range); // range 0 to 11
+        currentState = State.RangeSet;
+        break;
 
-           currentState = State.Shoot;
-           break;
+      case RangeSet:
+        telemetry.addLine("State Machine: RangeSet");
+        // do stuff in here
+        april.getAprilTag();
+        double range = april.getRange();
+        super.setLaunchVelocity(range);
+        chute.goToPosition(range); // range 0 to 11
 
-         case Shoot:
-           telemetry.addLine("State Machine: Shoot");
-           // do stuff in here
-           super.openGate();
-           super.intakeOn();
-           currentState = State.Intake;
-           break;
+        currentState = State.Shoot;
+        break;
 
-         default:
-           telemetry.addLine("State Machine: error");
-           break;
-       }
+      case Shoot:
+        telemetry.addLine("State Machine: Shoot");
+        // do stuff in here
+        super.openGate();
+        super.intakeOn();
+        currentState = State.Intake;
+        break;
 
-    */
+      default:
+        telemetry.addLine("State Machine: error");
+        break;
+    }
   } // end run
 } // End State machine

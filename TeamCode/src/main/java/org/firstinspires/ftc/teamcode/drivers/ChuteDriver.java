@@ -49,6 +49,7 @@ public class ChuteDriver {
   private int stallCount = 0;
   private double prevHomingPos = 0.0;
   private boolean homed = false;
+  //private boolean direction = false;
 
   // -----------------------------------------------------------------------
   // Completion callbacks
@@ -84,12 +85,13 @@ public class ChuteDriver {
   // Public commands -- call these from your InputStateMachine callbacks
   // -----------------------------------------------------------------------
 
-  /** Move chute to a target position (clamped to MAX_CHUTE_POS). */
+  /** Move chute to a target position (clamped to MAX_CHUTE_POS of 11). */
   public void goToPosition(double position) {
     targetPos = Math.min(Math.max(position, 0.0), MAX_CHUTE_POS);
     if (targetPos < 0.001) {
       goHome();
     } else {
+      //direction = !(getPosition() < targetPos);
       mode = Mode.MOVING_TO_TARGET;
     }
   }
@@ -126,9 +128,9 @@ public class ChuteDriver {
 
   // -----------------------------------------------------------------------
   // Call this every loop cycle (~50Hz)
-  // -----------------------------------------------------------------------
-  public void update() {
-    switch (mode) {
+  public void update() {  // -----------------------------------------------------------------------
+
+      switch (mode) {
       case MOVING_TO_TARGET:
         updateMovingToTarget();
         break;
@@ -149,56 +151,56 @@ public class ChuteDriver {
   // Internal state machine
   // -----------------------------------------------------------------------
 
-  private void updateMovingToTarget() {
-    updatePos(true);
+    private void updateMovingToTarget() {
+        updatePos(true);
 
-    if (correctedChutePos >= targetPos) {
-      chuteMotor.setPower(0.0);
-      mode = Mode.IDLE;
-      if (listener != null) listener.onTargetReached(correctedChutePos);
-    } else {
-      chuteMotor.setPower(0.8);
-    }
-  }
-
-  private void updateHoming() {
-    // Timeout safety
-    if (System.currentTimeMillis() - homeStartTime > HOME_TIMEOUT_MS) {
-      chuteMotor.setPower(0.0);
-      telemetry.addLine("HOME TIMEOUT - stopped");
-      mode = Mode.IDLE;
-      if (listener != null) listener.onHomeTimeout();
-      return;
+        if (correctedChutePos >= targetPos) {
+            chuteMotor.setPower(0.0);
+            mode = Mode.IDLE;
+            if (listener != null) listener.onTargetReached(correctedChutePos);
+        } else {
+            chuteMotor.setPower(0.8);
+        }
     }
 
-    updatePos(false);
+    private void updateHoming() {
+        // Timeout safety
+        if (System.currentTimeMillis() - homeStartTime > HOME_TIMEOUT_MS) {
+            chuteMotor.setPower(0.0);
+            telemetry.addLine("HOME TIMEOUT - stopped");
+            mode = Mode.IDLE;
+            if (listener != null) listener.onHomeTimeout();
+            return;
+        }
 
-    // Slow down when close
-    if (correctedChutePos < 2.0) {
-      chuteMotor.setPower(-0.3);
-    } else {
-      chuteMotor.setPower(-0.8);
+        updatePos(false);
+
+        // Slow down when close
+        if (correctedChutePos < 2.0) {
+            chuteMotor.setPower(-0.3);
+        } else {
+            chuteMotor.setPower(-0.8);
+        }
+
+        // Stall detection
+        if ((int) correctedChutePos == (int) prevHomingPos) {
+            stallCount++;
+        } else {
+            stallCount = 0;
+        }
+        prevHomingPos = correctedChutePos;
+
+        if (stallCount > 50) {
+            chuteMotor.setPower(0.0);
+            minChutePos = absChutePos;
+            homed = true;
+            mode = Mode.IDLE;
+            telemetry.addLine("Found home");
+            if (listener != null) listener.onHomeComplete();
+        }
     }
 
-    // Stall detection
-    if ((int) correctedChutePos == (int) prevHomingPos) {
-      stallCount++;
-    } else {
-      stallCount = 0;
-    }
-    prevHomingPos = correctedChutePos;
-
-    if (stallCount > 50) {
-      chuteMotor.setPower(0.0);
-      minChutePos = absChutePos;
-      homed = true;
-      mode = Mode.IDLE;
-      telemetry.addLine("Found home");
-      if (listener != null) listener.onHomeComplete();
-    }
-  }
-
-  // -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
   // Position tracking (from potentiometer)
   // -----------------------------------------------------------------------
   private void updatePos(boolean directionUp) {

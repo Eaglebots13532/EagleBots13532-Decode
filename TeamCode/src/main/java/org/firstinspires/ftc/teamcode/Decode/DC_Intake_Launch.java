@@ -180,6 +180,10 @@ public class DC_Intake_Launch {
     return true;
   } // end arm position
 
+  public int getArmEnc() {
+    return arm.getCurrentPosition();
+  }
+
   public void closeGate() {
     gate.setPosition(0.5); // / todo set direction close power
   }
@@ -189,6 +193,9 @@ public class DC_Intake_Launch {
   }
 
   // auto seek set by range found by the April tag
+  public double getFlyVel() {
+    return launch.getVelocity();
+  }
 
   // might be combined
   public void flyVelocity(double range) {

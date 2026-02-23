@@ -121,7 +121,7 @@ public class GameDriver {
   // Launcher
   // -----------------------------------------------------------------------
   // feedback flywheel velocity
-  public double flyVelocity() {
+  public double getFlyVelocity() {
     return launch.getVelocity();
   }
 

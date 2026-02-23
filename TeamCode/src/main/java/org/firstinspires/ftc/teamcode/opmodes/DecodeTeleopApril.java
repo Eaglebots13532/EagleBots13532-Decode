@@ -3,11 +3,14 @@
 
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import static org.firstinspires.ftc.teamcode.StateMachine.StateMachine.*;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
+import org.firstinspires.ftc.teamcode.StateMachine.StateMachine;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
@@ -30,7 +33,7 @@ public class DecodeTeleopApril extends LinearOpMode {
     // --- Subsystems ---
     DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
-
+    StateMachine LaunchCtl = new StateMachine(hardwareMap, telemetry);
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
     AnalogInput chutePot = hardwareMap.get(AnalogInput.class, "CP");
     FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
@@ -159,7 +162,12 @@ public class DecodeTeleopApril extends LinearOpMode {
           }
 
           @Override
-          public void onModifierLeft(int gamepad, float value) {}
+          public void onModifierLeft(int gamepad, float value) {
+            if (gamepad == 2) {
+              LaunchCtl.setState(State.Approach);
+              LaunchCtl.run();
+            }
+          }
 
           // Right trigger -- gamepad2: flywheel speed (proportional)
           @Override
@@ -211,15 +219,14 @@ public class DecodeTeleopApril extends LinearOpMode {
           -gamepad1.left_stick_y,
           -gamepad1.right_stick_x,
           -gamepad1.right_stick_y);
-
       // Gamepad2: arm and tilt (polled, continuous)
       game.setArmPower(-gamepad2.right_stick_y);
       game.setTilt((-gamepad2.left_stick_y + 1.0) / 2.0); // map -1..1 to 0..1
 
       // Subsystem updates
       chute.update();
-      game.updateTelemetry();
-      telemetry.update();
+      // game.updateTelemetry();
+      // telemetry.update();
       sleep(20);
     }
   }

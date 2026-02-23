@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 @TeleOp(name = "Decode Teleop")
 public class DecodeTeleop extends LinearOpMode {
 
-  private static final double CHUTE_STEP = 3.0;
+  private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
 
   private boolean chuteInputsLocked = false;
@@ -109,7 +109,8 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad up -- gamepad2: extend chute
           @Override
-          public void onIncrementUp(int gamepad) {
+          // onCycleRight
+          public void onCycleRight(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
@@ -118,21 +119,17 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad down -- gamepad2: retract chute
           @Override
-          public void onIncrementDown(int gamepad) {
+          // onCycleLeft
+          public void onCycleLeft(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
-              double target = chute.getPosition() - CHUTE_STEP;
-              if (target < 0.001) {
-                chute.goHome();
-              } else {
-                chute.goToPosition(target);
-              }
+              chute.goToPosition(chute.getPosition() - CHUTE_STEP);
             }
           }
 
           // Dpad left -- gamepad1: toggle drive mode
           @Override
-          public void onCycleLeft(int gamepad) {
+          public void onIncrementDown(int gamepad) {
             if (gamepad == 1) {
               driveManager.toggleMode();
             } else if (gamepad == 2) {
@@ -145,7 +142,7 @@ public class DecodeTeleop extends LinearOpMode {
           }
 
           @Override
-          public void onCycleRight(int gamepad) {
+          public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {
               flywheelPower += 0.1;
               if (flywheelPower > 9.0) {

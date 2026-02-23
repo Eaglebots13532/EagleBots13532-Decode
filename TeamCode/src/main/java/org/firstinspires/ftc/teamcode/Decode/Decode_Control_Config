@@ -10,8 +10,8 @@ Left   Analog 0 . . . . . . . . .  LFP [one cable
 Right  Analog 1 . . . . . . . . .  RFP  for both]
 chute  Analog 2 . . . . . . . . .
        Analog 3 . . . . . . . . .  CP
-Arm    Motor  3 . . . . . . . . .  arm
-Spin   Motor  2 . . . . . . . . .  launch
+Arm    Motor  2 . . . . . . . . .  arm
+Spin   Motor  3 . . . . . . . . .  launch
 Intake Servo  3 . . . . . . . . .  intake
 chute  Servo  4 . . . . . . . . .  chute
 tilt   Servo  2 . . . . . . . . .  tilt

@@ -41,8 +41,7 @@ public class DC_Swerve_Drive {
 
   // Velocity feedback (one per wheel)
   private final PIDController[] velocityPIDs = {
-    new PIDController(0.15, 0, 0),
-    new PIDController(0.15, 0, 0)
+    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
   };
 
   // Derived: max wheel speed in m/s
@@ -165,8 +164,8 @@ public class DC_Swerve_Drive {
       double headingCorrection =
           headingHoldPID.calculate(currentYawRad, holdHeading.get().getRadians());
       // Clamp so the heading hold can't overpower the translation
-      effectiveOmega = Math.max(-maxOmegaRadPerSec * 0.5,
-          Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
+      effectiveOmega =
+          Math.max(-maxOmegaRadPerSec * 0.5, Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
     } else {
       // Everything released -- no rotation, keep hold target fresh for next move
       effectiveOmega = 0;
@@ -179,7 +178,7 @@ public class DC_Swerve_Drive {
 
     double[] drivePowers = {
       basePower - rotationDelta, // left wheel
-      basePower + rotationDelta  // right wheel
+      basePower + rotationDelta // right wheel
     };
 
     double currentTime = System.nanoTime() / 1e9;
@@ -195,19 +194,29 @@ public class DC_Swerve_Drive {
     myOp.telemetry.update();
 
     // --- Step 6: Per-wheel steering PID and flip optimization ---
+    // Read both wheel angles first so we can coordinate the flip decision.
+    Rotation2d[] currentAngles = new Rotation2d[2];
+    Rotation2d[] angleErrors = new Rotation2d[2];
     for (int i = 0; i < 2; i++) {
-      // Read current wheel angle from the analog encoder
-      var currentAngle =
+      currentAngles[i] =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
               .plus(encoderOffsets[i]);
+      angleErrors[i] = targetAngle.minus(currentAngles[i]);
+    }
 
-      var angleError = targetAngle.minus(currentAngle);
+    // Both wheels must agree on flip. If only one wants to flip, the wheels
+    // would point in opposite directions (potentially inward) with opposing
+    // motor signs, deadlocking the robot.
+    boolean flipMotors =
+        Math.abs(angleErrors[0].getDegrees()) > 90 && Math.abs(angleErrors[1].getDegrees()) > 90;
+
+    for (int i = 0; i < 2; i++) {
+      var angleError = angleErrors[i];
       double power = drivePowers[i];
 
-      // Flip optimization: reverse motor instead of turning > 90 deg
-      if (Math.abs(angleError.getDegrees()) > 90) {
+      if (flipMotors) {
         power *= -1;
-        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngle);
+        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngles[i]);
       }
 
       // Cosine scaling: reduce drive power while wheel is mid-turn

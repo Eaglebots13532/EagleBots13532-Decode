@@ -41,7 +41,8 @@ public class DC_Swerve_Drive {
 
   // Velocity feedback (one per wheel)
   private final PIDController[] velocityPIDs = {
-    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
+    new PIDController(0.15, 0, 0),
+    new PIDController(0.15, 0, 0)
   };
 
   // Derived: max wheel speed in m/s
@@ -73,7 +74,7 @@ public class DC_Swerve_Drive {
   // When translating with no rotation command, the IMU-based PID maintains
   // the robot's heading automatically. This replaces all per-direction
   // drift compensation and rudder logic with one uniform mechanism.
-  private final PIDController headingHoldPID = new PIDController(2.0, 0, 0.05);
+  private final PIDController headingHoldPID = new PIDController(2.0, 0.5, 0.05);
   private Optional<Rotation2d> holdHeading = Optional.empty();
 
   public void init() {
@@ -164,8 +165,8 @@ public class DC_Swerve_Drive {
       double headingCorrection =
           headingHoldPID.calculate(currentYawRad, holdHeading.get().getRadians());
       // Clamp so the heading hold can't overpower the translation
-      effectiveOmega =
-          Math.max(-maxOmegaRadPerSec * 0.5, Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
+      effectiveOmega = Math.max(-maxOmegaRadPerSec * 0.5,
+          Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
     } else {
       // Everything released -- no rotation, keep hold target fresh for next move
       effectiveOmega = 0;
@@ -178,7 +179,7 @@ public class DC_Swerve_Drive {
 
     double[] drivePowers = {
       basePower - rotationDelta, // left wheel
-      basePower + rotationDelta // right wheel
+      basePower + rotationDelta  // right wheel
     };
 
     double currentTime = System.nanoTime() / 1e9;

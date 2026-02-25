@@ -34,7 +34,7 @@ public class DC_Swerve_Drive {
   private static final double wheelBaseWidthMm = 355.5;
 
   // Motor encoder conversion
-  private static final double ticksPerMotorRev = 28.0;
+  private static final double ticksPerMotorRev = 28.0; // goBILDA 5203 series
   private static final double ticksPerWheelRev = ticksPerMotorRev * gearRatio;
   private static final double wheelCircumMeters = Math.PI * wheelDiameterMm / 1000.0;
   private static final double metersPerTick = wheelCircumMeters / ticksPerWheelRev;
@@ -231,6 +231,13 @@ public class DC_Swerve_Drive {
 
   private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
     double errorRad = angleError.getRadians();
+
+    // Deadband: ignore encoder noise to prevent kS from chattering
+    if (Math.abs(errorRad) < Math.toRadians(2.0)) {
+      lastErrorRad[i] = 0;
+      return 0.0;
+    }
+
     double kP = 1.25 / (Math.PI / 2); // Full output at 90 deg error
     double kD = 0.01;
     double kS = 0.03; // Static friction compensation

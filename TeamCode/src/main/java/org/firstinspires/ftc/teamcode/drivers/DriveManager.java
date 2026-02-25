@@ -3,8 +3,10 @@
 
 package org.firstinspires.ftc.teamcode.drivers;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Decode.DC_Swerve_Drive;
 
 /**
  * Wraps SwerveDriver and routes inputs based on drive mode.
@@ -24,10 +26,13 @@ public class DriveManager {
   private final SwerveDriver swerve;
   private final Telemetry telemetry;
   private DriveMode mode = DriveMode.TANK;
+  private DC_Swerve_Drive swerve_drive;
 
-  public DriveManager(HardwareMap hardwareMap, Telemetry telemetry) {
+  public DriveManager(LinearOpMode opmode, HardwareMap hardwareMap, Telemetry telemetry) {
     this.telemetry = telemetry;
     this.swerve = new SwerveDriver(hardwareMap, telemetry);
+    swerve_drive = new DC_Swerve_Drive(opmode);
+    swerve_drive.init();
   }
 
   /** Toggle between field-centric and tank drive. */
@@ -67,10 +72,14 @@ public class DriveManager {
   public void drive(double leftX, double leftY, double rightX, double rightY) {
     switch (mode) {
       case FIELD_CENTRIC:
-        swerve.swerveDrive(
-            leftX * swerve.maxSpeedMetersPerSec,
-            leftY * swerve.maxSpeedMetersPerSec,
-            rightX * swerve.maxOmegaRadPerSec);
+        // swerve.swerveDrive(
+        //     leftX * swerve.maxSpeedMetersPerSec,
+        //     leftY * swerve.maxSpeedMetersPerSec,
+        //     rightX * swerve.maxOmegaRadPerSec);
+        swerve_drive.fieldRelativeDrive(
+            leftY * swerve_drive.maxSpeedMetersPerSec,
+            leftX * swerve_drive.maxSpeedMetersPerSec,
+            rightX * swerve_drive.maxOmegaRadPerSec);
         break;
 
       case TANK:

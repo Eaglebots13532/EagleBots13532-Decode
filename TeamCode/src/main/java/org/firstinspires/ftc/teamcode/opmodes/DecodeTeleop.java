@@ -27,7 +27,7 @@ public class DecodeTeleop extends LinearOpMode {
   @Override
   public void runOpMode() {
     // --- Subsystems ---
-    DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
+    DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
 
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");

@@ -34,7 +34,7 @@ public class DecodeTeleopApril extends LinearOpMode {
     // --- Subsystems ---
     AprilDriver april = new AprilDriver(this);
     april.initAprilTag(); // initialize camera to read april tags
-    DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
+    DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
     StateMachine LaunchCtl = new StateMachine(hardwareMap, telemetry);
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");

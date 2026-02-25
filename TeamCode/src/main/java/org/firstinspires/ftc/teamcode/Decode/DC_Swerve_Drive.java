@@ -41,8 +41,7 @@ public class DC_Swerve_Drive {
 
   // Velocity feedback (one per wheel)
   private final PIDController[] velocityPIDs = {
-    new PIDController(0.15, 0, 0),
-    new PIDController(0.15, 0, 0)
+    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
   };
 
   // Derived: max wheel speed in m/s

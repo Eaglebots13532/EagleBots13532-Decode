@@ -3,8 +3,8 @@
 
 package org.firstinspires.ftc.teamcode.Decode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -27,8 +27,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
  * https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html
  *
  *  */
-// @TeleOp(name = "Decode:AprilTag Localization")
-@Disabled
+@TeleOp(name = "Decode:AprilTag Localization")
+// @Disabled
 public class UT_AprilTagLocalizationTest extends LinearOpMode {
 
   double kdist = 0.0;

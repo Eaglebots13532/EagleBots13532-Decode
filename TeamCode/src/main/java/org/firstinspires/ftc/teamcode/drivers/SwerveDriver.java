@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 import java.util.Optional;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drivers.odo.GoBildaPinpointDriver;
@@ -100,13 +101,18 @@ public class SwerveDriver {
    * @param rightPower right wheel power (-1.0 to 1.0)
    */
   public void tankDrive(double leftPower, double rightPower) {
+    double drive = leftPower;
+    double turn = rightPower;
     // Lock both wheels to straight forward
     steerServos[0].setPosition(TANK_STEERING_CENTER);
     steerServos[1].setPosition(TANK_STEERING_CENTER);
 
     // Direct power control
-    driveMotors[0].setPower(leftPower);
-    driveMotors[1].setPower(rightPower);
+    leftPower = -(drive + turn);
+    rightPower = drive - turn;
+    //  Clip values to ensure they stay within -1.0 and 1.0
+    driveMotors[0].setPower(Range.clip(leftPower, -1.0, 1.0));
+    driveMotors[1].setPower(Range.clip(rightPower, -1.0, 1.0));
 
     telemetry.addData("Drive Mode", "TANK");
     telemetry.addData("Left Power", "%.2f", leftPower);
@@ -282,8 +288,8 @@ public class SwerveDriver {
       return 0.0;
     }
 
-    double kP = 2.0 / (Math.PI / 2); // stiffer hold against disturbances
-    double kD = 0.01;
+    double kP = 3.0 / (Math.PI / 2); // stiffer hold against disturbances
+    double kD = 0.05; // .01
     double kS = 0.03; // static friction compensation
 
     double proportional = errorRad * kP;

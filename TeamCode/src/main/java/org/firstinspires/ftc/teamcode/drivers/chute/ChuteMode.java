@@ -3,8 +3,8 @@
 
 package org.firstinspires.ftc.teamcode.drivers.chute;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import java.util.Optional;
@@ -14,7 +14,8 @@ import java.util.Optional;
  *
  * <p>Hardware Config: - Motor: "chute_motor" (DcMotor) - Potentiometer: "chute_pot" (AnalogInput)
  */
-@TeleOp(name = "Chute function")
+// @TeleOp(name = "Chute function")
+@Disabled
 public class ChuteMode extends LinearOpMode {
 
   boolean potage = false;

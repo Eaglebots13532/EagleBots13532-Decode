@@ -125,18 +125,13 @@ public class DC_Swerve_Drive {
     // --- Step 3: Compute shared steering angle ---
     Rotation2d targetAngle;
 
-    // Use a higher threshold for committing lastTargetAngle so that
-    // joystick spring-back noise doesn't overwrite the held angle.
-    double commitThreshold = 0.15 * maxSpeedMetersPerSec;
-
     if (speed > 0.01) {
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
-      if (speed > commitThreshold) {
-        lastTargetAngle = targetAngle;
-      }
+      lastTargetAngle = targetAngle;
     } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
-      // Rotation only -- hold the last steering angle
-      targetAngle = lastTargetAngle;
+      // Rotation only -- point wheels forward for differential spin
+      targetAngle = Rotation2d.kZero;
+      lastTargetAngle = targetAngle;
     } else {
       // Nothing commanded -- hold everything
       targetAngle = lastTargetAngle;

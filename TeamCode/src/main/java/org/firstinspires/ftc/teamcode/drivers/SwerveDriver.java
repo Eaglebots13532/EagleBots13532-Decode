@@ -69,12 +69,12 @@ public class SwerveDriver {
   private Rotation2d lastTargetAngle = Rotation2d.kZero;
   private double lastTimeStamp;
   private final double[] lastErrorRad = new double[2];
-  private Optional<Rotation2d> startingYawAngle = Optional.empty();
-  private Optional<Boolean> leadingWheelEast = Optional.empty();
+
+  // --- Heading hold ---
+  private final PIDController headingHoldPID = new PIDController(2.0, 0.5, 0.05);
+  private Optional<Rotation2d> holdHeading = Optional.empty();
 
   // --- Tank drive: servo position that points wheels straight forward ---
-  // This is the servo value (0.0-1.0) where PID output = 0 => centered = 0.5
-  // Adjust if wheels don't point straight at 0.5
   private static final double TANK_STEERING_CENTER = 0.5;
 
   public SwerveDriver(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -94,10 +94,14 @@ public class SwerveDriver {
     pinpoint.resetPosAndIMU();
 
     lastTimeStamp = System.nanoTime() / 1e9;
+
+    // Heading PID wraps at +/- pi so it takes the shortest path
+    headingHoldPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   public void resetYaw() {
     pinpoint.setHeading(Rotation2d.kZero);
+    holdHeading = Optional.empty();
   }
 
   // -----------------------------------------------------------------------
@@ -163,108 +167,89 @@ public class SwerveDriver {
 
     // --- Step 3: Compute shared steering angle ---
     Rotation2d targetAngle;
-    double requestedTranslationAngle = Math.atan2(yVelMetersPerSec, xVelMetersPerSec);
-
-    Rotation2d yawRotationalDrift = new Rotation2d();
-    if (startingYawAngle.isPresent()) {
-      yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
-    }
-
-    // Use a higher threshold for committing a new lastTargetAngle so that
-    // joystick drift near center (spring-back noise) doesn't overwrite the
-    // held angle with a random direction.
-    double commitThreshold = 0.15 * maxSpeedMetersPerSec; // ~15% stick deflection
 
     if (speed > 0.01) {
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
-      if (speed > commitThreshold) {
-        lastTargetAngle = targetAngle;
-      }
-
-      if (startingYawAngle.isEmpty()) {
-        Rotation2d leftJoyRotation = new Rotation2d(xVelMetersPerSec, yVelMetersPerSec);
-        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromRadians(requestedTranslationAngle));
-        startingYawAngle = Optional.of(leftJoyRotation);
-      }
+      lastTargetAngle = targetAngle;
     } else if (Math.abs(omegaRadPerSec) > 0.01) {
-      // No translation but rotation requested -- hold the last steering angle
-      // so wheels don't snap. Differential speed handles the spin regardless
-      // of wheel heading.
-      targetAngle = lastTargetAngle;
-      startingYawAngle = Optional.empty();
+      // Rotation only -- point wheels forward for differential spin
+      targetAngle = Rotation2d.kZero;
+      lastTargetAngle = targetAngle;
     } else {
+      // Nothing commanded -- hold last angle
       targetAngle = lastTargetAngle;
-      startingYawAngle = Optional.empty();
     }
 
-    // --- Step 4: Compute per-wheel drive power ---
+    // --- Step 4: Heading hold ---
+    double effectiveOmega;
+    double currentYawRad = pinpoint.getYaw().getRadians();
+
+    if (Math.abs(omegaRadPerSec) > 0.01) {
+      // Driver is commanding rotation -- pass through directly
+      effectiveOmega = omegaRadPerSec;
+      holdHeading = Optional.of(pinpoint.getYaw());
+    } else if (speed > 0.01) {
+      // Translating with no rotation command -- hold heading via PID
+      if (holdHeading.isEmpty()) {
+        holdHeading = Optional.of(pinpoint.getYaw());
+      }
+      double headingCorrection =
+          headingHoldPID.calculate(currentYawRad, holdHeading.get().getRadians());
+      // Clamp so heading hold can't overpower translation
+      effectiveOmega =
+          Math.max(-maxOmegaRadPerSec * 0.5, Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
+    } else {
+      // Everything released -- no rotation, keep hold target fresh
+      effectiveOmega = 0;
+      holdHeading = Optional.of(pinpoint.getYaw());
+    }
+
+    // --- Step 5: Compute per-wheel drive power ---
     double basePower = speed * kV;
-    double rotationDelta = omegaRadPerSec * HALF_WHEELBASE_METERS * kV;
-
-    double rotationDriftPowerCompensationRight = 0.0;
-    double rotationDriftPowerCompensationLeft = 0.0;
-
-    if (startingYawAngle.isPresent()) {
-      if (yawRotationalDrift.getRadians() > 0.01) {
-        rotationDriftPowerCompensationRight = 0.5;
-        rotationDriftPowerCompensationLeft = 0.0;
-      } else if (yawRotationalDrift.getRadians() < -0.01) {
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.5;
-      }
-
-      if (requestedTranslationAngle <= 0.5 && requestedTranslationAngle >= -0.5) {
-        // Heading north -- use differential power compensation
-      } else if (requestedTranslationAngle >= 3.0 || requestedTranslationAngle <= -3.0) {
-        // Heading south -- use differential power compensation
-      } else if (requestedTranslationAngle > 0.0) {
-        // Heading west -- use rudder correction instead
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(false);
-      } else {
-        // Heading east -- use rudder correction instead
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(true);
-      }
-    }
+    double rotationDelta = effectiveOmega * HALF_WHEELBASE_METERS * kV;
 
     double[] drivePowers = {
-      basePower - rotationDelta + rotationDriftPowerCompensationLeft, // left
-      basePower + rotationDelta + rotationDriftPowerCompensationRight // right
+      basePower - rotationDelta, // left
+      basePower + rotationDelta // right
     };
 
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
 
-    // --- Step 5: Zero drive motors when stationary, but always steer ---
+    // --- Step 6: Zero drive motors when stationary, but always steer ---
     boolean isStationary = (speed <= 0.01 && Math.abs(omegaRadPerSec) <= 0.01);
     if (isStationary) {
       driveMotors[0].setPower(0);
       driveMotors[1].setPower(0);
     }
 
-    // --- Step 6: Per-wheel steering PID and flip optimization ---
+    // --- Step 7: Per-wheel steering PID and coordinated flip optimization ---
+    Rotation2d[] currentAngles = new Rotation2d[2];
+    Rotation2d[] angleErrors = new Rotation2d[2];
     for (int i = 0; i < 2; i++) {
-      var currentAngle =
+      currentAngles[i] =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
               .plus(encoderOffsets[i]);
+      angleErrors[i] = targetAngle.minus(currentAngles[i]);
+    }
 
-      var angleError = targetAngle.minus(currentAngle);
+    // Both wheels must agree on flip to prevent them pointing inward
+    boolean flipMotors =
+        Math.abs(angleErrors[0].getDegrees()) > 90 && Math.abs(angleErrors[1].getDegrees()) > 90;
+
+    for (int i = 0; i < 2; i++) {
+      var angleError = angleErrors[i];
       double power = drivePowers[i];
 
-      // Flip optimization: reverse motor instead of turning 180 deg
-      if (Math.abs(angleError.getDegrees()) > 90) {
+      if (flipMotors) {
         power *= -1;
-        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngle);
+        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngles[i]);
       }
 
       // Cosine scaling: reduce power while wheel is mid-turn
       power *= angleError.getCos();
 
       // Closed-loop velocity: feedforward + PID correction from motor encoder
-      // to keep both wheels matched even if one has more friction.
       if (!isStationary) {
         double targetVel = power * maxSpeedMetersPerSec;
         double actualVel = driveMotors[i].getVelocity() * METERS_PER_TICK;
@@ -274,23 +259,7 @@ public class SwerveDriver {
 
       // Steering PID -> servo position
       double steeringAngle = -calculateSteerPID(angleError, i, dt) / 2 + 0.5;
-
-      double rudderCorrection = 0.0;
-      if (leadingWheelEast.isPresent()) {
-        double candidateRudder = 0.0;
-        if (yawRotationalDrift.getRadians() > 0.01) {
-          candidateRudder = -0.1;
-        } else if (yawRotationalDrift.getRadians() < -0.01) {
-          candidateRudder = 0.1;
-        }
-        if (leadingWheelEast.get()) {
-          if (i == 0) rudderCorrection = candidateRudder;
-        } else {
-          if (i == 1) rudderCorrection = candidateRudder;
-        }
-      }
-
-      steerServos[i].setPosition(steeringAngle + rudderCorrection);
+      steerServos[i].setPosition(steeringAngle);
     }
 
     lastTimeStamp = currentTime;
@@ -299,6 +268,10 @@ public class SwerveDriver {
     telemetry.addData("Drive Mode", "FIELD-CENTRIC");
     telemetry.addData("Speed", "%.2f m/s", speed);
     telemetry.addData("Target Angle", targetAngle);
+    if (holdHeading.isPresent()) {
+      telemetry.addData("Hold Heading", holdHeading.get());
+    }
+    telemetry.addData("Effective Omega", "%.3f", effectiveOmega);
   }
 
   // -----------------------------------------------------------------------
@@ -315,7 +288,7 @@ public class SwerveDriver {
     }
 
     double kP = 3.0 / (Math.PI / 2); // stiffer hold against disturbances
-    double kD = 0.05; // .01
+    double kD = 0.05;
     double kS = 0.03; // static friction compensation
 
     double proportional = errorRad * kP;

@@ -33,6 +33,18 @@ public class DC_Swerve_Drive {
   private static final double gearRatio = 3;
   private static final double wheelBaseWidthMm = 355.5;
 
+  // Motor encoder conversion
+  private static final double ticksPerMotorRev = 28.0;
+  private static final double ticksPerWheelRev = ticksPerMotorRev * gearRatio;
+  private static final double wheelCircumMeters = Math.PI * wheelDiameterMm / 1000.0;
+  private static final double metersPerTick = wheelCircumMeters / ticksPerWheelRev;
+
+  // Velocity feedback (one per wheel)
+  private final PIDController[] velocityPIDs = {
+    new PIDController(0.15, 0, 0),
+    new PIDController(0.15, 0, 0)
+  };
+
   // Derived: max wheel speed in m/s
   //   wheelRadiusMeters = (diameter_mm / 1000) / 2
   //   wheelAngularVel = RPM_at_wheel * 2*pi / 60
@@ -135,8 +147,8 @@ public class DC_Swerve_Drive {
     // wheels need to face. If the joystick is released (no translation), we hold
     // the last angle so the wheels don't snap to some default.
     // Special case: if the driver is ONLY rotating (right stick with no left stick),
-    // point the wheels straight forward on the robot body. This lets the differential
-    // speed spin the robot in place -- one wheel forward, one wheel backward.
+    // hold the last steering angle so the wheels don't snap. The differential speed
+    // will spin the robot regardless of wheel heading.
     Rotation2d targetAngle;
     double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
 
@@ -145,10 +157,17 @@ public class DC_Swerve_Drive {
       yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
     }
 
+    // Use a higher threshold for committing a new lastTargetAngle so that
+    // joystick drift near center (spring-back noise) doesn't overwrite the
+    // held angle with a random direction.
+    double commitThreshold = 0.15 * maxSpeedMetersPerSec; // ~15% stick deflection
+
     if (speed > 0.01) {
       // atan2(y, x) gives the angle of the velocity vector
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
-      lastTargetAngle = targetAngle;
+      if (speed > commitThreshold) {
+        lastTargetAngle = targetAngle;
+      }
 
       // FIXME: The starting yaw angle needs to be updated if the joystick changes
       if (startingYawAngle.isEmpty()) {
@@ -157,9 +176,10 @@ public class DC_Swerve_Drive {
         startingYawAngle = Optional.of(leftJoyRotation);
       }
     } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
-      // No translation but rotation requested -- orient wheels forward so
-      // differential speed can spin the robot in place
-      targetAngle = Rotation2d.kZero;
+      // No translation but rotation requested -- hold the last steering angle
+      // so wheels don't snap. Differential speed handles the spin regardless
+      // of wheel heading.
+      targetAngle = lastTargetAngle;
       startingYawAngle = Optional.empty();
     } else {
       targetAngle = lastTargetAngle;
@@ -271,7 +291,14 @@ public class DC_Swerve_Drive {
       // lurching sideways while the wheel is still mid-turn.
       power *= angleError.getCos();
 
-      driveMotors[i].setPower(power);
+      // Closed-loop velocity: use the open-loop power as feedforward and add a
+      // PID correction based on measured vs. desired wheel speed from the motor
+      // encoder. This keeps both wheels matched even if one has more friction.
+      double targetVel = power * maxSpeedMetersPerSec;
+      double actualVel = driveMotors[i].getVelocity() * metersPerTick;
+      double correction = velocityPIDs[i].calculate(actualVel, targetVel);
+      driveMotors[i].setPower(power + correction);
+
       // The steering PID outputs a value from -1 to 1 (full left to full right).
       // Servos expect 0 to 1, so we map: servo_pos = (pid_output / 2) + 0.5
       //   pid = -1 -> servo = 0.0 (full one direction)

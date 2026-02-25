@@ -12,6 +12,7 @@ import java.util.Optional;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drivers.odo.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.math.controller.PIDController;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.util.Units;
 
 /**
@@ -44,6 +45,16 @@ public class SwerveDriver {
   public final double maxOmegaRadPerSec = maxSpeedMetersPerSec / HALF_WHEELBASE_METERS;
 
   private final double kV = 1.0 / maxSpeedMetersPerSec;
+
+  // --- Motor encoder velocity feedback ---
+  private static final double TICKS_PER_MOTOR_REV = 28.0; // goBILDA 5203 series
+  private static final double TICKS_PER_WHEEL_REV = TICKS_PER_MOTOR_REV * GEAR_RATIO;
+  private static final double WHEEL_CIRCUM_METERS = Math.PI * WHEEL_DIAMETER_MM / 1000.0;
+  private static final double METERS_PER_TICK = WHEEL_CIRCUM_METERS / TICKS_PER_WHEEL_REV;
+
+  private final PIDController[] velocityPIDs = {
+    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
+  };
 
   // --- Encoder offsets (calibrated so 0 deg = forward) ---
   private static final double LEFT_ENCODER_OFFSET_DEG = -70.0;
@@ -159,9 +170,16 @@ public class SwerveDriver {
       yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
     }
 
+    // Use a higher threshold for committing a new lastTargetAngle so that
+    // joystick drift near center (spring-back noise) doesn't overwrite the
+    // held angle with a random direction.
+    double commitThreshold = 0.15 * maxSpeedMetersPerSec; // ~15% stick deflection
+
     if (speed > 0.01) {
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
-      lastTargetAngle = targetAngle;
+      if (speed > commitThreshold) {
+        lastTargetAngle = targetAngle;
+      }
 
       if (startingYawAngle.isEmpty()) {
         Rotation2d leftJoyRotation = new Rotation2d(xVelMetersPerSec, yVelMetersPerSec);
@@ -169,7 +187,10 @@ public class SwerveDriver {
         startingYawAngle = Optional.of(leftJoyRotation);
       }
     } else if (Math.abs(omegaRadPerSec) > 0.01) {
-      targetAngle = Rotation2d.kZero;
+      // No translation but rotation requested -- hold the last steering angle
+      // so wheels don't snap. Differential speed handles the spin regardless
+      // of wheel heading.
+      targetAngle = lastTargetAngle;
       startingYawAngle = Optional.empty();
     } else {
       targetAngle = lastTargetAngle;
@@ -242,8 +263,13 @@ public class SwerveDriver {
       // Cosine scaling: reduce power while wheel is mid-turn
       power *= angleError.getCos();
 
+      // Closed-loop velocity: feedforward + PID correction from motor encoder
+      // to keep both wheels matched even if one has more friction.
       if (!isStationary) {
-        driveMotors[i].setPower(power);
+        double targetVel = power * maxSpeedMetersPerSec;
+        double actualVel = driveMotors[i].getVelocity() * METERS_PER_TICK;
+        double correction = velocityPIDs[i].calculate(actualVel, targetVel);
+        driveMotors[i].setPower(power + correction);
       }
 
       // Steering PID -> servo position

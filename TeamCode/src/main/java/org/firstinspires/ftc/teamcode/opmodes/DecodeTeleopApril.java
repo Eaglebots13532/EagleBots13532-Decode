@@ -139,9 +139,9 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void on_D_Pad_Left(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
               if (target < 0.001) {
+                chuteInputsLocked = true;
                 chute.goHome();
               } else {
                 chute.goToPosition(target);

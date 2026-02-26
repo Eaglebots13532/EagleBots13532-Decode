@@ -208,18 +208,23 @@ public class DecodeTeleopApril extends LinearOpMode {
           }
         });
 
-    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(0.0, 0.0);
+      InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
+      distanceToHoodMap.put(43.0, 2.0);
+      distanceToHoodMap.put(79.0, 4.0);
+      distanceToHoodMap.put(126.0, 8.0);
+      distanceToHoodMap.put(130.0, 8.5);
+      distanceToHoodMap.put(160.0, 9.5);
+      distanceToHoodMap.put(296.0, 10.5);
 
-    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(43.0, 1600.0);
-    distanceToHoodMap.put(79.0, 1600.0);
-    distanceToHoodMap.put(126.0, 1700.0);
-    distanceToHoodMap.put(130.0, 1800.0);
-    distanceToHoodMap.put(160.0, 1900.0);
-    distanceToHoodMap.put(273.0, 2000.0); // end LUT
+      InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+      distanceToFlywheelVelocity.put(43.0, 1600.0);
+      distanceToFlywheelVelocity.put(79.0, 1600.0);
+      distanceToFlywheelVelocity.put(126.0, 1700.0);
+      distanceToFlywheelVelocity.put(130.0, 1800.0);
+      distanceToFlywheelVelocity.put(160.0, 1900.0);
+      distanceToFlywheelVelocity.put(273.0, 2000.0); // end LUT
 
-    telemetry.addLine("Initialized -- waiting for start");
+      telemetry.addLine("Initialized -- waiting for start");
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 

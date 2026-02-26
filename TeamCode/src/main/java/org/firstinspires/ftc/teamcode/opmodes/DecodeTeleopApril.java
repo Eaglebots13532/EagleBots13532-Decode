@@ -198,9 +198,15 @@ public class DecodeTeleopApril extends LinearOpMode {
     distanceToHoodMap.put(0.0, 0.0);
 
     InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(0.0, 0.0);
+    distanceToHoodMap.put(43.0, 1600.0);
+    distanceToHoodMap.put(79.0, 1600.0);
+    distanceToHoodMap.put(126.0, 1700.0);
+    distanceToHoodMap.put(130.0, 1800.0);
+    distanceToHoodMap.put(160.0, 1900.0);
+    distanceToHoodMap.put(273.0, 2000.0);
 
-    telemetry.addLine("Initialized -- waiting for start");
+
+      telemetry.addLine("Initialized -- waiting for start");
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 

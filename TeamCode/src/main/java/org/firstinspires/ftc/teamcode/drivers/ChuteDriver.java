@@ -152,15 +152,17 @@ public class ChuteDriver {
   // Internal state machine
   // -----------------------------------------------------------------------
 
-  private void updateMovingToTarget() {
+  private final double hoodP = 1;
+
+    private void updateMovingToTarget() {
     updatePos(true);
 
-    if (correctedChutePos >= targetPos) {
+    if (Math.abs(targetPos - correctedChutePos) < 0.1) {
       chuteMotor.setPower(0.0);
       mode = Mode.IDLE;
       if (listener != null) listener.onTargetReached(correctedChutePos);
     } else {
-      chuteMotor.setPower(0.8);
+      chuteMotor.setPower(hoodP * (targetPos - correctedChutePos));
     }
   }
 

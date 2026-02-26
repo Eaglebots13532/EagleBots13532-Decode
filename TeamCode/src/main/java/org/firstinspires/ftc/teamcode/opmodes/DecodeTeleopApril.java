@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
 @TeleOp(name = "April Teleop")
 public class DecodeTeleopApril extends LinearOpMode {
@@ -191,6 +192,11 @@ public class DecodeTeleopApril extends LinearOpMode {
           }
         });
 
+    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
+    distanceToHoodMap.put(0.0,0.0);
+
+    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+
     telemetry.addLine("Initialized -- waiting for start");
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
@@ -222,9 +228,10 @@ public class DecodeTeleopApril extends LinearOpMode {
               if (istag) {
                   // in teleOp we are facing the correct april tag
                   // at present there is no check for match tag
-                  flyvelocity = (1.6374 * range) + 1510;
+                  flyvelocity = distanceToFlywheelVelocity.get(range);
                   game.setLaunchVelocity(flyvelocity);
                   // check hood position
+                  chute.goToPosition(distanceToHoodMap.get(range));
               }
           } else {
               // the robot is close for launching set default 1500
@@ -232,26 +239,6 @@ public class DecodeTeleopApril extends LinearOpMode {
           }
           // check hood position
           // range loses scope so initialize range or use default
-          if (istag) range = april.getRange();
-          if (range <= 50) {
-              if (chute.getPosition() < 3.0) {
-                  chute.goHome();
-                  sleep(500);
-                  chute.goToPosition(3.0);
-              }
-          } else if (range <= 90) {
-              if (chute.getPosition() < 5.0) {
-                  chute.goHome();
-                  sleep(600);
-                  chute.goToPosition(6.0);
-              } else if (range <= 150) {
-                  if (chute.getPosition() < 7.0) {
-                      chute.goHome();
-                      sleep(700);
-                      chute.goToPosition(7.0);
-                  }
-              }
-          }
       }
       // Discrete button events
       sm.captureInputs();

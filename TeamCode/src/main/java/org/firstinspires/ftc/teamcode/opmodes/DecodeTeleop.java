@@ -22,6 +22,7 @@ public class DecodeTeleop extends LinearOpMode {
   private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
   private boolean gateOpen = false;
+  private boolean autoRange = false;
 
   private double flywheelPower = 0.0;
   GoBildaPrismDriver prism;
@@ -95,9 +96,15 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onActionX(int gamepad) {
             if (gamepad == 2) {
-              chute.goHome();
-            }
-          }
+              autoRange = !autoRange;
+              if (autoRange) {
+                telemetry.addLine("Auto Range On");
+              } // auto one
+              else {
+                telemetry.addLine("Auto Range off");
+              }
+            } // end if gamepad = 2
+          } // end onActionX
 
           // Y button -- gamepad2: emergency stop chute
           @Override
@@ -212,27 +219,29 @@ public class DecodeTeleop extends LinearOpMode {
       // -----------------------------------------
       // April tag and chute/flywheel auto adjust
       // -----------------------------------------
-      // Load/refresh April tag information into AprilDriver members
-      april.getAprilTag();
-      telemetry.addData("April range", april.getRange());
-      telemetry.addData("April tag", april.getMetaId());
+      if (autoRange) {
+        // Load/refresh April tag information into AprilDriver members
+        april.getAprilTag();
+        telemetry.addData("April range", april.getRange());
+        telemetry.addData("April tag", april.getMetaId());
 
-      // Determine if a tag is within view of the camera
-      // Retrieve values from recently refreshed AprilDriver members
-      double range = april.getRange();
-      int tag = april.getMetaId();
-      boolean istag = tag == 20 || tag == 24;
-      if (istag) {
-        double flyvelocity = distanceToFlywheelVelocity.get(range);
-        game.setLaunchVelocity(flyvelocity);
-        // check hood position
-        chute.goToPosition(distanceToHoodMap.get(range));
-      } else {
-        // Tage not in visible range of camera
-        //
-        // The robot is close for launching set default 1500
-        game.setLaunchVelocity(1500);
-      }
+        // Determine if a tag is within view of the camera
+        // Retrieve values from recently refreshed AprilDriver members
+        double range = april.getRange();
+        int tag = april.getMetaId();
+        boolean istag = tag == 20 || tag == 24;
+        if (istag) {
+          double flyvelocity = distanceToFlywheelVelocity.get(range);
+          game.setLaunchVelocity(flyvelocity);
+          // check hood position
+          chute.goToPosition(distanceToHoodMap.get(range));
+        } else {
+          // Tage not in visible range of camera
+          //
+          // The robot is close for launching set default 1500
+          game.setLaunchVelocity(1500);
+        }
+      } // End autoRange check
 
       // -----------------------------------------
       // Joystick control for robot movement
@@ -243,7 +252,6 @@ public class DecodeTeleop extends LinearOpMode {
           -gamepad1.left_stick_y,
           -gamepad1.right_stick_x,
           -gamepad1.right_stick_y);
-
 
       // Gamepad2: arm and tilt (polled, continuous)
       game.setArmPower(-gamepad2.right_stick_y);

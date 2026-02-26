@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
-import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
@@ -31,8 +30,8 @@ public class DecodeTeleop extends LinearOpMode {
   public void runOpMode() {
     // --- Subsystems ---
     prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
-    AprilDriver april = new AprilDriver(this);
-    april.initAprilTag(); // initialize camera to read april tags
+    // AprilDriver april = new AprilDriver(this);
+    // april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
 
@@ -219,29 +218,29 @@ public class DecodeTeleop extends LinearOpMode {
       // -----------------------------------------
       // April tag and chute/flywheel auto adjust
       // -----------------------------------------
-      if (autoRange) {
-        // Load/refresh April tag information into AprilDriver members
-        april.getAprilTag();
-        telemetry.addData("April range", april.getRange());
-        telemetry.addData("April tag", april.getMetaId());
+      // if (autoRange) {
+      //   // Load/refresh April tag information into AprilDriver members
+      //   april.getAprilTag();
+      //   telemetry.addData("April range", april.getRange());
+      //   telemetry.addData("April tag", april.getMetaId());
 
-        // Determine if a tag is within view of the camera
-        // Retrieve values from recently refreshed AprilDriver members
-        double range = april.getRange();
-        int tag = april.getMetaId();
-        boolean istag = tag == 20 || tag == 24;
-        if (istag) {
-          double flyvelocity = distanceToFlywheelVelocity.get(range);
-          game.setLaunchVelocity(flyvelocity);
-          // check hood position
-          chute.goToPosition(distanceToHoodMap.get(range));
-        } else {
-          // Tage not in visible range of camera
-          //
-          // The robot is close for launching set default 1500
-          game.setLaunchVelocity(1500);
-        }
-      } // End autoRange check
+      //   // Determine if a tag is within view of the camera
+      //   // Retrieve values from recently refreshed AprilDriver members
+      //   double range = april.getRange();
+      //   int tag = april.getMetaId();
+      //   boolean istag = tag == 20 || tag == 24;
+      //   if (istag) {
+      //     double flyvelocity = distanceToFlywheelVelocity.get(range);
+      //     game.setLaunchVelocity(flyvelocity);
+      //     // check hood position
+      //     chute.goToPosition(distanceToHoodMap.get(range));
+      //   } else {
+      //     // Tage not in visible range of camera
+      //     //
+      //     // The robot is close for launching set default 1500
+      //     game.setLaunchVelocity(1500);
+      //   }
+      // } // End autoRange check
 
       // -----------------------------------------
       // Joystick control for robot movement

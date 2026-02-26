@@ -14,14 +14,13 @@ import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
 @TeleOp(name = "Decode Teleop")
 public class DecodeTeleop extends LinearOpMode {
 
   private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
-  private double range = 0.0;
-  private int isTag = 0;
   private boolean gateOpen = false;
 
   private double flywheelPower = 0.0;
@@ -32,7 +31,7 @@ public class DecodeTeleop extends LinearOpMode {
     // --- Subsystems ---
     prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
     AprilDriver april = new AprilDriver(this);
-      april.initAprilTag(); // initialize camera to read april tags
+    april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
 
@@ -184,25 +183,67 @@ public class DecodeTeleop extends LinearOpMode {
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 
+    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
+    distanceToHoodMap.put(43.0, 2.0);
+    distanceToHoodMap.put(79.0, 4.0);
+    distanceToHoodMap.put(126.0, 8.0);
+    distanceToHoodMap.put(130.0, 8.5);
+    distanceToHoodMap.put(160.0, 9.5);
+    distanceToHoodMap.put(296.0, 10.5);
+
+    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+    distanceToFlywheelVelocity.put(43.0, 1600.0);
+    distanceToFlywheelVelocity.put(79.0, 1600.0);
+    distanceToFlywheelVelocity.put(126.0, 1700.0);
+    distanceToFlywheelVelocity.put(130.0, 1800.0);
+    distanceToFlywheelVelocity.put(160.0, 1900.0);
+    distanceToFlywheelVelocity.put(273.0, 2000.0);
+
     waitForStart();
 
     // --- Main loop ---
     while (opModeIsActive()) {
+      // -----------------------------------------
       // Discrete button events
+      // -----------------------------------------
       sm.captureInputs();
       sm.processState();
-      // Read April tags
+
+      // -----------------------------------------
+      // April tag and chute/flywheel auto adjust
+      // -----------------------------------------
+      // Load/refresh April tag information into AprilDriver members
       april.getAprilTag();
-        telemetry.addData("April range", april.getRange());
-        telemetry.addData("April tag", april.getMetaId());
-        range = april.getRange();
-        isTag = april.getMetaId();
+      telemetry.addData("April range", april.getRange());
+      telemetry.addData("April tag", april.getMetaId());
+
+      // Determine if a tag is within view of the camera
+      // Retrieve values from recently refreshed AprilDriver members
+      double range = april.getRange();
+      int tag = april.getMetaId();
+      boolean istag = tag == 20 || tag == 24;
+      if (istag) {
+        double flyvelocity = distanceToFlywheelVelocity.get(range);
+        game.setLaunchVelocity(flyvelocity);
+        // check hood position
+        chute.goToPosition(distanceToHoodMap.get(range));
+      } else {
+        // Tage not in visible range of camera
+        //
+        // The robot is close for launching set default 1500
+        game.setLaunchVelocity(1500);
+      }
+
+      // -----------------------------------------
+      // Joystick control for robot movement
+      // -----------------------------------------
       // Gamepad1: drive (polled)
       driveManager.drive(
           -gamepad1.left_stick_x,
           -gamepad1.left_stick_y,
           -gamepad1.right_stick_x,
           -gamepad1.right_stick_y);
+
 
       // Gamepad2: arm and tilt (polled, continuous)
       game.setArmPower(-gamepad2.right_stick_y);

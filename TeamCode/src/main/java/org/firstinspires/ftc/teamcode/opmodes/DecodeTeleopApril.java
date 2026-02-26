@@ -128,7 +128,7 @@ public class DecodeTeleopApril extends LinearOpMode {
 
           // Dpad right -- gamepad2: extend chute
           @Override
-          public void onCycleRight(int gamepad) {
+          public void on_D_Pad_Right(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
@@ -137,7 +137,7 @@ public class DecodeTeleopApril extends LinearOpMode {
 
           // Dpad left -- gamepad2: retract chute
           @Override
-          public void onCycleLeft(int gamepad) {
+          public void on_D_Pad_Left(int gamepad) {
             if (gamepad == 2 && !chuteInputsLocked) {
               chuteInputsLocked = true;
               double target = chute.getPosition() - CHUTE_STEP;
@@ -146,6 +146,20 @@ public class DecodeTeleopApril extends LinearOpMode {
               } else {
                 chute.goToPosition(target);
               }
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Right_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Left_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
             }
           }
 

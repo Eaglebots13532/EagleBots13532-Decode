@@ -106,19 +106,31 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad right -- gamepad2: extend chute
           @Override
-          // onCycleRight
-          public void onCycleRight(int gamepad) {
+          public void on_D_Pad_Right(int gamepad) {
             if (gamepad == 2) {
-              chute.goToPosition(chute.getPosition() + CHUTE_STEP);
+              chute.extend();
             }
           }
 
           // Dpad left -- gamepad2: retract chute
           @Override
-          // onCycleLeft
-          public void onCycleLeft(int gamepad) {
+          public void on_D_Pad_Left(int gamepad) {
             if (gamepad == 2) {
-              chute.goToPosition(chute.getPosition() - CHUTE_STEP);
+              chute.retract();
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Right_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Left_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
             }
           }
 

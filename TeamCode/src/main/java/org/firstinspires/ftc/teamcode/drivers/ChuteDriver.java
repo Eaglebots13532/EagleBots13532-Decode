@@ -97,6 +97,14 @@ public class ChuteDriver {
     }
   }
 
+  public void extend() {
+    goToPosition(MAX_CHUTE_POS);
+  }
+
+  public void retract() {
+    goHome();
+  }
+
   /** Run chute to home position (stall-detect with timeout). */
   public void goHome() {
     mode = Mode.HOMING;

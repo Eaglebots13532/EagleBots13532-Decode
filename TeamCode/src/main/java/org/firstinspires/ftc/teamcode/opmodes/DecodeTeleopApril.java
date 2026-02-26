@@ -203,7 +203,7 @@ public class DecodeTeleopApril extends LinearOpMode {
     distanceToHoodMap.put(126.0, 1700.0);
     distanceToHoodMap.put(130.0, 1800.0);
     distanceToHoodMap.put(160.0, 1900.0);
-    distanceToHoodMap.put(273.0, 2000.0);
+    distanceToHoodMap.put(273.0, 2000.0);// end LUT
 
 
       telemetry.addLine("Initialized -- waiting for start");

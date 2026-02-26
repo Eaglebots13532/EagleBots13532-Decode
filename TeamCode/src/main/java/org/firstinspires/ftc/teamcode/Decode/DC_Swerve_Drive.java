@@ -189,29 +189,19 @@ public class DC_Swerve_Drive {
     myOp.telemetry.update();
 
     // --- Step 6: Per-wheel steering PID and flip optimization ---
-    // Read both wheel angles first so we can coordinate the flip decision.
-    Rotation2d[] currentAngles = new Rotation2d[2];
-    Rotation2d[] angleErrors = new Rotation2d[2];
     for (int i = 0; i < 2; i++) {
-      currentAngles[i] =
+      // Read current wheel angle from the analog encoder
+      var currentAngle =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
               .plus(encoderOffsets[i]);
-      angleErrors[i] = targetAngle.minus(currentAngles[i]);
-    }
 
-    // Both wheels must agree on flip. If only one wants to flip, the wheels
-    // would point in opposite directions (potentially inward) with opposing
-    // motor signs, deadlocking the robot.
-    boolean flipMotors =
-        Math.abs(angleErrors[0].getDegrees()) > 90 && Math.abs(angleErrors[1].getDegrees()) > 90;
-
-    for (int i = 0; i < 2; i++) {
-      var angleError = angleErrors[i];
+      var angleError = targetAngle.minus(currentAngle);
       double power = drivePowers[i];
 
-      if (flipMotors) {
+      // Flip optimization: reverse motor instead of turning > 90 deg
+      if (Math.abs(angleError.getDegrees()) > 90) {
         power *= -1;
-        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngles[i]);
+        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngle);
       }
 
       // Cosine scaling: reduce drive power while wheel is mid-turn

@@ -131,6 +131,10 @@ public class GameDriver {
     launch.setPower(power);
   }
 
+  public void setIntakePower(double power) {
+    intake.setPower(power);
+  }
+
   /** Spin flywheel to a target velocity. */
   public void setLaunchVelocity(double velocity) {
     launch.setVelocity(velocity);

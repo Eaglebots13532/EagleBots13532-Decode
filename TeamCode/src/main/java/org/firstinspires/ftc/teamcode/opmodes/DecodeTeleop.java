@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
@@ -23,10 +24,12 @@ public class DecodeTeleop extends LinearOpMode {
   private boolean gateOpen = false;
 
   private double flywheelPower = 0.0;
+  GoBildaPrismDriver prism;
 
   @Override
   public void runOpMode() {
     // --- Subsystems ---
+    prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
 

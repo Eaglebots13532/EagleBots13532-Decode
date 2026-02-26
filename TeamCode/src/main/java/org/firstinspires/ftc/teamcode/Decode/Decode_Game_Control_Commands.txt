@@ -22,9 +22,9 @@ Gamepad	Input	           Type	       Action
 |   2  | Dpad right     |Rising Edge| Hood down -2
 |   2  | Dpad up        |Rising Edge| Flywheel + velocity
 |   2  | Dpad down      |Rising Edge| Flywheel - velocity
-|   2  | A              |Rising Edge| Toggle gate open / closed
-|   2  | B              |Rising Edge| Toggle intake on / off
-|   2  | X              |Rising Edge| Send Hood home
+|   2  | A              |Rising Edge| unassigned
+|   2  | B              |Rising Edge| Toggle gate on / off
+|   2  | X              |Rising Edge| Auto Fly and hood by range toggle
 |   2  | Y              |Rising Edge| Emergency stop Hood
 |   2  | Left trigger   |   Held    | Unassigned
-|   2  | Right trigger  |   Held    | Flywheel speed (propotinal 0.0 - 1.0)
+|   2  | Right trigger  |   Held    | Flywheel speed (proportional 0.0 - 1.0)

@@ -26,13 +26,14 @@ public class DecodeTeleopApril extends LinearOpMode {
 
   private boolean chuteInputsLocked = false;
   private boolean gateOpen = false;
+  private boolean IntakeOn = false;
   private boolean autoRange = false;
 
   // private double flywheelPower = 0.0;
   private double flywheelPower = 1850.0;
-    double flyvelocity = 1500;
-    boolean istag = true;
-    double range = 90; // average distance
+  double flyvelocity = 1500;
+  boolean istag = true;
+  double range = 90; // average distance
 
   @Override
   public void runOpMode() {
@@ -46,7 +47,6 @@ public class DecodeTeleopApril extends LinearOpMode {
     AnalogInput chutePot = hardwareMap.get(AnalogInput.class, "CP");
     FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
     ChuteDriver chute = new ChuteDriver(chuteMotor, pot, telemetry);
-    game.intakeOn(); // leave the intake on
 
     // --- Input ---
     InputStateMachine sm = new InputStateMachine(gamepad1, gamepad2);
@@ -86,8 +86,10 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void onTogglePrimary(int gamepad, boolean active) {
             if (gamepad == 2) {
-              game.closeGate();
-              // game.toggleIntake();
+              ;
+              IntakeOn = !IntakeOn;
+              if (IntakeOn) game.intakeOn();
+              else game.intakeOff();
             }
           }
 
@@ -95,10 +97,10 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void onToggleSecondary(int gamepad, boolean active) {
             if (gamepad == 2) {
-                gateOpen = !gateOpen;
+              gateOpen = !gateOpen;
               // game.toggleIntake();
-              if(gateOpen) game.openGate(); else game.closeGate();
-
+              if (gateOpen) game.openGate();
+              else game.closeGate();
             }
           }
 
@@ -106,13 +108,13 @@ public class DecodeTeleopApril extends LinearOpMode {
           @Override
           public void onActionX(int gamepad) {
             if (gamepad == 2) {
-                autoRange = !autoRange;
-                if(autoRange) {
-                    telemetry.addLine("Auto Range On");
-                } // auto one
-                else {
-                    telemetry.addLine("Auto Range off");
-                }
+              autoRange = !autoRange;
+              if (autoRange) {
+                telemetry.addLine("Auto Range On");
+              } // auto one
+              else {
+                telemetry.addLine("Auto Range off");
+              }
             } // end if gamepad = 2
           } // end onActionX
 
@@ -177,9 +179,9 @@ public class DecodeTeleopApril extends LinearOpMode {
           // Left trigger -- gamepad2: Hood positon (proportional)
           @Override
           public void onModifierLeft(int gamepad, float value) {
-            final double hoodMax = 11.0;
             if (gamepad == 2) {
-              game.setIntakePower(value);
+              if (value > .2) game.setIntakePower(0.5);
+              else game.setIntakePower(0.0);
             }
           }
 
@@ -193,9 +195,10 @@ public class DecodeTeleopApril extends LinearOpMode {
         });
 
     InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(0.0,0.0);
+    distanceToHoodMap.put(0.0, 0.0);
 
     InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+    distanceToHoodMap.put(0.0, 0.0);
 
     telemetry.addLine("Initialized -- waiting for start");
     telemetry.addData("Drive Mode", driveManager.getMode());
@@ -219,26 +222,32 @@ public class DecodeTeleopApril extends LinearOpMode {
           sleep(20);
         }
       }
-      if(autoRange){
-          if(istag){
-              april.getAprilTag();// get tag data
-              range = april.getRange();
-              int tag = april.getMetaId();
-              istag = tag == 20 || tag == 24;
-              if (istag) {
-                  // in teleOp we are facing the correct april tag
-                  // at present there is no check for match tag
-                  flyvelocity = distanceToFlywheelVelocity.get(range);
-                  game.setLaunchVelocity(flyvelocity);
-                  // check hood position
-                  chute.goToPosition(distanceToHoodMap.get(range));
-              }
-          } else {
-              // the robot is close for launching set default 1500
-              game.setLaunchVelocity(flyvelocity);
+      if (autoRange) {
+        if (istag) {
+          april.getAprilTag(); // get tag data
+          range = april.getRange();
+          int tag = april.getMetaId();
+          istag = tag == 20 || tag == 24;
+          if (istag) {
+            // in teleOp we are facing the correct april tag
+            // at present there is no check for match tag
+            flyvelocity = distanceToFlywheelVelocity.get(range);
+            game.setLaunchVelocity(flyvelocity);
+            // check hood position
+            chute.goToPosition(distanceToHoodMap.get(range));
           }
-          // check hood position
-          // range loses scope so initialize range or use default
+        } else {
+          // the robot is close for launching set default 1500
+          game.setLaunchVelocity(flyvelocity);
+        }
+        // check hood position
+        // range loses scope so initialize range or use default
+      }
+      if (gamepad2.rightBumperWasPressed()) {
+        if (!chuteInputsLocked) {
+          chuteInputsLocked = true;
+          chute.goHome();
+        }
       }
       // Discrete button events
       sm.captureInputs();

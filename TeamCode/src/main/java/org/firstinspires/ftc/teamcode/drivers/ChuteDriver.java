@@ -154,15 +154,17 @@ public class ChuteDriver {
 
   private final double hoodP = 1;
 
-    private void updateMovingToTarget() {
+  private void updateMovingToTarget() {
     updatePos(true);
 
     if (Math.abs(targetPos - correctedChutePos) < 0.1) {
       chuteMotor.setPower(0.0);
       mode = Mode.IDLE;
       if (listener != null) listener.onTargetReached(correctedChutePos);
+    } else if (targetPos > correctedChutePos) {
+      chuteMotor.setPower(0.8);
     } else {
-      chuteMotor.setPower(hoodP * (targetPos - correctedChutePos));
+      chuteMotor.setPower(-0.8);
     }
   }
 

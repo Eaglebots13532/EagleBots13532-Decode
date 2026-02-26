@@ -1,3 +1,6 @@
+// Copyright (c) 2024-2025 FTC 13532
+// All rights reserved.
+
 package org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation;
 
 import java.util.Comparator;
@@ -26,7 +29,7 @@ public class InterpolatingTreeMap<K, V> {
    * @param interpolator Function to use for interpolation of the values.
    */
   public InterpolatingTreeMap(
-    InverseInterpolator<K> inverseInterpolator, Interpolator<V> interpolator) {
+      InverseInterpolator<K> inverseInterpolator, Interpolator<V> interpolator) {
     m_map = new TreeMap<>();
     m_inverseInterpolator = inverseInterpolator;
     m_interpolator = interpolator;
@@ -40,9 +43,9 @@ public class InterpolatingTreeMap<K, V> {
    * @param comparator Comparator to use on keys.
    */
   public InterpolatingTreeMap(
-    InverseInterpolator<K> inverseInterpolator,
-    Interpolator<V> interpolator,
-    Comparator<K> comparator) {
+      InverseInterpolator<K> inverseInterpolator,
+      Interpolator<V> interpolator,
+      Comparator<K> comparator) {
     m_inverseInterpolator = inverseInterpolator;
     m_interpolator = interpolator;
     m_map = new TreeMap<>(comparator);
@@ -87,7 +90,7 @@ public class InterpolatingTreeMap<K, V> {
       V ceiling = m_map.get(ceilingKey);
 
       return m_interpolator.interpolate(
-        floor, ceiling, m_inverseInterpolator.inverseInterpolate(floorKey, ceilingKey, key));
+          floor, ceiling, m_inverseInterpolator.inverseInterpolate(floorKey, ceilingKey, key));
     } else {
       return val;
     }

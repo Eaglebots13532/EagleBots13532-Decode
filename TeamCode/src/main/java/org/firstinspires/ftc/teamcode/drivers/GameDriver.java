@@ -132,7 +132,7 @@ public class GameDriver {
   }
 
   public void setIntakePower(double power) {
-    intake.setPower(power);
+    intake.setPower(-power);
   }
 
   /** Spin flywheel to a target velocity. */

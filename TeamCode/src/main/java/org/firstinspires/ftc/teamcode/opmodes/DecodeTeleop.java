@@ -20,7 +20,8 @@ public class DecodeTeleop extends LinearOpMode {
 
   private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
-
+  private double range = 0.0;
+  private int isTag = 0;
   private boolean gateOpen = false;
 
   private double flywheelPower = 0.0;
@@ -190,7 +191,12 @@ public class DecodeTeleop extends LinearOpMode {
       // Discrete button events
       sm.captureInputs();
       sm.processState();
-
+      // Read April tags
+      april.getAprilTag();
+        telemetry.addData("April range", april.getRange());
+        telemetry.addData("April tag", april.getMetaId());
+        range = april.getRange();
+        isTag = april.getMetaId();
       // Gamepad1: drive (polled)
       driveManager.drive(
           -gamepad1.left_stick_x,

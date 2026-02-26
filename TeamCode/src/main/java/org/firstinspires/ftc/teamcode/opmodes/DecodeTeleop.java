@@ -20,7 +20,6 @@ public class DecodeTeleop extends LinearOpMode {
   private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
 
-  private boolean chuteInputsLocked = false;
   private boolean gateOpen = false;
 
   private double flywheelPower = 0.0;
@@ -46,25 +45,21 @@ public class DecodeTeleop extends LinearOpMode {
         new ChuteDriver.ChuteListener() {
           @Override
           public void onTargetReached(double position) {
-            chuteInputsLocked = false;
             // telemetry.addLine("Chute reached: " +  managerposition);
           }
 
           @Override
           public void onHomeComplete() {
-            chuteInputsLocked = false;
             telemetry.addLine("Chute homed");
           }
 
           @Override
           public void onHomeTimeout() {
-            chuteInputsLocked = false;
             telemetry.addLine("WARNING: Chute home timed out");
           }
 
           @Override
           public void onStopped() {
-            chuteInputsLocked = false;
             telemetry.addLine("Chute stopped");
           }
         });
@@ -96,8 +91,7 @@ public class DecodeTeleop extends LinearOpMode {
           // X button -- gamepad2: send chute home
           @Override
           public void onActionX(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
+            if (gamepad == 2) {
               chute.goHome();
             }
           }
@@ -110,27 +104,25 @@ public class DecodeTeleop extends LinearOpMode {
             }
           }
 
-          // Dpad up -- gamepad2: extend chute
+          // Dpad right -- gamepad2: extend chute
           @Override
           // onCycleRight
           public void onCycleRight(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
+            if (gamepad == 2) {
               chute.goToPosition(chute.getPosition() + CHUTE_STEP);
             }
           }
 
-          // Dpad down -- gamepad2: retract chute
+          // Dpad left -- gamepad2: retract chute
           @Override
           // onCycleLeft
           public void onCycleLeft(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
+            if (gamepad == 2) {
               chute.goToPosition(chute.getPosition() - CHUTE_STEP);
             }
           }
 
-          // Dpad left -- gamepad1: toggle drive mode
+          // Dpad down -- gamepad1: toggle drive mode
           @Override
           public void onIncrementDown(int gamepad) {
             if (gamepad == 1) {
@@ -144,6 +136,7 @@ public class DecodeTeleop extends LinearOpMode {
             }
           }
 
+          // Dpad up
           @Override
           public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {

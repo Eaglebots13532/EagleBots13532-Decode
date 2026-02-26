@@ -218,7 +218,7 @@ public class DecodeTeleopApril extends LinearOpMode {
               april.getAprilTag();// get tag data
               range = april.getRange();
               int tag = april.getMetaId();
-              istag = tag != 20 || tag != 24;
+              istag = tag == 20 || tag == 24;
               if (istag) {
                   // in teleOp we are facing the correct april tag
                   // at present there is no check for match tag

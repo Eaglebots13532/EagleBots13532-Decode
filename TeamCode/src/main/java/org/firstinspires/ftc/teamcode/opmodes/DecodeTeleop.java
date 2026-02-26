@@ -156,7 +156,11 @@ public class DecodeTeleop extends LinearOpMode {
           }
 
           @Override
-          public void onModifierLeft(int gamepad, float value) {}
+          public void onModifierLeft(int gamepad, float value) {
+            if (gamepad == 2) {
+              game.setIntakePower(value);
+            }
+          }
 
           // Right trigger -- gamepad2: flywheel speed (proportional)
           @Override

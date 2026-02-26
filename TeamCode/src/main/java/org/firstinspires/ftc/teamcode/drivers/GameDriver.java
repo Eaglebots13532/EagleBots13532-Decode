@@ -64,6 +64,18 @@ public class GameDriver {
     intake.setPower(intakeRunning ? -1.0 : 0.0);
   }
 
+  public void setIntakePower(float power) {
+    if (power < 0.01) {
+      intakeRunning = false;
+      power = 0.0f;
+    } else {
+      intakeRunning = true;
+    }
+
+    // Power needs to be inverted before applying to intake motor
+    intake.setPower(-1.0 * power);
+  }
+
   /** Run intake forward. */
   public void intakeOn() {
     intakeRunning = true;

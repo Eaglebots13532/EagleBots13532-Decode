@@ -44,7 +44,8 @@ public class GameDriver {
     launch = hardwareMap.get(DcMotorEx.class, "launch");
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+    launch.setZeroPowerBehavior(
+        DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();

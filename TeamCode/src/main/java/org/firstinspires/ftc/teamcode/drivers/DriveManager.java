@@ -77,13 +77,13 @@ public class DriveManager {
         //     leftY * swerve.maxSpeedMetersPerSec,
         //     rightX * swerve.maxOmegaRadPerSec);
         swerve_drive.fieldRelativeDrive(
-            leftY * swerve_drive.maxSpeedMetersPerSec,
-            leftX * swerve_drive.maxSpeedMetersPerSec,
+            -leftY * swerve_drive.maxSpeedMetersPerSec,
+            -leftX * swerve_drive.maxSpeedMetersPerSec,
             rightX * swerve_drive.maxOmegaRadPerSec);
         break;
 
       case TANK:
-        swerve.tankDrive(leftY, -1.0 * rightY);
+        swerve.tankDrive(leftY, 1.0 * rightX);
         break;
     }
   }

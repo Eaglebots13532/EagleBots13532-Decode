@@ -173,7 +173,9 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onModifierLeft(int gamepad, float value) {
             if (gamepad == 2) {
-              game.setIntakePower(value);
+              double InPwr = value;
+              if (InPwr < 0.2) InPwr = 0.0;
+              game.setIntakePower(InPwr);
             }
           }
 
@@ -181,7 +183,11 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onModifierRight(int gamepad, float value) {
             if (gamepad == 2) {
-              game.setLaunchPower(value);
+              double inPwr = value;
+              if (inPwr < .2) {
+                inPwr = 0.0;
+              }
+              game.setLaunchPower(inPwr);
             }
           }
         });
@@ -191,15 +197,15 @@ public class DecodeTeleop extends LinearOpMode {
     telemetry.update();
 
     InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(43.0, 2.0);
-    distanceToHoodMap.put(79.0, 4.0);
-    distanceToHoodMap.put(126.0, 8.0);
-    distanceToHoodMap.put(130.0, 8.5);
-    distanceToHoodMap.put(160.0, 9.5);
     distanceToHoodMap.put(296.0, 10.5);
+    distanceToHoodMap.put(160.0, 9.5);
+    distanceToHoodMap.put(130.0, 8.5);
+    distanceToHoodMap.put(126.0, 8.0);
+    distanceToHoodMap.put(79.0, 4.0);
+    distanceToHoodMap.put(43.0, 2.0);
 
     InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
-    distanceToFlywheelVelocity.put(43.0, 1600.0);
+    distanceToFlywheelVelocity.put(35.0, 1450.0);
     distanceToFlywheelVelocity.put(79.0, 1600.0);
     distanceToFlywheelVelocity.put(126.0, 1700.0);
     distanceToFlywheelVelocity.put(130.0, 1800.0);
@@ -234,7 +240,7 @@ public class DecodeTeleop extends LinearOpMode {
           double flyvelocity = distanceToFlywheelVelocity.get(range);
           game.setLaunchVelocity(flyvelocity);
           // check hood position
-          chute.goToPosition(distanceToHoodMap.get(range));
+          // chute.goToPosition(distanceToHoodMap.get(range));
         } else {
           // Tage not in visible range of camera
           //

@@ -120,24 +120,31 @@ public class Red_Decode_Autonomous extends LinearOpMode {
       sleep(1000);
       // shoot 3 balls
       decode.openGate();
-      for (int i = 1; i < 4; i++) {
-        decode.Intake();
-        sleep(1500); // wait for ball to launch
-        decode.IntakeStop();
-        sleep(500); // wait for gate to close
-      }
+
+      decode.Intake();
+      sleep(2000); // 1.0 wait for ball to launch
       decode.IntakeStop();
+      sleep(4000); // 2.0
+      decode.Intake();
+      sleep(2000);
+      decode.IntakeStop();
+      sleep(2000); // 3.0
+      decode.Intake();
+
       decode.closeGate();
-      sleep(1000);
       decode.spinOff();
+
       servoLF.setPosition(0.5);
       servoRT.setPosition(0.5);
-      sleep(500);
-      driveRT.setPower(.9);
-      driveLF.setPower(.9);
-      sleep(2000);
-      driveLF.setPower(.0);
-      driveRT.setPower(.0);
+
+      sleep(1000);
+      driveRT.setPower(-.3);
+      driveLF.setPower(.4);
+
+      sleep(1000);
+      driveRT.setPower(1.0);
+      driveLF.setPower(1.0);
+
     } // end try
     catch (Exception e) {
       telemetry.addLine(", exception in gamePadTeleOP");

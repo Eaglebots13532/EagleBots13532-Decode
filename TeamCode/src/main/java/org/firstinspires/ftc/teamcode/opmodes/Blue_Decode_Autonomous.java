@@ -134,7 +134,7 @@ public class Blue_Decode_Autonomous extends LinearOpMode {
       sleep(500);
       driveRT.setPower(-.9);
       driveLF.setPower(-.9);
-      sleep(2000);
+      sleep(1000);
       driveLF.setPower(.0);
       driveRT.setPower(.0);
     } // end try

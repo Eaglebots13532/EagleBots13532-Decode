@@ -122,8 +122,8 @@ public class SwerveDriver {
     steerServos[0].setPosition(TANK_STEERING_CENTER);
     steerServos[1].setPosition(TANK_STEERING_CENTER);
 
-    leftPower = -(drive + turn);
-    rightPower = drive - turn;
+    rightPower = drive + turn;
+    leftPower = drive - turn;
     driveMotors[0].setPower(Range.clip(leftPower, -1.0, 1.0));
     driveMotors[1].setPower(Range.clip(rightPower, -1.0, 1.0));
 

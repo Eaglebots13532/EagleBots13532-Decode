@@ -50,12 +50,8 @@ public class SwerveDriver {
 
   // --- Derived constants ---
   private static final double wheelRadiusMeters = wheelDiameterMm / 1000.0 / 2.0;
-
-  double scaleSpeed = 8.0;
   public final double maxSpeedMetersPerSec =
-      scaleSpeed
-          * Units.rotationsPerMinuteToRadiansPerSecond(motorMaxRPM / gearRatio)
-          * wheelRadiusMeters;
+      Units.rotationsPerMinuteToRadiansPerSecond(motorMaxRPM / gearRatio) * wheelRadiusMeters;
 
   // kV maps m/s -> motor power [0..1].  power = speed * kV
   private final double kV = 1.0 / maxSpeedMetersPerSec;
@@ -122,8 +118,8 @@ public class SwerveDriver {
     steerServos[0].setPosition(TANK_STEERING_CENTER);
     steerServos[1].setPosition(TANK_STEERING_CENTER);
 
-    rightPower = drive + turn;
-    leftPower = drive - turn;
+    leftPower = -(drive + turn);
+    rightPower = drive - turn;
     driveMotors[0].setPower(Range.clip(leftPower, -1.0, 1.0));
     driveMotors[1].setPower(Range.clip(rightPower, -1.0, 1.0));
 

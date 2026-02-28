@@ -141,7 +141,7 @@ public class Red_Decode_Autonomous extends LinearOpMode {
       driveRT.setPower(-.3);
       driveLF.setPower(.4);
 
-      sleep(1000);
+      sleep(1080);
       driveRT.setPower(1.0);
       driveLF.setPower(1.0);
 

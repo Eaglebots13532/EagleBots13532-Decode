@@ -140,7 +140,7 @@ public class GameDriver {
 
   /** Set flywheel power directly (pass joystick value). */
   public void setLaunchPower(double power) {
-    gate.setPosition(GATE_OPEN);
+    // gate.setPosition(GATE_OPEN);
     launch.setPower(power);
   }
 

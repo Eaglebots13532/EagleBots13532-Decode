@@ -24,7 +24,7 @@ public class DecodeTeleop extends LinearOpMode {
   private boolean gateOpen = false;
   private boolean autoRange = false;
 
-  private double flywheelPower = 0.0;
+  private double flywheelPower = 1400.0;
   GoBildaPrismDriver prism;
 
   @Override
@@ -74,6 +74,9 @@ public class DecodeTeleop extends LinearOpMode {
           // A button -- gamepad2: toggle gate
           @Override
           public void onTogglePrimary(int gamepad, boolean active) {
+            if (gamepad == 1) {
+              driveManager.resetYaw();
+            }
             if (gamepad == 2) {
               gateOpen = !gateOpen;
               if (gateOpen) {
@@ -97,12 +100,6 @@ public class DecodeTeleop extends LinearOpMode {
           public void onActionX(int gamepad) {
             if (gamepad == 2) {
               autoRange = !autoRange;
-              if (autoRange) {
-                telemetry.addLine("Auto Range On");
-              } // auto one
-              else {
-                telemetry.addLine("Auto Range off");
-              }
             } // end if gamepad = 2
           } // end onActionX
 
@@ -116,7 +113,8 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad right -- gamepad2: extend chute
           @Override
-          public void on_D_Pad_Right(int gamepad) {
+          // onIncrementUp
+          public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {
               chute.extend();
             }
@@ -124,7 +122,8 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad left -- gamepad2: retract chute
           @Override
-          public void on_D_Pad_Left(int gamepad) {
+          // onIncrementDown
+          public void onIncrementDown(int gamepad) {
             if (gamepad == 2) {
               chute.retract();
             }
@@ -146,27 +145,29 @@ public class DecodeTeleop extends LinearOpMode {
 
           // Dpad down -- gamepad1: toggle drive mode
           @Override
-          public void onIncrementDown(int gamepad) {
+          // on_D_Pad_Left
+          public void on_D_Pad_Left(int gamepad) {
             if (gamepad == 1) {
               driveManager.toggleMode();
             } else if (gamepad == 2) {
-              flywheelPower -= 0.1;
-              if (flywheelPower < 0.1) {
-                flywheelPower = 0.0;
+              flywheelPower -= 50.0;
+              if (flywheelPower < 1400.0) {
+                flywheelPower = 1400.0;
               }
-              game.setLaunchPower(flywheelPower);
+              game.setLaunchVelocity(flywheelPower);
             }
           }
 
           // Dpad up
           @Override
-          public void onIncrementUp(int gamepad) {
+          // on_D_Pad_Right
+          public void on_D_Pad_Right(int gamepad) {
             if (gamepad == 2) {
-              flywheelPower += 0.1;
-              if (flywheelPower > 9.0) {
-                flywheelPower = 0.95;
+              flywheelPower += 50.0;
+              if (flywheelPower > 2200.0) {
+                flywheelPower = 2100.0;
               }
-              game.setLaunchPower(flywheelPower);
+              game.setLaunchVelocity(flywheelPower);
             }
           }
 
@@ -210,7 +211,7 @@ public class DecodeTeleop extends LinearOpMode {
     distanceToFlywheelVelocity.put(126.0, 1700.0);
     distanceToFlywheelVelocity.put(130.0, 1800.0);
     distanceToFlywheelVelocity.put(160.0, 1900.0);
-    distanceToFlywheelVelocity.put(273.0, 2000.0);
+    distanceToFlywheelVelocity.put(273.0, 2100.0);
 
     waitForStart();
 
@@ -248,6 +249,7 @@ public class DecodeTeleop extends LinearOpMode {
           game.setLaunchVelocity(1500);
         }
       } // End autoRange check
+      if (gamepad2.rightBumperWasPressed()) game.setLaunchVelocity(0.0);
 
       // -----------------------------------------
       // Joystick control for robot movement
@@ -266,6 +268,7 @@ public class DecodeTeleop extends LinearOpMode {
       // Subsystem updates
       chute.update();
       game.updateTelemetry();
+      telemetry.addData("Auto Range ", autoRange ? "On" : "Off");
       telemetry.update();
       sleep(20);
     }

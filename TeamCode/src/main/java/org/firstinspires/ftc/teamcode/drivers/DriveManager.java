@@ -83,7 +83,7 @@ public class DriveManager {
         break;
 
       case TANK:
-        swerve.tankDrive(leftY, 1.0 * rightX);
+        swerve.tankDrive(leftY, 0.9 * rightX);
         break;
     }
   }

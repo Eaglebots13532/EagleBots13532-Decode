@@ -13,10 +13,11 @@ public class LearnEncoderStuff extends LinearOpMode {
   private DcMotor motor = null;
   public TouchSensor bob = null;
   int homeEncoder = 0;
-
   int currentPosition = 0;
+  int targetPosition = 0;
 
   public void runOpMode() {
+
     motor = hardwareMap.get(DcMotor.class, "Motor");
     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -25,7 +26,7 @@ public class LearnEncoderStuff extends LinearOpMode {
 
     waitForStart();
 
-    motor.setPower(0.3);
+    motor.setPower(0.2);
     while (opModeIsActive() && !bob.isPressed()) {
       telemetry.addData("Encoder", motor.getCurrentPosition());
       telemetry.update();
@@ -35,9 +36,14 @@ public class LearnEncoderStuff extends LinearOpMode {
 
     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    // calculate hood height (position)
 
-    motor.setPower(-0.5);
-    while (opModeIsActive() && Math.abs(motor.getCurrentPosition()) < homeEncoder + 5000) {
+    targetPosition = 5000;
+    motor.setTargetPosition(motor.getCurrentPosition() + targetPosition);
+    motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+    motor.setPower(0.2);
+    while (opModeIsActive() && motor.isBusy()) {
 
       telemetry.addData("homeEncoder", homeEncoder);
       telemetry.addData("Encoder", motor.getCurrentPosition());
@@ -48,14 +54,15 @@ public class LearnEncoderStuff extends LinearOpMode {
 
     currentPosition = motor.getCurrentPosition();
 
-    motor.setPower(0.5);
-    while (opModeIsActive() && Math.abs(motor.getCurrentPosition()) > currentPosition - 500) {
+    /*motor.setPower(0.2);
+        while (opModeIsActive() && Math.abs(motor.getCurrentPosition()) > currentPosition - 500) {
 
-      telemetry.addData("homeEncoder", homeEncoder);
-      telemetry.addData("Encoder", motor.getCurrentPosition());
-      telemetry.update();
-    }
-    motor.setPower((0.0));
+          telemetry.addData("homeEncoder", homeEncoder);
+          telemetry.addData("Encoder", motor.getCurrentPosition());
+          telemetry.update();
+        }
+        motor.setPower((0.0));
+    */
 
     sleep(5);
   } // ends runOpMode

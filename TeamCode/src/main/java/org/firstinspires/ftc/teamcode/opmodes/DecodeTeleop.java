@@ -7,27 +7,33 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
+import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.ChuteDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
 @TeleOp(name = "Decode Teleop")
 public class DecodeTeleop extends LinearOpMode {
 
   private static final double CHUTE_STEP = 2.0;
   private static final double POT_WRAP_AMOUNT = 6.16;
-
-  private boolean chuteInputsLocked = false;
   private boolean gateOpen = false;
+  private boolean autoRange = false;
 
-  private double flywheelPower = 0.0;
+  private double flywheelPower = 1400.0;
+  GoBildaPrismDriver prism;
 
   @Override
   public void runOpMode() {
     // --- Subsystems ---
-    DriveManager driveManager = new DriveManager(hardwareMap, telemetry);
+    prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
+    AprilDriver april = new AprilDriver(this);
+    april.initAprilTag(); // initialize camera to read april tags
+    DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry);
 
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
@@ -43,25 +49,21 @@ public class DecodeTeleop extends LinearOpMode {
         new ChuteDriver.ChuteListener() {
           @Override
           public void onTargetReached(double position) {
-            chuteInputsLocked = false;
             // telemetry.addLine("Chute reached: " +  managerposition);
           }
 
           @Override
           public void onHomeComplete() {
-            chuteInputsLocked = false;
             telemetry.addLine("Chute homed");
           }
 
           @Override
           public void onHomeTimeout() {
-            chuteInputsLocked = false;
             telemetry.addLine("WARNING: Chute home timed out");
           }
 
           @Override
           public void onStopped() {
-            chuteInputsLocked = false;
             telemetry.addLine("Chute stopped");
           }
         });
@@ -72,6 +74,9 @@ public class DecodeTeleop extends LinearOpMode {
           // A button -- gamepad2: toggle gate
           @Override
           public void onTogglePrimary(int gamepad, boolean active) {
+            if (gamepad == 1) {
+              driveManager.resetYaw();
+            }
             if (gamepad == 2) {
               gateOpen = !gateOpen;
               if (gateOpen) {
@@ -93,11 +98,10 @@ public class DecodeTeleop extends LinearOpMode {
           // X button -- gamepad2: send chute home
           @Override
           public void onActionX(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
-              chute.goHome();
-            }
-          }
+            if (gamepad == 2) {
+              autoRange = !autoRange;
+            } // end if gamepad = 2
+          } // end onActionX
 
           // Y button -- gamepad2: emergency stop chute
           @Override
@@ -107,59 +111,84 @@ public class DecodeTeleop extends LinearOpMode {
             }
           }
 
-          // Dpad up -- gamepad2: extend chute
+          // Dpad right -- gamepad2: extend chute
           @Override
-          // onCycleRight
-          public void onCycleRight(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
-              chute.goToPosition(chute.getPosition() + CHUTE_STEP);
+          // onIncrementUp
+          public void onIncrementUp(int gamepad) {
+            if (gamepad == 2) {
+              chute.extend();
             }
           }
 
-          // Dpad down -- gamepad2: retract chute
+          // Dpad left -- gamepad2: retract chute
           @Override
-          // onCycleLeft
-          public void onCycleLeft(int gamepad) {
-            if (gamepad == 2 && !chuteInputsLocked) {
-              chuteInputsLocked = true;
-              chute.goToPosition(chute.getPosition() - CHUTE_STEP);
-            }
-          }
-
-          // Dpad left -- gamepad1: toggle drive mode
-          @Override
+          // onIncrementDown
           public void onIncrementDown(int gamepad) {
+            if (gamepad == 2) {
+              chute.retract();
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Right_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
+            }
+          }
+
+          @Override
+          public void on_D_Pad_Left_Released(int gamepad) {
+            if (gamepad == 2) {
+              chute.stop();
+            }
+          }
+
+          // Dpad down -- gamepad1: toggle drive mode
+          @Override
+          // on_D_Pad_Left
+          public void on_D_Pad_Left(int gamepad) {
             if (gamepad == 1) {
               driveManager.toggleMode();
             } else if (gamepad == 2) {
-              flywheelPower -= 0.1;
-              if (flywheelPower < 0.1) {
-                flywheelPower = 0.0;
+              flywheelPower -= 50.0;
+              if (flywheelPower < 1400.0) {
+                flywheelPower = 1400.0;
               }
-              game.setLaunchPower(flywheelPower);
+              game.setLaunchVelocity(flywheelPower);
             }
           }
 
+          // Dpad up
           @Override
-          public void onIncrementUp(int gamepad) {
+          // on_D_Pad_Right
+          public void on_D_Pad_Right(int gamepad) {
             if (gamepad == 2) {
-              flywheelPower += 0.1;
-              if (flywheelPower > 9.0) {
-                flywheelPower = 0.95;
+              flywheelPower += 50.0;
+              if (flywheelPower > 2200.0) {
+                flywheelPower = 2100.0;
               }
-              game.setLaunchPower(flywheelPower);
+              game.setLaunchVelocity(flywheelPower);
             }
           }
 
           @Override
-          public void onModifierLeft(int gamepad, float value) {}
+          public void onModifierLeft(int gamepad, float value) {
+            if (gamepad == 2) {
+              double InPwr = value;
+              if (InPwr < 0.2) InPwr = 0.0;
+              game.setIntakePower(InPwr);
+            }
+          }
 
           // Right trigger -- gamepad2: flywheel speed (proportional)
           @Override
           public void onModifierRight(int gamepad, float value) {
             if (gamepad == 2) {
-              game.setLaunchPower(value);
+              double inPwr = value;
+              if (inPwr < .2) {
+                inPwr = 0.0;
+              }
+              game.setLaunchPower(inPwr);
             }
           }
         });
@@ -168,27 +197,63 @@ public class DecodeTeleop extends LinearOpMode {
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 
+    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
+    distanceToHoodMap.put(296.0, 10.5);
+    distanceToHoodMap.put(160.0, 9.5);
+    distanceToHoodMap.put(130.0, 8.5);
+    distanceToHoodMap.put(126.0, 8.0);
+    distanceToHoodMap.put(79.0, 4.0);
+    distanceToHoodMap.put(43.0, 2.0);
+
+    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+    distanceToFlywheelVelocity.put(35.0, 1450.0);
+    distanceToFlywheelVelocity.put(79.0, 1600.0);
+    distanceToFlywheelVelocity.put(126.0, 1700.0);
+    distanceToFlywheelVelocity.put(130.0, 1800.0);
+    distanceToFlywheelVelocity.put(160.0, 1900.0);
+    distanceToFlywheelVelocity.put(273.0, 2100.0);
+
     waitForStart();
-
-    /* --- Home the chute before entering main loop ---
-     *
-
-    telemetry.addLine("Homing chute...");
-    telemetry.update();
-    chute.goHome();
-    while (opModeIsActive() && chute.isBusy()) {
-      chute.update();
-      telemetry.update();
-      sleep(20);
-    }
-    */
 
     // --- Main loop ---
     while (opModeIsActive()) {
+      // -----------------------------------------
       // Discrete button events
+      // -----------------------------------------
       sm.captureInputs();
       sm.processState();
 
+      // -----------------------------------------
+      // April tag and chute/flywheel auto adjust
+      // -----------------------------------------
+      if (autoRange) {
+        // Load/refresh April tag information into AprilDriver members
+        april.getAprilTag();
+        telemetry.addData("April range", april.getRange());
+        telemetry.addData("April tag", april.getMetaId());
+
+        // Determine if a tag is within view of the camera
+        // Retrieve values from recently refreshed AprilDriver members
+        double range = april.getRange();
+        int tag = april.getMetaId();
+        boolean istag = tag == 20 || tag == 24;
+        if (istag) {
+          double flyvelocity = distanceToFlywheelVelocity.get(range);
+          game.setLaunchVelocity(flyvelocity);
+          // check hood position
+          // chute.goToPosition(distanceToHoodMap.get(range));
+        } else {
+          // Tage not in visible range of camera
+          //
+          // The robot is close for launching set default 1500
+          game.setLaunchVelocity(1500);
+        }
+      } // End autoRange check
+      if (gamepad2.rightBumperWasPressed()) game.setLaunchVelocity(0.0);
+
+      // -----------------------------------------
+      // Joystick control for robot movement
+      // -----------------------------------------
       // Gamepad1: drive (polled)
       driveManager.drive(
           -gamepad1.left_stick_x,
@@ -203,6 +268,7 @@ public class DecodeTeleop extends LinearOpMode {
       // Subsystem updates
       chute.update();
       game.updateTelemetry();
+      telemetry.addData("Auto Range ", autoRange ? "On" : "Off");
       telemetry.update();
       sleep(20);
     }

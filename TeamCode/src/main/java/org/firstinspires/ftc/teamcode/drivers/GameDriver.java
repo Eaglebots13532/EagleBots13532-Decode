@@ -44,7 +44,8 @@ public class GameDriver {
     launch = hardwareMap.get(DcMotorEx.class, "launch");
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+    launch.setZeroPowerBehavior(
+        DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
@@ -62,6 +63,18 @@ public class GameDriver {
   public void toggleIntake() {
     intakeRunning = !intakeRunning;
     intake.setPower(intakeRunning ? -1.0 : 0.0);
+  }
+
+  public void setIntakePower(float power) {
+    if (power < 0.01) {
+      intakeRunning = false;
+      power = 0.0f;
+    } else {
+      intakeRunning = true;
+    }
+
+    // Power needs to be inverted before applying to intake motor
+    intake.setPower(-1.0 * power);
   }
 
   /** Run intake forward. */
@@ -127,8 +140,12 @@ public class GameDriver {
 
   /** Set flywheel power directly (pass joystick value). */
   public void setLaunchPower(double power) {
-    gate.setPosition(GATE_OPEN);
+    // gate.setPosition(GATE_OPEN);
     launch.setPower(power);
+  }
+
+  public void setIntakePower(double power) {
+    intake.setPower(-power);
   }
 
   /** Spin flywheel to a target velocity. */

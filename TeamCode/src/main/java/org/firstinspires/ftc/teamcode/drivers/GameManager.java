@@ -51,7 +51,7 @@ public class GameManager {
     // in teleOp we are facing the correct april tag
     // at present there is no check for match tag
     if (getTag() == 24 || getTag() == 20) {
-      flyvelocity = 1.6374 * range() + 1506;
+      flyvelocity = 1.6374 * range() + 1450;
     }
     return flyvelocity;
   }

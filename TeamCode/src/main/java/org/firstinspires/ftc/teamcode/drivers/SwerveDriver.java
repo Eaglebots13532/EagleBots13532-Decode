@@ -5,12 +5,15 @@ package org.firstinspires.ftc.teamcode.drivers;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 import java.util.Optional;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drivers.odo.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.geometry.Rotation2d;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.math.controller.PIDController;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.util.Units;
 
 /**
@@ -29,40 +32,53 @@ public class SwerveDriver {
   private final Telemetry telemetry;
 
   // --- Physical constants ---
-  private static final double WHEEL_DIAMETER_MM = 75.0;
-  private static final double MOTOR_MAX_RPM = 1150;
-  private static final double GEAR_RATIO = 3;
-  private static final double WHEEL_BASE_WIDTH_MM = 355.5;
+  private static final double wheelDiameterMm = 75.0;
+  private static final double motorMaxRPM = 1150;
+  private static final double gearRatio = 3;
+  private static final double wheelBaseWidthMm = 355.5;
+
+  // --- Motor encoder conversion ---
+  private static final double ticksPerMotorRev = 28.0; // goBILDA 5203 series
+  private static final double ticksPerWheelRev = ticksPerMotorRev * gearRatio;
+  private static final double wheelCircumMeters = Math.PI * wheelDiameterMm / 1000.0;
+  private static final double metersPerTick = wheelCircumMeters / ticksPerWheelRev;
+
+  // --- Velocity feedback (one per wheel) ---
+  private final PIDController[] velocityPIDs = {
+    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
+  };
 
   // --- Derived constants ---
-  private static final double WHEEL_RADIUS_METERS = WHEEL_DIAMETER_MM / 1000.0 / 2.0;
-  private static final double HALF_WHEELBASE_METERS = WHEEL_BASE_WIDTH_MM / 1000.0 / 2.0;
-
+  private static final double wheelRadiusMeters = wheelDiameterMm / 1000.0 / 2.0;
   public final double maxSpeedMetersPerSec =
-      Units.rotationsPerMinuteToRadiansPerSecond(MOTOR_MAX_RPM / GEAR_RATIO) * WHEEL_RADIUS_METERS;
-  public final double maxOmegaRadPerSec = maxSpeedMetersPerSec / HALF_WHEELBASE_METERS;
+      Units.rotationsPerMinuteToRadiansPerSecond(motorMaxRPM / gearRatio) * wheelRadiusMeters;
 
+  // kV maps m/s -> motor power [0..1].  power = speed * kV
   private final double kV = 1.0 / maxSpeedMetersPerSec;
 
-  // --- Encoder offsets (calibrated so 0 deg = forward) ---
-  private static final double LEFT_ENCODER_OFFSET_DEG = -70.0;
-  private static final double RIGHT_ENCODER_OFFSET_DEG = -82.0;
+  // Half the wheelbase in meters -- used for differential rotation
+  private static final double halfWheelbaseMeters = wheelBaseWidthMm / 1000.0 / 2.0;
+
+  public final double maxOmegaRadPerSec = maxSpeedMetersPerSec / halfWheelbaseMeters;
+
+  // --- Per-wheel analog encoder offsets (calibrated so 0 deg = forward) ---
+  private static final double leftEncoderOffsetDeg = -70.0;
+  private static final double rightEncoderOffsetDeg = -82.0;
   private final Rotation2d[] encoderOffsets =
       new Rotation2d[] {
-        Rotation2d.fromDegrees(LEFT_ENCODER_OFFSET_DEG),
-        Rotation2d.fromDegrees(RIGHT_ENCODER_OFFSET_DEG)
+        Rotation2d.fromDegrees(leftEncoderOffsetDeg), Rotation2d.fromDegrees(rightEncoderOffsetDeg)
       };
 
   // --- Swerve state ---
   private Rotation2d lastTargetAngle = Rotation2d.kZero;
   private double lastTimeStamp;
   private final double[] lastErrorRad = new double[2];
-  private Optional<Rotation2d> startingYawAngle = Optional.empty();
-  private Optional<Boolean> leadingWheelEast = Optional.empty();
+
+  // --- Heading hold ---
+  private final PIDController headingHoldPID = new PIDController(2.0, 0.5, 0.05);
+  private Optional<Rotation2d> holdHeading = Optional.empty();
 
   // --- Tank drive: servo position that points wheels straight forward ---
-  // This is the servo value (0.0-1.0) where PID output = 0 => centered = 0.5
-  // Adjust if wheels don't point straight at 0.5
   private static final double TANK_STEERING_CENTER = 0.5;
 
   public SwerveDriver(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -70,7 +86,7 @@ public class SwerveDriver {
 
     driveMotors[0] = (DcMotorEx) hardwareMap.dcMotor.get("LFM");
     driveMotors[1] = (DcMotorEx) hardwareMap.dcMotor.get("RFM");
-    // driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
+    driveMotors[0].setDirection(DcMotorSimple.Direction.REVERSE);
 
     steerServos[0] = hardwareMap.servo.get("LFS");
     steerServos[1] = hardwareMap.servo.get("RFS");
@@ -82,31 +98,30 @@ public class SwerveDriver {
     pinpoint.resetPosAndIMU();
 
     lastTimeStamp = System.nanoTime() / 1e9;
+
+    // Heading PID wraps at +/- pi so it takes the shortest path
+    headingHoldPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   public void resetYaw() {
     pinpoint.setHeading(Rotation2d.kZero);
+    holdHeading = Optional.empty();
   }
 
   // -----------------------------------------------------------------------
   // Tank drive -- wheels lock forward, direct left/right power
   // -----------------------------------------------------------------------
 
-  /**
-   * Tank drive mode. Both wheels are locked pointing straight forward. Each joystick directly
-   * controls its corresponding wheel speed.
-   *
-   * @param leftPower left wheel power (-1.0 to 1.0)
-   * @param rightPower right wheel power (-1.0 to 1.0)
-   */
   public void tankDrive(double leftPower, double rightPower) {
-    // Lock both wheels to straight forward
+    double drive = leftPower;
+    double turn = rightPower;
     steerServos[0].setPosition(TANK_STEERING_CENTER);
     steerServos[1].setPosition(TANK_STEERING_CENTER);
 
-    // Direct power control
-    driveMotors[0].setPower(leftPower);
-    driveMotors[1].setPower(rightPower);
+    leftPower = -(drive + turn);
+    rightPower = drive - turn;
+    driveMotors[0].setPower(Range.clip(leftPower, -1.0, 1.0));
+    driveMotors[1].setPower(Range.clip(rightPower, -1.0, 1.0));
 
     telemetry.addData("Drive Mode", "TANK");
     telemetry.addData("Left Power", "%.2f", leftPower);
@@ -114,26 +129,19 @@ public class SwerveDriver {
   }
 
   // -----------------------------------------------------------------------
-  // Field-centric swerve drive
+  // Field-centric swerve drive (exact copy of DC_Swerve_Drive logic)
   // -----------------------------------------------------------------------
 
-  /**
-   * Field-centric swerve drive. Both wheels steer to the same angle (parallel constraint). Rotation
-   * is achieved via differential wheel speed.
-   *
-   * @param xVelMetersPerSec lateral velocity (field frame)
-   * @param yVelMetersPerSec forward velocity (field frame)
-   * @param omegaRadPerSec desired rotational rate (positive = CCW)
-   */
-  public void swerveDrive(double xVelMetersPerSec, double yVelMetersPerSec, double omegaRadPerSec) {
+  public void swerveDrive(
+      double fieldXVelMetersPerSec, double fieldYVelMetersPerSec, double chassisOmegaRadPerSec) {
     pinpoint.update();
 
     // --- Step 1: Field-to-robot frame rotation ---
     var inverseYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVel =
-        xVelMetersPerSec * inverseYaw.getCos() - yVelMetersPerSec * inverseYaw.getSin();
+        fieldXVelMetersPerSec * inverseYaw.getCos() - fieldYVelMetersPerSec * inverseYaw.getSin();
     double chassisYVel =
-        xVelMetersPerSec * inverseYaw.getSin() + yVelMetersPerSec * inverseYaw.getCos();
+        fieldXVelMetersPerSec * inverseYaw.getSin() + fieldYVelMetersPerSec * inverseYaw.getCos();
 
     // --- Step 2: Clamp movement speed to motor limits ---
     double speed = Math.hypot(chassisXVel, chassisYVel);
@@ -146,127 +154,97 @@ public class SwerveDriver {
 
     // --- Step 3: Compute shared steering angle ---
     Rotation2d targetAngle;
-    double requestedTranslationAngle = Math.atan2(yVelMetersPerSec, xVelMetersPerSec);
-
-    Rotation2d yawRotationalDrift = new Rotation2d();
-    if (startingYawAngle.isPresent()) {
-      yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
-    }
 
     if (speed > 0.01) {
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
       lastTargetAngle = targetAngle;
-
-      if (startingYawAngle.isEmpty()) {
-        Rotation2d leftJoyRotation = new Rotation2d(xVelMetersPerSec, yVelMetersPerSec);
-        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromRadians(requestedTranslationAngle));
-        startingYawAngle = Optional.of(leftJoyRotation);
-      }
-    } else if (Math.abs(omegaRadPerSec) > 0.01) {
+    } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
+      // Rotation only -- point wheels forward for differential spin
       targetAngle = Rotation2d.kZero;
-      startingYawAngle = Optional.empty();
+      lastTargetAngle = targetAngle;
     } else {
+      // Nothing commanded -- hold everything
       targetAngle = lastTargetAngle;
-      startingYawAngle = Optional.empty();
     }
 
-    // --- Step 4: Compute per-wheel drive power ---
+    // --- Step 4: Heading hold ---
+    double effectiveOmega;
+    double currentYawRad = pinpoint.getYaw().getRadians();
+
+    if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
+      effectiveOmega = chassisOmegaRadPerSec;
+      holdHeading = Optional.of(pinpoint.getYaw());
+    } else if (speed > 0.01) {
+      if (holdHeading.isEmpty()) {
+        holdHeading = Optional.of(pinpoint.getYaw());
+      }
+      double headingCorrection =
+          headingHoldPID.calculate(currentYawRad, holdHeading.get().getRadians());
+      effectiveOmega =
+          Math.max(-maxOmegaRadPerSec * 0.5, Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
+    } else {
+      effectiveOmega = 0;
+      holdHeading = Optional.of(pinpoint.getYaw());
+    }
+
+    // --- Step 5: Compute per-wheel drive power ---
     double basePower = speed * kV;
-    double rotationDelta = omegaRadPerSec * HALF_WHEELBASE_METERS * kV;
-
-    double rotationDriftPowerCompensationRight = 0.0;
-    double rotationDriftPowerCompensationLeft = 0.0;
-
-    if (startingYawAngle.isPresent()) {
-      if (yawRotationalDrift.getRadians() > 0.01) {
-        rotationDriftPowerCompensationRight = 0.5;
-        rotationDriftPowerCompensationLeft = 0.0;
-      } else if (yawRotationalDrift.getRadians() < -0.01) {
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.5;
-      }
-
-      if (requestedTranslationAngle <= 0.5 && requestedTranslationAngle >= -0.5) {
-        // Heading north -- use differential power compensation
-      } else if (requestedTranslationAngle >= 3.0 || requestedTranslationAngle <= -3.0) {
-        // Heading south -- use differential power compensation
-      } else if (requestedTranslationAngle > 0.0) {
-        // Heading west -- use rudder correction instead
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(false);
-      } else {
-        // Heading east -- use rudder correction instead
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(true);
-      }
-    }
+    double rotationDelta = effectiveOmega * halfWheelbaseMeters * kV;
 
     double[] drivePowers = {
-      basePower - rotationDelta + rotationDriftPowerCompensationLeft, // left
-      basePower + rotationDelta + rotationDriftPowerCompensationRight // right
+      basePower - rotationDelta, // left wheel
+      basePower + rotationDelta // right wheel
     };
 
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
 
-    // --- Step 5: Zero drive motors when stationary, but always steer ---
-    boolean isStationary = (speed <= 0.01 && Math.abs(omegaRadPerSec) <= 0.01);
-    if (isStationary) {
-      driveMotors[0].setPower(0);
-      driveMotors[1].setPower(0);
+    // --- Telemetry ---
+    telemetry.addLine("Yaw: " + pinpoint.getYaw());
+    telemetry.addLine("Target angle: " + targetAngle);
+    if (holdHeading.isPresent()) {
+      telemetry.addLine("Hold heading: " + holdHeading.get());
     }
+    telemetry.addLine("Effective omega: " + effectiveOmega);
+    telemetry.update();
 
-    // --- Step 6: Per-wheel steering PID and flip optimization ---
+    // --- Step 6: Per-wheel steering PID and coordinated flip ---
+    Rotation2d[] currentAngles = new Rotation2d[2];
+    Rotation2d[] angleErrors = new Rotation2d[2];
     for (int i = 0; i < 2; i++) {
-      var currentAngle =
+      currentAngles[i] =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
               .plus(encoderOffsets[i]);
+      angleErrors[i] = targetAngle.minus(currentAngles[i]);
+    }
 
-      var angleError = targetAngle.minus(currentAngle);
+    boolean flipMotors =
+        Math.abs(angleErrors[0].getDegrees()) > 90 && Math.abs(angleErrors[1].getDegrees()) > 90;
+
+    for (int i = 0; i < 2; i++) {
+      var angleError = angleErrors[i];
       double power = drivePowers[i];
 
-      // Flip optimization: reverse motor instead of turning 180 deg
-      if (Math.abs(angleError.getDegrees()) > 90) {
+      if (flipMotors) {
         power *= -1;
-        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngle);
+        angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngles[i]);
       }
 
-      // Cosine scaling: reduce power while wheel is mid-turn
+      // Cosine scaling: reduce drive power while wheel is mid-turn
       power *= angleError.getCos();
 
-      if (!isStationary) {
-        driveMotors[i].setPower(power);
-      }
+      // Closed-loop velocity: feedforward + PID correction from motor encoder
+      double targetVel = power * maxSpeedMetersPerSec;
+      double actualVel = driveMotors[i].getVelocity() * metersPerTick;
+      double correction = velocityPIDs[i].calculate(actualVel, targetVel);
+      driveMotors[i].setPower(power + correction);
 
       // Steering PID -> servo position
-      double steeringAngle = -calculateSteerPID(angleError, i, dt) / 2 + 0.5;
-
-      double rudderCorrection = 0.0;
-      if (leadingWheelEast.isPresent()) {
-        double candidateRudder = 0.0;
-        if (yawRotationalDrift.getRadians() > 0.01) {
-          candidateRudder = -0.1;
-        } else if (yawRotationalDrift.getRadians() < -0.01) {
-          candidateRudder = 0.1;
-        }
-        if (leadingWheelEast.get()) {
-          if (i == 0) rudderCorrection = candidateRudder;
-        } else {
-          if (i == 1) rudderCorrection = candidateRudder;
-        }
-      }
-
-      steerServos[i].setPosition(steeringAngle + rudderCorrection);
+      double steeringAngle = calculateSteerPID(angleError, i, dt) / 2 + 0.5;
+      steerServos[i].setPosition(steeringAngle);
     }
 
     lastTimeStamp = currentTime;
-
-    // --- Telemetry ---
-    telemetry.addData("Drive Mode", "FIELD-CENTRIC");
-    telemetry.addData("Speed", "%.2f m/s", speed);
-    telemetry.addData("Target Angle", targetAngle);
   }
 
   // -----------------------------------------------------------------------
@@ -276,15 +254,15 @@ public class SwerveDriver {
   private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
     double errorRad = angleError.getRadians();
 
-    // Deadband: ignore encoder noise, but fight real disturbances
+    // Deadband: ignore encoder noise to prevent kS from chattering
     if (Math.abs(errorRad) < Math.toRadians(2.0)) {
       lastErrorRad[i] = 0;
       return 0.0;
     }
 
-    double kP = 2.0 / (Math.PI / 2); // stiffer hold against disturbances
+    double kP = 1.25 / (Math.PI / 2); // Full output at 90 deg error
     double kD = 0.01;
-    double kS = 0.03; // static friction compensation
+    double kS = 0.03; // Static friction compensation
 
     double proportional = errorRad * kP;
     double derivative = kD * (errorRad - lastErrorRad[i]) / dt;

@@ -34,21 +34,17 @@ public class DC_Swerve_Drive {
   private static final double wheelBaseWidthMm = 355.5;
 
   // Motor encoder conversion
-  private static final double ticksPerMotorRev = 28.0;
+  private static final double ticksPerMotorRev = 28.0; // goBILDA 5203 series
   private static final double ticksPerWheelRev = ticksPerMotorRev * gearRatio;
   private static final double wheelCircumMeters = Math.PI * wheelDiameterMm / 1000.0;
   private static final double metersPerTick = wheelCircumMeters / ticksPerWheelRev;
 
   // Velocity feedback (one per wheel)
   private final PIDController[] velocityPIDs = {
-    new PIDController(0.15, 0, 0),
-    new PIDController(0.15, 0, 0)
+    new PIDController(0.15, 0, 0), new PIDController(0.15, 0, 0)
   };
 
   // Derived: max wheel speed in m/s
-  //   wheelRadiusMeters = (diameter_mm / 1000) / 2
-  //   wheelAngularVel = RPM_at_wheel * 2*pi / 60
-  //   linearVel = wheelAngularVel * wheelRadius
   private static final double wheelRadiusMeters = wheelDiameterMm / 1000.0 / 2.0;
   public double maxSpeedMetersPerSec =
       Units.rotationsPerMinuteToRadiansPerSecond(motorMaxRPM / gearRatio) * wheelRadiusMeters;
@@ -62,11 +58,8 @@ public class DC_Swerve_Drive {
   public double maxOmegaRadPerSec = maxSpeedMetersPerSec / halfWheelbaseMeters;
 
   // Per-wheel analog encoder offsets (calibrated so 0 deg = forward).
-  // Adjust these until both wheels point straight ahead when the joystick is
-  // pushed forward. If a wheel aims too far left, increase its value.
-  // more neg clockwise
-  private static final double leftEncoderOffsetDeg = -70.0; // -2.5
-  private static final double rightEncoderOffsetDeg = -82.0; // -5.0
+  private static final double leftEncoderOffsetDeg = -70.0;
+  private static final double rightEncoderOffsetDeg = -82.0;
   Rotation2d[] encoderOffsets =
       new Rotation2d[] {
         Rotation2d.fromDegrees(leftEncoderOffsetDeg), Rotation2d.fromDegrees(rightEncoderOffsetDeg)
@@ -75,6 +68,13 @@ public class DC_Swerve_Drive {
   // Tracks the last steering direction so wheels hold position when joystick is released
   private Rotation2d lastTargetAngle = Rotation2d.kZero;
   private double lastTimeStamp;
+
+  // --- Heading hold ---
+  // When translating with no rotation command, the IMU-based PID maintains
+  // the robot's heading automatically. This replaces all per-direction
+  // drift compensation and rudder logic with one uniform mechanism.
+  private final PIDController headingHoldPID = new PIDController(2.0, 0.5, 0.05);
+  private Optional<Rotation2d> holdHeading = Optional.empty();
 
   public void init() {
     driveMotors[0] = (DcMotorEx) myOp.hardwareMap.dcMotor.get("LFM");
@@ -87,10 +87,10 @@ public class DC_Swerve_Drive {
     pinpoint = myOp.hardwareMap.get(GoBildaPinpointDriver.class, "odo");
     pinpoint.resetPosAndIMU();
     lastTimeStamp = System.nanoTime() / 1e9;
-  }
 
-  Optional<Rotation2d> startingYawAngle = Optional.empty();
-  Optional<Boolean> leadingWheelEast = Optional.empty();
+    // Heading PID wraps at +/- pi so it takes the shortest path
+    headingHoldPID.enableContinuousInput(-Math.PI, Math.PI);
+  }
 
   /**
    * Field-centric parallel-wheel swerve drive.
@@ -107,20 +107,6 @@ public class DC_Swerve_Drive {
     pinpoint.update();
 
     // --- Step 1: Field-to-robot frame rotation ---
-    // "Yaw" is the robot's rotation as seen from above -- imagine looking straight
-    // down at the field. 0 deg = the direction the robot faced at startup. Turning
-    // left increases yaw, turning right decreases it.
-    //
-    // The problem: the joystick gives us a direction relative to the FIELD (push up
-    // = move away from the driver, always). But the wheels are attached to the ROBOT,
-    // which may be rotated. We need to convert field directions into robot directions.
-    //
-    // We do this by rotating the joystick vector by the NEGATIVE (inverse) of the
-    // robot's yaw. Example: robot is turned 90 deg left. Driver pushes joystick "up"
-    // (field-forward). From the robot's perspective, that's actually to its RIGHT.
-    // Rotating by -90 deg converts field-forward into robot-right. That's what the
-    // matrix multiply below does for any angle.
-    //
     var inverseYaw = pinpoint.getYaw().unaryMinus();
     double chassisXVel =
         fieldXVelMetersPerSec * inverseYaw.getCos() - fieldYVelMetersPerSec * inverseYaw.getSin();
@@ -128,11 +114,6 @@ public class DC_Swerve_Drive {
         fieldXVelMetersPerSec * inverseYaw.getSin() + fieldYVelMetersPerSec * inverseYaw.getCos();
 
     // --- Step 2: Clamp movement speed to motor limits ---
-    // "speed" is how fast the robot is sliding across the field (ignoring rotation).
-    // The joystick could ask for more than the motors can deliver -- e.g. pushing
-    // into a corner asks for full forward AND full sideways at once. If that happens,
-    // scale the velocity down so it stays within the motor's max while keeping the
-    // same direction.
     double speed = Math.hypot(chassisXVel, chassisYVel);
     if (speed > maxSpeedMetersPerSec) {
       double scale = maxSpeedMetersPerSec / speed;
@@ -142,132 +123,74 @@ public class DC_Swerve_Drive {
     }
 
     // --- Step 3: Compute shared steering angle ---
-    // Both wheels point in the direction the robot-frame velocity vector is going.
-    // atan2(y, x) gives us the angle of that vector -- this is the direction the
-    // wheels need to face. If the joystick is released (no translation), we hold
-    // the last angle so the wheels don't snap to some default.
-    // Special case: if the driver is ONLY rotating (right stick with no left stick),
-    // hold the last steering angle so the wheels don't snap. The differential speed
-    // will spin the robot regardless of wheel heading.
     Rotation2d targetAngle;
-    double requestedTranslationAngle = Math.atan2(fieldYVelMetersPerSec, fieldXVelMetersPerSec);
-
-    Rotation2d yawRotationalDrift = new Rotation2d();
-    if (startingYawAngle.isPresent()) {
-      yawRotationalDrift = inverseYaw.minus(startingYawAngle.get());
-    }
-
-    // Use a higher threshold for committing a new lastTargetAngle so that
-    // joystick drift near center (spring-back noise) doesn't overwrite the
-    // held angle with a random direction.
-    double commitThreshold = 0.15 * maxSpeedMetersPerSec; // ~15% stick deflection
 
     if (speed > 0.01) {
-      // atan2(y, x) gives the angle of the velocity vector
       targetAngle = new Rotation2d(chassisXVel, chassisYVel);
-      if (speed > commitThreshold) {
-        lastTargetAngle = targetAngle;
-      }
-
-      // FIXME: The starting yaw angle needs to be updated if the joystick changes
-      if (startingYawAngle.isEmpty()) {
-        Rotation2d leftJoyRotation = new Rotation2d(fieldXVelMetersPerSec, fieldYVelMetersPerSec);
-        leftJoyRotation = leftJoyRotation.minus(Rotation2d.fromRadians(requestedTranslationAngle));
-        startingYawAngle = Optional.of(leftJoyRotation);
-      }
+      lastTargetAngle = targetAngle;
     } else if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
-      // No translation but rotation requested -- hold the last steering angle
-      // so wheels don't snap. Differential speed handles the spin regardless
-      // of wheel heading.
-      targetAngle = lastTargetAngle;
-      startingYawAngle = Optional.empty();
+      // Rotation only -- point wheels forward for differential spin
+      targetAngle = Rotation2d.kZero;
+      lastTargetAngle = targetAngle;
     } else {
+      // Nothing commanded -- hold everything
       targetAngle = lastTargetAngle;
-      startingYawAngle = Optional.empty();
     }
 
-    // --- Step 4: Compute per-wheel drive power ---
-    // Base power comes from how far the joystick is pushed (translational speed).
-    // To rotate, we make one wheel go faster and the other slower -- just like a
-    // tank/skid-steer robot turns by spinning its sides at different speeds.
-    // Positive omega -> robot turns CCW -> right wheel faster, left wheel slower.
-    //   omega = (v_right - v_left) / wheelbase
-    //   so v_left  = v_base - omega * wheelbase/2
-    //      v_right = v_base + omega * wheelbase/2
+    // --- Step 4: Heading hold ---
+    // When the right stick is active, pass through the commanded omega and
+    // continuously update the hold heading so it's current when released.
+    // When the right stick is released, a PID on the IMU yaw generates the
+    // rotational delta to keep the heading locked -- works uniformly for
+    // all travel directions without special-casing north/south/east/west.
+    double effectiveOmega;
+    double currentYawRad = pinpoint.getYaw().getRadians();
+
+    if (Math.abs(chassisOmegaRadPerSec) > 0.01) {
+      // Driver is commanding rotation -- pass through directly
+      effectiveOmega = chassisOmegaRadPerSec;
+      // Keep updating the hold target so it's fresh when the stick is released
+      holdHeading = Optional.of(pinpoint.getYaw());
+    } else if (speed > 0.01) {
+      // Translating with no rotation command -- hold heading via PID
+      if (holdHeading.isEmpty()) {
+        holdHeading = Optional.of(pinpoint.getYaw());
+      }
+      double headingCorrection =
+          headingHoldPID.calculate(currentYawRad, holdHeading.get().getRadians());
+      // Clamp so the heading hold can't overpower the translation
+      effectiveOmega =
+          Math.max(-maxOmegaRadPerSec * 0.5, Math.min(maxOmegaRadPerSec * 0.5, headingCorrection));
+    } else {
+      // Everything released -- no rotation, keep hold target fresh for next move
+      effectiveOmega = 0;
+      holdHeading = Optional.of(pinpoint.getYaw());
+    }
+
+    // --- Step 5: Compute per-wheel drive power ---
     double basePower = speed * kV;
-    double rotationDelta = chassisOmegaRadPerSec * halfWheelbaseMeters * kV;
-
-    double rotationDriftPowerCompensationRight = 0.0;
-    double rotationDriftPowerCompensationLeft = 0.0;
-
-    // TODO: Factor in yaw rotation caused by drag and make final adjustment to rotationDelta to
-    // ensure robot moves properly
-    myOp.telemetry.addLine("Yaw: " + inverseYaw);
-    myOp.telemetry.addLine("Target angle: " + targetAngle);
-    myOp.telemetry.addLine("Requested translation: " + requestedTranslationAngle);
-    if (startingYawAngle.isEmpty()) {
-      myOp.telemetry.addLine("Starting yaw: --");
-    } else {
-      myOp.telemetry.addLine("Starting yaw: " + startingYawAngle);
-      myOp.telemetry.addLine("Yaw drift: " + yawRotationalDrift);
-      myOp.telemetry.addLine("Look here: " + yawRotationalDrift.getRadians());
-
-      if (yawRotationalDrift.getRadians() > 0.01) {
-        // Apply more power to right motor
-        myOp.telemetry.addLine("AHH IT'S TURNING RIGHT!");
-        rotationDriftPowerCompensationRight = 0.5;
-        rotationDriftPowerCompensationLeft = 0.0;
-      } else if (yawRotationalDrift.getRadians() < -0.01) {
-        // Apply more power to left motor
-        myOp.telemetry.addLine("AHH IT'S TURNING LEFT!");
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.5;
-      }
-
-      // If requestedTranslationAngle is close to zero or close to +/- pi, the robot is driving
-      // toward the bow (forward) or stern (reverse). In that case, small adjustments in rotational
-      // speed can be applied to prevent yaw rotation due to drag.
-      // If however requestedTranslationAngle exceeds amounts causing the robot translation to move
-      // toward the port (left) or starboard (right), then the leading wheel needs to maintain
-      // the appropriate direction of travel while the trailing wheel acts as a rudder to make
-      // yaw rotation corrections.
-      //
-      // Determine if robot is moving toward bow (forward)
-      if (requestedTranslationAngle <= 0.5 // Left joystick = NW tolerance
-          && requestedTranslationAngle >= -0.5) { // Left joystick = NE tolerance
-        myOp.telemetry.addLine("-- DIRECTION: NORTH");
-      } else if (requestedTranslationAngle >= 3.0 // Left joystick = SW tolerance
-          || requestedTranslationAngle <= -3.0) { // Left joystick = SE tolerance
-        myOp.telemetry.addLine("-- DIRECTION: SOUTH");
-      } else if (requestedTranslationAngle > 0.0) { // Left joystick = W tolerance
-        myOp.telemetry.addLine("-- DIRECTION: WEST");
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(false);
-      } else { // Left joystick = E tolerance
-        myOp.telemetry.addLine("-- DIRECTION: EAST");
-        rotationDriftPowerCompensationRight = 0.0;
-        rotationDriftPowerCompensationLeft = 0.0;
-        leadingWheelEast = Optional.of(true);
-      }
-    }
-    myOp.telemetry.update();
+    double rotationDelta = effectiveOmega * halfWheelbaseMeters * kV;
 
     double[] drivePowers = {
-      basePower - rotationDelta + rotationDriftPowerCompensationLeft, // left wheel
-      basePower + rotationDelta + rotationDriftPowerCompensationRight // right wheel
+      basePower - rotationDelta, // left wheel
+      basePower + rotationDelta // right wheel
     };
 
-    // Track how much time has passed since the last call (in seconds).
-    // The steering PID's derivative term needs this -- it divides the change
-    // in error by dt so that the correction is based on how fast the error
-    // is changing, not how fast the loop happens to run.
     double currentTime = System.nanoTime() / 1e9;
     double dt = currentTime - lastTimeStamp;
 
-    // --- Step 5: Per-wheel steering PID and flip optimization ---
+    // --- Telemetry ---
+    myOp.telemetry.addLine("Yaw: " + pinpoint.getYaw());
+    myOp.telemetry.addLine("Target angle: " + targetAngle);
+    if (holdHeading.isPresent()) {
+      myOp.telemetry.addLine("Hold heading: " + holdHeading.get());
+    }
+    myOp.telemetry.addLine("Effective omega: " + effectiveOmega);
+    myOp.telemetry.update();
+
+    // --- Step 6: Per-wheel steering PID and flip optimization ---
     for (int i = 0; i < 2; i++) {
-      // Read current wheel angle from the analog encoder (maps voltage to one full rotation)
+      // Read current wheel angle from the analog encoder
       var currentAngle =
           Rotation2d.fromRotations(-encoders[i].getVoltage() / encoders[i].getMaxVoltage())
               .plus(encoderOffsets[i]);
@@ -275,59 +198,24 @@ public class DC_Swerve_Drive {
       var angleError = targetAngle.minus(currentAngle);
       double power = drivePowers[i];
 
-      // Flip optimization: suppose the wheel currently points right and we want it
-      // to point left. That's 180 deg of turning. But we can instead keep pointing
-      // right and just reverse the motor -- same effect, zero steering needed. We
-      // apply this whenever the error exceeds 90 deg: flip the motor and target the
-      // opposite direction, which is always closer.
+      // Flip optimization: reverse motor instead of turning > 90 deg
       if (Math.abs(angleError.getDegrees()) > 90) {
         power *= -1;
         angleError = targetAngle.plus(Rotation2d.k180deg).minus(currentAngle);
       }
 
-      // Cosine scaling: while the wheel is still turning toward the target angle,
-      // we reduce drive power proportionally. cos(0) = 1 (full power when aligned),
-      // cos(90) = 0 (no power when perpendicular). This prevents the robot from
-      // lurching sideways while the wheel is still mid-turn.
+      // Cosine scaling: reduce drive power while wheel is mid-turn
       power *= angleError.getCos();
 
-      // Closed-loop velocity: use the open-loop power as feedforward and add a
-      // PID correction based on measured vs. desired wheel speed from the motor
-      // encoder. This keeps both wheels matched even if one has more friction.
+      // Closed-loop velocity: feedforward + PID correction from motor encoder
       double targetVel = power * maxSpeedMetersPerSec;
       double actualVel = driveMotors[i].getVelocity() * metersPerTick;
       double correction = velocityPIDs[i].calculate(actualVel, targetVel);
       driveMotors[i].setPower(power + correction);
 
-      // The steering PID outputs a value from -1 to 1 (full left to full right).
-      // Servos expect 0 to 1, so we map: servo_pos = (pid_output / 2) + 0.5
-      //   pid = -1 -> servo = 0.0 (full one direction)
-      //   pid =  0 -> servo = 0.5 (centered)
-      //   pid =  1 -> servo = 1.0 (full other direction)
+      // Steering PID -> servo position
       double steeringAngle = calculateSteerPID(angleError, i, dt) / 2 + 0.5;
-      double candidateRudderCorrection = 0.0;
-      double rudderCorrection = 0.0;
-      if (leadingWheelEast.isPresent()) {
-        if (yawRotationalDrift.getRadians() > 0.01) {
-          // Apply more power to right motor
-          candidateRudderCorrection = -0.1;
-        } else if (yawRotationalDrift.getRadians() < -0.01) {
-          // Apply more power to left motor
-          candidateRudderCorrection = 0.1;
-        }
-        if (leadingWheelEast.get()) {
-          // Leading wheel is East (right)
-          if (i == 0) {
-            rudderCorrection = candidateRudderCorrection;
-          }
-        } else {
-          // Leading wheel is West (left)
-          if (i == 1) {
-            rudderCorrection = candidateRudderCorrection;
-          }
-        }
-      }
-      steerServos[i].setPosition(steeringAngle + rudderCorrection);
+      steerServos[i].setPosition(steeringAngle);
     }
 
     lastTimeStamp = currentTime;
@@ -338,6 +226,13 @@ public class DC_Swerve_Drive {
 
   private double calculateSteerPID(Rotation2d angleError, int i, double dt) {
     double errorRad = angleError.getRadians();
+
+    // Deadband: ignore encoder noise to prevent kS from chattering
+    if (Math.abs(errorRad) < Math.toRadians(2.0)) {
+      lastErrorRad[i] = 0;
+      return 0.0;
+    }
+
     double kP = 1.25 / (Math.PI / 2); // Full output at 90 deg error
     double kD = 0.01;
     double kS = 0.03; // Static friction compensation
@@ -347,12 +242,12 @@ public class DC_Swerve_Drive {
     lastErrorRad[i] = errorRad;
 
     double output = proportional + derivative;
-    // Add a small constant in the direction of output to overcome static friction
     return output + kS * Math.signum(output);
   }
 
   public void resetYaw() {
     pinpoint.setHeading(Rotation2d.kZero);
+    holdHeading = Optional.empty();
   }
 
   private final PIDController xController = new PIDController(1, 0, 0);

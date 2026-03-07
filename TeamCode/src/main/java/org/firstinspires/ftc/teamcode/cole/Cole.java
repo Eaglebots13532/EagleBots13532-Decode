@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "TankDriveWithTriggers", group = "TeleOp")
+@TeleOp(name = "Tank Drive With Triggers", group = "TeleOp")
 public class Cole extends LinearOpMode {
 
     private DcMotor leftFront;

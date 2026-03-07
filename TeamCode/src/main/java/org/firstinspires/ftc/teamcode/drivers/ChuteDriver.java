@@ -97,6 +97,14 @@ public class ChuteDriver {
     }
   }
 
+  public void extend() {
+    goToPosition(MAX_CHUTE_POS);
+  }
+
+  public void retract() {
+    goHome();
+  }
+
   /** Run chute to home position (stall-detect with timeout). */
   public void goHome() {
     mode = Mode.HOMING;
@@ -152,15 +160,19 @@ public class ChuteDriver {
   // Internal state machine
   // -----------------------------------------------------------------------
 
+  private final double hoodP = 1;
+
   private void updateMovingToTarget() {
     updatePos(true);
 
-    if (correctedChutePos >= targetPos) {
+    if (Math.abs(targetPos - correctedChutePos) < 0.1) {
       chuteMotor.setPower(0.0);
       mode = Mode.IDLE;
       if (listener != null) listener.onTargetReached(correctedChutePos);
-    } else {
+    } else if (targetPos > correctedChutePos) {
       chuteMotor.setPower(0.8);
+    } else {
+      chuteMotor.setPower(-0.8);
     }
   }
 

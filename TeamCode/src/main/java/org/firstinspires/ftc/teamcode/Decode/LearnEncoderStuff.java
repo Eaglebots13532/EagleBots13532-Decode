@@ -38,7 +38,7 @@ public class LearnEncoderStuff extends LinearOpMode {
     motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     // calculate hood height (position)
 
-    targetPosition = 5000;
+    targetPosition = -2000;
     motor.setTargetPosition(motor.getCurrentPosition() + targetPosition);
     motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 

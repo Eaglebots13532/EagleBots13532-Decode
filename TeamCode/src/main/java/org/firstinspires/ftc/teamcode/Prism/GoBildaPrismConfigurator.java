@@ -29,7 +29,6 @@ import org.firstinspires.ftc.teamcode.Prism.PrismAnimations.PoliceLights;
 
 @TeleOp(name = "Prism Configurator", group = "Linear OpMode")
 @Disabled
-
 public class GoBildaPrismConfigurator extends LinearOpMode {
 
   GoBildaPrismDriver prism;

@@ -34,36 +34,38 @@ public class LearnEncoderStuff extends LinearOpMode {
 
     motor.setPower(0.0);
 
-    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    // calculate hood height (position)
+    HoodPosition(-2000);
+    HoodPosition(-3000);
+    HoodPosition(-1500);
+    //tells what positions to go to
 
-    targetPosition = -2000;
-    motor.setTargetPosition(motor.getCurrentPosition() + targetPosition);
-    motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-    motor.setPower(0.2);
-    while (opModeIsActive() && motor.isBusy()) {
-
-      telemetry.addData("homeEncoder", homeEncoder);
-      telemetry.addData("Encoder", motor.getCurrentPosition());
-      telemetry.update();
-    }
-
-    motor.setPower(0.0);
-
-    currentPosition = motor.getCurrentPosition();
-
-    /*motor.setPower(0.2);
-        while (opModeIsActive() && Math.abs(motor.getCurrentPosition()) > currentPosition - 500) {
-
-          telemetry.addData("homeEncoder", homeEncoder);
-          telemetry.addData("Encoder", motor.getCurrentPosition());
-          telemetry.update();
-        }
-        motor.setPower((0.0));
-    */
 
     sleep(5);
   } // ends runOpMode
+
+
+  public void HoodPosition(int newPosition){
+    if(Math.abs(newPosition) > homeEncoder) {
+      targetPosition = newPosition;
+
+      //add a check max position eventually
+
+      motor.setTargetPosition(motor.getCurrentPosition() + targetPosition);
+      motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      // target position!
+
+      motor.setPower(0.2);
+      while (opModeIsActive() && motor.isBusy()) {
+
+        telemetry.addData("homeEncoder", homeEncoder);
+        telemetry.addData("Encoder", motor.getCurrentPosition());
+        telemetry.update();
+      }
+    }//end if statement
+    motor.setPower(0.0);
+
+  }//end hood position
+
+
+
 }

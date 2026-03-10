@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 @TeleOp(name = "Learning Encoder Basics")
 public class LearnEncoderStuff extends LinearOpMode {
   private DcMotor motor = null;
-  public TouchSensor bob = null;
+  public TouchSensor sensor = null;
   int homeEncoder = 0;
   int currentPosition = 0;
   int targetPosition = 0;
@@ -30,12 +30,12 @@ public class LearnEncoderStuff extends LinearOpMode {
     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-    bob = hardwareMap.get(TouchSensor.class, "TouchSensor");
+    sensor = hardwareMap.get(TouchSensor.class, "TouchSensor");
 
     waitForStart();
 
     motor.setPower(0.2);
-    while (opModeIsActive() && !bob.isPressed()) {
+    while (opModeIsActive() && !sensor.isPressed()) {
       telemetry.addData("Encoder", motor.getCurrentPosition());
       telemetry.update();
     }

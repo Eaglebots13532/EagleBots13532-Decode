@@ -41,6 +41,9 @@ public class LearnEncoderStuff extends LinearOpMode {
     }
 
     motor.setPower(0.0);
+    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    motor.setPower(1.0);
 
     HoodPosition(-2000);
     HoodPosition(-3000);
@@ -50,24 +53,15 @@ public class LearnEncoderStuff extends LinearOpMode {
     sleep(5);
   } // ends runOpMode
 
-  public void HoodPosition(int newPosition) {
-    if (Math.abs(newPosition) > homeEncoder) {
-      targetPosition = newPosition;
+  public void HoodPosition(int targetPosition) {
+    // add a check max position eventually
+    motor.setTargetPosition(targetPosition);
 
-      // add a check max position eventually
+    // while loop needs to get removed and just print out current encoder position (no telem update)
+    while (opModeIsActive() && motor.isBusy()) {
 
-      motor.setTargetPosition(motor.getCurrentPosition() + targetPosition);
-      motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-      // target position!
-
-      motor.setPower(0.2);
-      while (opModeIsActive() && motor.isBusy()) {
-
-        telemetry.addData("homeEncoder", homeEncoder);
-        telemetry.addData("Encoder", motor.getCurrentPosition());
-        telemetry.update();
-      }
-    } // end if statement
-    motor.setPower(0.0);
+      telemetry.addData("Encoder", motor.getCurrentPosition());
+      telemetry.update();
+    }
   } // end hood position
 }

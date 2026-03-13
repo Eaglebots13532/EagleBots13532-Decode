@@ -17,8 +17,6 @@ public class udpwifiData {
   int Places = 100;
   int TimeRes = 1000;
 
-  double AcqData = 0.0;
-
   // double timeStamp = 0.0;
 
   // int device = 0;

@@ -77,16 +77,20 @@ public class LearnEncoderStuff extends LinearOpMode {
         // target position!
 
         motor.setPower(0.2);
+        eTime.reset();
         while (opModeIsActive() && motor.isBusy()) {
-          sndData.sendData(eTime.milliseconds(), 1, motor.getCurrent(CurrentUnit.AMPS));
+          if (eTime.seconds() > 1) {
+            sndData.sendData(eTime.milliseconds(), 1, motor.getCurrent(CurrentUnit.AMPS));
+            eTime.reset();
+          }
 
           telemetry.addData("homeEncoder", homeEncoder);
-          telemetry.addData("Encoder", motor.getCurrentPosition());
+          telemetry.addData("Encoder", (double) motor.getCurrentPosition());
           telemetry.update();
         }
       } // end if statement
       motor.setPower(0.0);
-      sndData.sendData(eTime.milliseconds(), 2, motor.getCurrentPosition());
+      sndData.sendData(eTime.milliseconds(), 2, (double) motor.getCurrentPosition());
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -37,7 +37,7 @@ public class udpwifiData {
                 // This just makes the double integer with Place decimal places
                 // Prepare the data removing the data after the decimal
                 int SndData = (int) finalAcqData;
-                int SndTime = (int) finalTS;
+                int SndTime = (int) finalTS / 1000;
                 // 1. Create a socket
                 DatagramSocket socket = new DatagramSocket();
                 String json =

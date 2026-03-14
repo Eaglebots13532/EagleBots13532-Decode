@@ -15,14 +15,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drivers.udpwifiData;
 
 @TeleOp(name = "Learning Encoder Basics")
-public class LearnEncoderStuff extends LinearOpMode {
+public class HoodEncoderStuff extends LinearOpMode {
   private DcMotorEx motor = null;
+  private Servo servo = null;
   public TouchSensor bob = null;
   int homeEncoder = 0;
   int currentPosition = 0;
@@ -34,6 +36,9 @@ public class LearnEncoderStuff extends LinearOpMode {
 
   public void runOpMode() {
 
+    servo = hardwareMap.get(Servo.class, "servo");
+    servo.setDirection(Servo.Direction.FORWARD);
+
     motor = hardwareMap.get(DcMotorEx.class, "Motor");
     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -43,18 +48,19 @@ public class LearnEncoderStuff extends LinearOpMode {
     waitForStart();
     try {
 
-      motor.setPower(0.2);
+      motor.setPower(.9);
       while (opModeIsActive() && !bob.isPressed()) {
-        // telemetry.addData("Encoder", motor.getCurrentPosition());
-        // telemetry.update();
+        telemetry.addData("Encoder: ", motor.getCurrentPosition());
+        telemetry.update();
       }
       motor.setPower(0.0);
       motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
       sleep(50);
       motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+      motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
       HoodPosition(-2000);
-      HoodPosition(1000);
+      HoodPosition(-1000);
       HoodPosition(-3000);
       // tells what positions to go to
 
@@ -70,13 +76,13 @@ public class LearnEncoderStuff extends LinearOpMode {
 
         // add a check max position eventually
         targetPosition += motor.getCurrentPosition();
-        motor.setTargetPosition(targetPosition);
+        motor.setTargetPosition(newPosition);
         sndData.sendData(eTime.milliseconds(), 2, motor.getCurrentPosition());
-        sndData.sendData(eTime.milliseconds(), 2, targetPosition);
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        sndData.sendData(eTime.milliseconds(), 2, newPosition);
+
         // target position!
 
-        motor.setPower(0.2);
+        motor.setPower(0.75);
         eTime.reset();
         while (opModeIsActive() && motor.isBusy()) {
           if (eTime.seconds() > 1) {

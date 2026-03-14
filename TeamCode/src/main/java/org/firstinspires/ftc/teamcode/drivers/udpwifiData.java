@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 public class udpwifiData {
   private final ElapsedTime timestamp = new ElapsedTime();
 
-  String RcvIP = "192.168.43.12"; // the IP to send data to
+  String RcvIP = "192.168.43.38"; // the IP to send data to
   int Port = 3000;
   int Places = 100;
   int TimeRes = 1000;
@@ -36,7 +36,7 @@ public class udpwifiData {
               try {
                 // This just makes the double integer with Place decimal places
                 // Prepare the data removing the data after the decimal
-                int SndData = (int) finalAcqData;
+                double SndData = finalAcqData;
                 int SndTime = (int) finalTS / 1000;
                 // 1. Create a socket
                 DatagramSocket socket = new DatagramSocket();
@@ -45,7 +45,7 @@ public class udpwifiData {
                         + ","
                         + Integer.toString(device)
                         + ","
-                        + Integer.toString(SndData);
+                        + Double.toString(SndData);
                 // convert to byte array
                 byte[] buf = json.getBytes(StandardCharsets.UTF_8);
                 // set the receiver

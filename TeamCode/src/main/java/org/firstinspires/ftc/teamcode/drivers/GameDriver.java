@@ -47,7 +47,7 @@ public class GameDriver {
     private static double servode = 0.0;
     private static final int revCtperRev = 8192;
     private static final double gearDia = 1.415;
-    private static final double gearCircum = gearDia * 3.141
+    private static final double gearCircum = gearDia * 3.141;
 
   public GameDriver(HardwareMap hardwareMap, Telemetry telemetry) {
     this.telemetry = telemetry;

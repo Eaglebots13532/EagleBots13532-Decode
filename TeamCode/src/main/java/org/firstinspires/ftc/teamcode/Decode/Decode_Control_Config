@@ -1,6 +1,7 @@
-/* Copyright (c) 2024-2025 FTC 13532
+/* Copyright (c) 2025-2026 FTC 13532
 ----  All rights reserved.
 - - - - -  eaglebots configuration -
+Expansion Hub ======================
 Left   Motor  0 . . . . . . . . .  LFM
 Right  Motor  1 . . . . . . . . .  RFM
 Left   Servo  0 . . . . . . . . .  LFS
@@ -8,17 +9,24 @@ Right  Servo  1 . . . . . . . . .  RFS
 
 Left   Analog 0 . . . . . . . . .  LFP [one cable
 Right  Analog 1 . . . . . . . . .  RFP  for both]
-chute  Analog 2 . . . . . . . . .
-       Analog 3 . . . . . . . . .  CP
+       Analog 2 . . . . . . . . .
+       Analog 3 . . . . . . . . .
+       Digital 0 . . . . . . . . .
+Home   Digital 1 . . . . . . . . . Home
 Arm    Motor  2 . . . . . . . . .  arm
 Spin   Motor  3 . . . . . . . . .  launch
-Intake Servo  3 . . . . . . . . .  intake
+       Servo  3 . . . . . . . . .
 chute  Servo  4 . . . . . . . . .  chute
 tilt   Servo  2 . . . . . . . . .  tilt
 gate   Servo  5 . . . . . . . . .  gate
 
-          IC  1 . . . . . . . . . .
+Prism     IC  1 . . . . . . . . . . Prism
           IC  2 . . . . . . . . . .
 PinPoint  IC  3 . 0 . . . . . . . . odo
+
+Control Hub =========================
+Hood    Motor  0 . . . . . . . . .  Hood
+Intake  Motor  1 . . . . . . . . .  Intake
+Winch   Motot  2 . . . . . . . . .  Winch
 
  */

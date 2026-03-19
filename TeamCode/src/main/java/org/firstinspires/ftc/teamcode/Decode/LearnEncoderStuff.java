@@ -11,8 +11,8 @@ package org.firstinspires.ftc.teamcode.Decode;
  * the web camera.
  */
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -20,7 +20,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drivers.udpwifiData;
 
-@TeleOp(name = "Learning Encoder Basics")
+// @TeleOp(name = "Learning Encoder Basics")
+@Disabled
 public class LearnEncoderStuff extends LinearOpMode {
   private DcMotorEx motor = null;
   public TouchSensor bob = null;

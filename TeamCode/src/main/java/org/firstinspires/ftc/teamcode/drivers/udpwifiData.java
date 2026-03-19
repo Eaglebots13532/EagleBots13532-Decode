@@ -26,7 +26,7 @@ public class udpwifiData {
   // sendData takes a double and converts it to a integer with the number of places.
   // Analog data is sent as a integer, Which means that integer input data must be made double to
   // use this Send method
-  public void sendData(double timeStamp, int device, double AcqData) throws Exception {
+  public void sendData(double timeStamp, int device, double AcqData) {
     // make AcqData effectively final
     // multiply by places to move allow 23.015 to 2301
     double finalAcqData = AcqData *= Places; // this is required for the LambDa expression

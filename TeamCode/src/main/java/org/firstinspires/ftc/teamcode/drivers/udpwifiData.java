@@ -29,7 +29,7 @@ public class udpwifiData {
   public void sendData(double timeStamp, int device, double AcqData) {
     // make AcqData effectively final
     // multiply by places to move allow 23.015 to 2301
-    double finalAcqData = AcqData *= Places; // this is required for the LambDa expression
+    double finalAcqData = AcqData; // this is required for the LambDa expression
     double finalTS = timeStamp *= TimeRes;
     new Thread(
             () -> {

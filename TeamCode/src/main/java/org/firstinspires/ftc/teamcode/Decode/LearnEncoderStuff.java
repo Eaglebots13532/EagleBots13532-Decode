@@ -55,7 +55,7 @@ public class LearnEncoderStuff extends LinearOpMode {
       motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
       HoodPosition(-2000);
-      HoodPosition(1000);
+      HoodPosition(-1000);
       HoodPosition(-3000);
       // tells what positions to go to
 
@@ -71,13 +71,13 @@ public class LearnEncoderStuff extends LinearOpMode {
 
         // add a check max position eventually
         targetPosition += motor.getCurrentPosition();
-        motor.setTargetPosition(targetPosition);
+        motor.setTargetPosition(newPosition); // main line used to change hood position
         sndData.sendData(eTime.milliseconds(), 2, motor.getCurrentPosition());
-        sndData.sendData(eTime.milliseconds(), 2, targetPosition);
+        sndData.sendData(eTime.milliseconds(), 2, newPosition);
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // target position!
 
-        motor.setPower(0.2);
+        motor.setPower(0.5);
         eTime.reset();
         while (opModeIsActive() && motor.isBusy()) {
           if (eTime.seconds() > 1) {

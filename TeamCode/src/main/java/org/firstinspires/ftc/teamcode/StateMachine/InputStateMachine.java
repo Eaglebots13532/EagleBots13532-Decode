@@ -6,8 +6,7 @@ package org.firstinspires.ftc.teamcode.StateMachine;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 public class InputStateMachine {
-  private Gamepad gamepad1;
-  private Gamepad gamepad2;
+  private Gamepad gamepad1, gamepad2;
 
   // Previous frame state for edge detection -- gamepad1
   private boolean prev1A, prev1B, prev1X, prev1Y;
@@ -61,14 +60,14 @@ public class InputStateMachine {
     captureGamepad2();
   }
 
-  public void processState() {
+  public void processInputs() {
     if (listener == null) return;
     processGamepad1();
     processGamepad2();
   }
 
   // -----------------------------------------------------------------------
-  // Gamepad 1
+  // Gamepad inputs, capturing and processing
   // -----------------------------------------------------------------------
 
   private void captureGamepad1() {

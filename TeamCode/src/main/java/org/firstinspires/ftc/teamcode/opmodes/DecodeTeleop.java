@@ -29,7 +29,7 @@ public class DecodeTeleop extends LinearOpMode {
   @Override
   public void runOpMode() {
     // --- Subsystems ---
-    prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
+    prism = hardwareMap.get(GoBildaPrismDriver.class, "prism"); // not used rn
     AprilDriver april = new AprilDriver(this);
     april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
@@ -220,7 +220,7 @@ public class DecodeTeleop extends LinearOpMode {
       // Discrete button events
       // -----------------------------------------
       sm.captureInputs();
-      sm.processState();
+      sm.processInputs();
 
       // -----------------------------------------
       // April tag and chute/flywheel auto adjust
@@ -255,9 +255,9 @@ public class DecodeTeleop extends LinearOpMode {
       // -----------------------------------------
       // Gamepad1: drive (polled)
       driveManager.drive(
-          -gamepad1.left_stick_x,
+          gamepad1.left_stick_x,
           -gamepad1.left_stick_y,
-          -gamepad1.right_stick_x,
+          gamepad1.right_stick_x,
           -gamepad1.right_stick_y);
 
       // Gamepad2: arm and tilt (polled, continuous)

@@ -187,7 +187,9 @@ public class GameDriver {
       // target position!
       dTime.reset(); // differential reset
       eTime.reset(); // udp reset
-      while (IsBusy(newPosition)) {}
+      while (linOp.opModeIsActive() && IsBusy(newPosition)) {
+          linOp.idle();
+      }
       servo.setPower(0.0);
 
     } catch (Exception e) {
@@ -208,8 +210,8 @@ public class GameDriver {
     final double Hm = 10.5; // maximum hood height
     final int Hmc = (int) (revCtperRev * Hm / gearCircum); // max hood encoder count
     double Hh = distanceToHoodMap.get(range); // desired hood height from range
-    int He = (int) (revCtperRev * Hh / gearCircum); // hood desired count position
-    return He;
+    int hood = (int) (revCtperRev * Hh / gearCircum); // hood desired count position
+    return hood;
   }
 
   private boolean IsBusy(int target) {
@@ -231,7 +233,9 @@ public class GameDriver {
     if (hmpwr > 0) homedirection = 1;
     else homedirection = -1;
     servo.setPower(hmpwr);
-    while (!bob.isPressed()) {}
+    while (linOp.opModeIsActive() && !bob.isPressed()) {
+        linOp.idle();
+    }
     servo.setPower(0.0);
     motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     homeEncoder = motor.getCurrentPosition();

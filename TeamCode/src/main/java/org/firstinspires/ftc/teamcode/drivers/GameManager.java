@@ -4,17 +4,17 @@
 package org.firstinspires.ftc.teamcode.drivers;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
 public class GameManager {
   private final AprilDriver april;
   private final GameDriver decode;
-  private final ChuteDriver chute;
+
   private final Telemetry telemetry;
 
-  public GameManager(AprilDriver april, GameDriver decode, ChuteDriver chute, Telemetry telemetry) {
+  public GameManager(AprilDriver april, GameDriver decode, Telemetry telemetry) {
     this.april = april;
     this.decode = decode;
-    this.chute = chute;
     this.telemetry = telemetry;
   }
 
@@ -46,25 +46,42 @@ public class GameManager {
   }
 
   public double setFlyWheel() {
+
+    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+    distanceToFlywheelVelocity.put(35.0, 1450.0);
+    distanceToFlywheelVelocity.put(79.0, 1600.0);
+    distanceToFlywheelVelocity.put(126.0, 1700.0);
+    distanceToFlywheelVelocity.put(130.0, 1800.0);
+    distanceToFlywheelVelocity.put(160.0, 1900.0);
+    distanceToFlywheelVelocity.put(273.0, 2100.0);
+
     double flyvelocity = 1850;
     getTagData();
     // in teleOp we are facing the correct april tag
     // at present there is no check for match tag
     if (getTag() == 24 || getTag() == 20) {
       flyvelocity = 1.6374 * range() + 1450;
+      // flyvelocity = distanceToFlywheelVelocity.get(range());
     }
     return flyvelocity;
   }
 
-  public double HoodVolt() {
-    // set value for middle of field
-    double hoodRange = 4.5;
+  public void setGPHood() {
+    double gprange = decode.gp2LYjoy();
+    if (gprange >= 0) {
+      // Maps [0 to 1] -> [20 to 110]
+      gprange = (gprange * 90.0) + 20.0;
+      decode.HoodPosition((int) gprange);
+    }
+  }
+
+  public void setCamHood() {
     getTagData();
     // in teleOp we are facing the correct april tag
     // at present there is no check for match tag
     if (getTag() == 24 || getTag() == 20) {
-      hoodRange = -.024 * range() + 2.7586;
+      // hoodRange = -.024 * range() + 2.7586;
+      decode.HoodPosition((int) range());
     }
-    return hoodRange;
   }
 } // end game manager

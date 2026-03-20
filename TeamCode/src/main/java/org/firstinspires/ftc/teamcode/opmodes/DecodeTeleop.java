@@ -5,14 +5,12 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
-import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
 @TeleOp(name = "Decode Teleop")
@@ -33,39 +31,12 @@ public class DecodeTeleop extends LinearOpMode {
     AprilDriver april = new AprilDriver(this);
     april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
-    GameDriver game = new GameDriver(hardwareMap, telemetry);
+    GameDriver game = new GameDriver(hardwareMap, telemetry, this);
 
     CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
-    AnalogInput chutePot = hardwareMap.get(AnalogInput.class, "CP");
-    FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
-    ChuteDriver chute = new ChuteDriver(chuteMotor, pot, telemetry);
 
     // --- Input ---
     InputStateMachine sm = new InputStateMachine(gamepad1, gamepad2);
-
-    // --- Chute completion callbacks ---
-    chute.setListener(
-        new ChuteDriver.ChuteListener() {
-          @Override
-          public void onTargetReached(double position) {
-            // telemetry.addLine("Chute reached: " +  managerposition);
-          }
-
-          @Override
-          public void onHomeComplete() {
-            telemetry.addLine("Chute homed");
-          }
-
-          @Override
-          public void onHomeTimeout() {
-            telemetry.addLine("WARNING: Chute home timed out");
-          }
-
-          @Override
-          public void onStopped() {
-            telemetry.addLine("Chute stopped");
-          }
-        });
 
     // --- Input callbacks ---
     sm.setListener(
@@ -106,7 +77,7 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void onActionY(int gamepad) {
             if (gamepad == 2) {
-              chute.stop();
+              // chute.stop();
             }
           }
 
@@ -115,7 +86,7 @@ public class DecodeTeleop extends LinearOpMode {
           // onIncrementUp
           public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {
-              chute.extend();
+              // chute.extend();
             }
           }
 
@@ -124,21 +95,21 @@ public class DecodeTeleop extends LinearOpMode {
           // onIncrementDown
           public void onIncrementDown(int gamepad) {
             if (gamepad == 2) {
-              chute.retract();
+              // chute.retract();
             }
           }
 
           @Override
           public void on_D_Pad_Right_Released(int gamepad) {
             if (gamepad == 2) {
-              chute.stop();
+              // chute.stop();
             }
           }
 
           @Override
           public void on_D_Pad_Left_Released(int gamepad) {
             if (gamepad == 2) {
-              chute.stop();
+              // chute.stop();
             }
           }
 
@@ -204,14 +175,6 @@ public class DecodeTeleop extends LinearOpMode {
     distanceToHoodMap.put(79.0, 4.0);
     distanceToHoodMap.put(43.0, 2.0);
 
-    InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
-    distanceToFlywheelVelocity.put(35.0, 1450.0);
-    distanceToFlywheelVelocity.put(79.0, 1600.0);
-    distanceToFlywheelVelocity.put(126.0, 1700.0);
-    distanceToFlywheelVelocity.put(130.0, 1800.0);
-    distanceToFlywheelVelocity.put(160.0, 1900.0);
-    distanceToFlywheelVelocity.put(273.0, 2100.0);
-
     waitForStart();
 
     // --- Main loop ---
@@ -221,6 +184,14 @@ public class DecodeTeleop extends LinearOpMode {
       // -----------------------------------------
       sm.captureInputs();
       sm.processInputs();
+
+      InterpolatingDoubleTreeMap distanceToFlywheelVelocity = new InterpolatingDoubleTreeMap();
+      distanceToFlywheelVelocity.put(35.0, 1450.0);
+      distanceToFlywheelVelocity.put(79.0, 1600.0);
+      distanceToFlywheelVelocity.put(126.0, 1700.0);
+      distanceToFlywheelVelocity.put(130.0, 1800.0);
+      distanceToFlywheelVelocity.put(160.0, 1900.0);
+      distanceToFlywheelVelocity.put(273.0, 2100.0);
 
       // -----------------------------------------
       // April tag and chute/flywheel auto adjust
@@ -265,7 +236,6 @@ public class DecodeTeleop extends LinearOpMode {
       game.setTilt((-gamepad2.left_stick_y + 1.0) / 2.0); // map -1..1 to 0..1
 
       // Subsystem updates
-      chute.update();
       game.updateTelemetry();
       telemetry.addData("Auto Range ", autoRange ? "On" : "Off");
       telemetry.update();

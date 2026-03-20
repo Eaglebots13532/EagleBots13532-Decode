@@ -3,6 +3,7 @@
 
 package org.firstinspires.ftc.teamcode.drivers;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -12,7 +13,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.InterpolatingDoubleTreeMap;
 
@@ -30,6 +30,7 @@ public class GameDriver {
   private final Servo gate;
   private final Servo tilt;
   private final Telemetry telemetry;
+  private final LinearOpMode linOp;
 
   // --- Gate positions ---
   private static final double GATE_OPEN = 1.0;
@@ -43,15 +44,15 @@ public class GameDriver {
 
   // --- Arm ---
   private final int armHome;
-    // servo power and pid error
-    private static double servode = 0.0;
-    private static final int revCtperRev = 8192;
-    private static final double gearDia = 1.415;
-    private static final double gearCircum = gearDia * 3.141;
+  // servo power and pid error
+  private static double servode = 0.0;
+  private static final int revCtperRev = 8192;
+  private static final double gearDia = 1.415;
+  private static final double gearCircum = gearDia * 3.141;
 
-  public GameDriver(HardwareMap hardwareMap, Telemetry telemetry) {
+  public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
     this.telemetry = telemetry;
-
+    this.linOp = linOp;
     launch = hardwareMap.get(DcMotorEx.class, "launch");
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -61,21 +62,22 @@ public class GameDriver {
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
     servo = hardwareMap.get(CRServo.class, "Servo");
-        servo.setDirection(DcMotorSimple.Direction.FORWARD);
+    servo.setDirection(DcMotorSimple.Direction.FORWARD);
     intake = hardwareMap.get(CRServo.class, "intake");
     gate = hardwareMap.get(Servo.class, "gate");
     tilt = hardwareMap.get(Servo.class, "tilt");
     motor = hardwareMap.get(DcMotorEx.class, "Motor");
   }
-    private CRServo servo = null;
-    public TouchSensor bob = null;
-    int homeEncoder = 0;
 
-    int homedirection = 1; // neg 1 for - power to home
-    int currentPosition = 0;
-    int targetPosition = 0;
-    private final ElapsedTime eTime = new ElapsedTime();
-    private final ElapsedTime dTime = new ElapsedTime();
+  private CRServo servo = null;
+  public TouchSensor bob = null;
+  int homeEncoder = 0;
+
+  int homedirection = 1; // neg 1 for - power to home
+  int currentPosition = 0;
+  int targetPosition = 0;
+  private final ElapsedTime eTime = new ElapsedTime();
+  private final ElapsedTime dTime = new ElapsedTime();
 
   // -----------------------------------------------------------------------
   // Intake
@@ -180,59 +182,76 @@ public class GameDriver {
     launch.setVelocity(0.0);
   }
 
-    public void HoodPosition(int newPosition) {
-        try {
-            // target position!
-            dTime.reset(); // differential reset
-            eTime.reset(); // udp reset
-            while ( IsBusy(newPosition) ){
-            }
-            servo.setPower(0.0);
+  public void HoodPosition(int newPosition) {
+    try {
+      // target position!
+      dTime.reset(); // differential reset
+      eTime.reset(); // udp reset
+      while (IsBusy(newPosition)) {}
+      servo.setPower(0.0);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    } // end hood position
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  } // end hood position
 
-    // range is the camera range in inches from target or gamepad -1 to 1 converted to 20 to 130 inches
-    public int EncCntfrmRange(double range) {
-        InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
-        distanceToHoodMap.put(43.0, 2.0);
-        distanceToHoodMap.put(79.0, 4.0);
-        distanceToHoodMap.put(126.0, 8.0);
-        distanceToHoodMap.put(130.0, 8.5);
-        distanceToHoodMap.put(160.0, 9.5);
-        distanceToHoodMap.put(296.0, 10.5);
-        final double Hm = 10.5; // maximum hood height
-        final int Hmc = (int)(revCtperRev * Hm / gearCircum);// max hood encoder count
-        double Hh = distanceToHoodMap.get(range);// desired hood height from range
-        int He = (int) (revCtperRev * Hh / gearCircum);// hood desired count position
-        return He;
-    }
+  // range is the camera range in inches from target or gamepad -1 to 1 converted to 20 to 130
+  // inches
+  public int EncCntfrmRange(double range) {
+    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
+    distanceToHoodMap.put(43.0, 2.0);
+    distanceToHoodMap.put(79.0, 4.0);
+    distanceToHoodMap.put(126.0, 8.0);
+    distanceToHoodMap.put(130.0, 8.5);
+    distanceToHoodMap.put(160.0, 9.5);
+    distanceToHoodMap.put(296.0, 10.5);
+    final double Hm = 10.5; // maximum hood height
+    final int Hmc = (int) (revCtperRev * Hm / gearCircum); // max hood encoder count
+    double Hh = distanceToHoodMap.get(range); // desired hood height from range
+    int He = (int) (revCtperRev * Hh / gearCircum); // hood desired count position
+    return He;
+  }
 
-    private boolean IsBusy(int target) {
-        final double k = 0.01;
-        final double d = .005;
-        int encCt = motor.getCurrentPosition();
-        int sgn = target > encCt ? -1 : 1; // change signs for reverse movement
-        double tdiff = encCt - target;
-        double servoPwr = sgn * tdiff * k + d * (tdiff - servode) / dTime.milliseconds();
-        servo.setPower(Range.clip(servoPwr, -1, 1));
-        servode = tdiff; // save error for differential error
-        dTime.reset(); // reset for differential
-        return !(tdiff < 1);
-    }
-    // Move hood to home if not already there and reset encoder to 0
-    public void GotoHome() {
-        double hmpwr = .2;
-        if (hmpwr > 0) homedirection = 1; else homedirection = -1;
-        servo.setPower(hmpwr);
-        while ( !bob.isPressed()) {
-        }
-        servo.setPower(0.0);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        homeEncoder = motor.getCurrentPosition();
-    }
+  private boolean IsBusy(int target) {
+    final double k = 0.01;
+    final double d = .005;
+    int encCt = motor.getCurrentPosition();
+    int sgn = target > encCt ? -1 : 1; // change signs for reverse movement
+    double tdiff = encCt - target;
+    double servoPwr = sgn * tdiff * k + d * (tdiff - servode) / dTime.milliseconds();
+    servo.setPower(Range.clip(servoPwr, -1, 1));
+    servode = tdiff; // save error for differential error
+    dTime.reset(); // reset for differential
+    return !(tdiff < 1);
+  }
+
+  // Move hood to home if not already there and reset encoder to 0
+  public void GotoHome() {
+    double hmpwr = .2;
+    if (hmpwr > 0) homedirection = 1;
+    else homedirection = -1;
+    servo.setPower(hmpwr);
+    while (!bob.isPressed()) {}
+    servo.setPower(0.0);
+    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    homeEncoder = motor.getCurrentPosition();
+  }
+
+  public double gp2LYjoy() {
+    return linOp.gamepad2.left_stick_y;
+  }
+
+  public double gp2LXjoy() {
+    return linOp.gamepad2.left_stick_x;
+  }
+
+  public double gp2YRjoy() {
+    return linOp.gamepad2.right_stick_y;
+  }
+
+  public double gp2Xjoy() {
+    return linOp.gamepad2.left_stick_x;
+  }
 
   // -----------------------------------------------------------------------
   // Telemetry

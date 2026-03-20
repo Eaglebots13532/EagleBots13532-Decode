@@ -10,13 +10,13 @@ import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 
 public class StateMachine extends GameDriver {
-  public StateMachine(HardwareMap hardwareMap, Telemetry telemetry) {
-    super(hardwareMap, telemetry);
+  public StateMachine(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
+    super(hardwareMap, telemetry, linOp);
   }
 
   public AprilDriver april;
 
-  public ChuteDriver chute;
+  // public ChuteDriver chute;
 
   public enum State {
     Intake,
@@ -70,7 +70,7 @@ public class StateMachine extends GameDriver {
         april.getAprilTag();
         double range = april.getRange();
         super.setLaunchVelocity(range);
-        chute.goToPosition(range); // range 0 to 11
+        // chute.goToPosition(range); // range 0 to 11
 
         currentState = State.Shoot;
         break;

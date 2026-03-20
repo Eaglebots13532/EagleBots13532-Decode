@@ -14,11 +14,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import java.util.Optional;
-import org.firstinspires.ftc.teamcode.drivers.chute.Chute;
-import org.firstinspires.ftc.teamcode.drivers.chute.ChuteController;
-import org.firstinspires.ftc.teamcode.drivers.chute.FtcCRServo;
-import org.firstinspires.ftc.teamcode.drivers.chute.FtcPotentiometer;
 
 public class DC_Intake_Launch {
   /* Declare OpMode members.
@@ -36,7 +31,6 @@ public class DC_Intake_Launch {
 
   public DcMotorEx launch = null; // 6000 rpm motor
   public DcMotor arm = null; // 312 rpm motor
-  public Chute chute;
 
   public CRServo intake = null; // intake motor controller
   public Servo gate = null; // intake gate
@@ -100,16 +94,13 @@ public class DC_Intake_Launch {
     // present.SensorInit();
     encHome = arm.getCurrentPosition(); // Not used for this software feature
     // initialize hood components
-    chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute"); // Not used for this software feature
-    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP"); // Not used for this software feature
+    chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute"); // Not used for this software
+
+    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP"); // Not used for this software
 
     // Create hardware adapters
-    FtcCRServo motor = new FtcCRServo(chuteMotor);
-    FtcPotentiometer pot = new FtcPotentiometer(chutePot, POT_WRAP_AMOUNT);
+    // FtcCRServo motor = new FtcCRServo(chuteMotor);
 
-    // Create chute controller with real hardware
-    ChuteController controller = new ChuteController(motor, pot, MAX);
-    chute = new Chute(controller, motor, pot);
   }
 
   // Servo controlled motor
@@ -213,96 +204,91 @@ public class DC_Intake_Launch {
     // light indicator
   }
 
-  void runToHomePos(CRServo chuteMotor, double home, FtcPotentiometer pot) {
-    double newVoltpot = Math.abs(pot.getVoltage());
-    int stallCount = 0;
-    double prevChutePos = 0.0;
+  //  void runToHomePos(CRServo chuteMotor, double home, FtcPotentiometer pot) {
+  //    double newVoltpot = Math.abs(pot.getVoltage());
+  //    int stallCount = 0;
+  //    double prevChutePos = 0.0;
+  //
+  //    do {
+  //      if (correctedChutePos < 2.0) {
+  //        chuteMotor.setPower(-0.3);
+  //      } else {
+  //        chuteMotor.setPower(-0.8);
+  //      }
+  //      updatePos(false, home, pot);
+  //
+  //      // See if we've stalled, if so, increase a count and make sure
+  //      if ((int) correctedChutePos == (int) prevChutePos) {
+  //        stallCount++;
+  //      } else {
+  //        stallCount = 0;
+  //      }
+  //
+  //      prevChutePos = correctedChutePos;
+  //
+  //      myOp.sleep(10);
+  //    } while (stallCount <= 50); // Loop until we stall at home
+  //
+  //    myOp.telemetry.addLine("Found home");
+  //    myOp.telemetry.update();
+  //    // Reset minChutePos to the new home position
+  //    minChutePos = absChutePos;
+  //
+  //    chuteMotor.setPower(0.0);
+  //  }
+  //
+  //  Optional<Double> chutePos = Optional.empty();
+  //
+  //  private void updatePos(boolean directionUp, double home, FtcPotentiometer pot) {
+  //    double newVoltpot = Math.abs(pot.getVoltage());
+  //
+  //    if (directionUp) {
+  //      if (newVoltpot >= maxPot / 2.0) {
+  //        if (!inUpperRegion) {
+  //          inUpperRegion = true;
+  //          majorLoopCt += 1;
+  //        }
+  //      }
+  //      if (newVoltpot < maxPot / 2.0) {
+  //        if (inUpperRegion) {
+  //          inUpperRegion = false;
+  //        }
+  //      }
+  //    } else {
+  //      if (newVoltpot >= maxPot / 2.0) {
+  //        if (!inUpperRegion) {
+  //          inUpperRegion = true;
+  //        }
+  //      }
+  //      if (newVoltpot < maxPot / 2.0) {
+  //        if (inUpperRegion) {
+  //          inUpperRegion = false;
+  //          majorLoopCt -= 1;
+  //        }
+  //      }
+  //    }
 
-    do {
-      if (correctedChutePos < 2.0) {
-        chuteMotor.setPower(-0.3);
-      } else {
-        chuteMotor.setPower(-0.8);
-      }
-      updatePos(false, home, pot);
+  //    absChutePos = (maxPot * majorLoopCt) + (maxPot - newVoltpot);
+  //    if (!homePosSet) {
+  //      homePosSet = true;
+  //      minChutePos = absChutePos;
+  //    }
+  //    correctedChutePos = absChutePos - minChutePos;
+  /*
+         telemetry.addLine("Potentiometer: " + newVoltpot);
+         telemetry.addLine("Loop ct: " + majorLoopCt);
+         telemetry.addLine("-- Transition: " + maxPot / 2.0);
+         if (inUpperRegion) {
+             telemetry.addLine("Region: UPPER");
+         } else {
+             telemetry.addLine("Region: LOWER");
+         }
+         telemetry.addLine("Chute POS: " + absChutePos);
+         telemetry.addLine("Corrected POS: " + correctedChutePos);
+         telemetry.addData("Potentiometer", pot.getVoltage());
+         telemetry.update();
 
-      // See if we've stalled, if so, increase a count and make sure
-      if ((int) correctedChutePos == (int) prevChutePos) {
-        stallCount++;
-      } else {
-        stallCount = 0;
-      }
+  */
 
-      prevChutePos = correctedChutePos;
-
-      myOp.sleep(10);
-    } while (stallCount <= 50); // Loop until we stall at home
-
-    myOp.telemetry.addLine("Found home");
-    myOp.telemetry.update();
-    // Reset minChutePos to the new home position
-    minChutePos = absChutePos;
-
-    chuteMotor.setPower(0.0);
-  }
-
-  Optional<Double> chutePos = Optional.empty();
-
-  private void updatePos(boolean directionUp, double home, FtcPotentiometer pot) {
-    double newVoltpot = Math.abs(pot.getVoltage());
-
-    if (directionUp) {
-      if (newVoltpot >= maxPot / 2.0) {
-        if (!inUpperRegion) {
-          inUpperRegion = true;
-          majorLoopCt += 1;
-        }
-      }
-      if (newVoltpot < maxPot / 2.0) {
-        if (inUpperRegion) {
-          inUpperRegion = false;
-        }
-      }
-    } else {
-      if (newVoltpot >= maxPot / 2.0) {
-        if (!inUpperRegion) {
-          inUpperRegion = true;
-        }
-      }
-      if (newVoltpot < maxPot / 2.0) {
-        if (inUpperRegion) {
-          inUpperRegion = false;
-          majorLoopCt -= 1;
-        }
-      }
-    }
-
-    absChutePos = (maxPot * majorLoopCt) + (maxPot - newVoltpot);
-    if (!homePosSet) {
-      homePosSet = true;
-      minChutePos = absChutePos;
-    }
-    correctedChutePos = absChutePos - minChutePos;
-    /*
-           telemetry.addLine("Potentiometer: " + newVoltpot);
-           telemetry.addLine("Loop ct: " + majorLoopCt);
-           telemetry.addLine("-- Transition: " + maxPot / 2.0);
-           if (inUpperRegion) {
-               telemetry.addLine("Region: UPPER");
-           } else {
-               telemetry.addLine("Region: LOWER");
-           }
-           telemetry.addLine("Chute POS: " + absChutePos);
-           telemetry.addLine("Corrected POS: " + correctedChutePos);
-           telemetry.addData("Potentiometer", pot.getVoltage());
-           telemetry.update();
-
-    */
-
-    prevVoltPot = newVoltpot;
-  }
-
-  public void setTilt() {
-    tilt.setPosition(.5);
-  }
+  // prevVoltPot = newVoltpot;
 }

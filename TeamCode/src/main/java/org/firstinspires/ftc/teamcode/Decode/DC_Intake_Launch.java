@@ -7,11 +7,11 @@ package org.firstinspires.ftc.teamcode.Decode;
 // All rights reserved.
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -32,11 +32,11 @@ public class DC_Intake_Launch {
   public DcMotorEx launch = null; // 6000 rpm motor
   public DcMotor arm = null; // 312 rpm motor
 
-  public CRServo intake = null; // intake motor controller
+  public DcMotor intake = null; // intake motor controller
   public Servo gate = null; // intake gate
   public Servo tilt = null; // tilt robot up
   public CRServo chuteMotor = null;
-  public AnalogInput chutePot = null;
+  public DigitalChannel home = null;
 
   // time out timer
   private ElapsedTime runTime = new ElapsedTime();
@@ -45,7 +45,7 @@ public class DC_Intake_Launch {
   boolean potage = false;
   double maxPot = 2.0 * Math.PI; // Was 6.16
   double lastVolt = 0.0;
-  double home = 0.0; // start voltage
+  double homeenc = 0.0; // start voltage
   // does hoodPos = home position
   double hoodPos = 0.0;
   int count = 0;
@@ -83,7 +83,8 @@ public class DC_Intake_Launch {
     // Define and Initialize Servo
     intake =
         myOp.hardwareMap.get(
-            CRServo.class, "intake"); // Rubberband bar and rubber gears to pull ball toward gate
+            DcMotor.class, "Intake"); // Rubber bar and rubber gears to pull ball toward gate
+    intake.setDirection(DcMotorSimple.Direction.REVERSE);
     // gate to stop balls from entering the chute
     gate =
         myOp.hardwareMap.get(
@@ -96,7 +97,7 @@ public class DC_Intake_Launch {
     // initialize hood components
     chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute"); // Not used for this software
 
-    chutePot = myOp.hardwareMap.get(AnalogInput.class, "CP"); // Not used for this software
+    home = myOp.hardwareMap.get(DigitalChannel.class, "Home"); // Not used for this software
 
     // Create hardware adapters
     // FtcCRServo motor = new FtcCRServo(chuteMotor);
@@ -204,91 +205,7 @@ public class DC_Intake_Launch {
     // light indicator
   }
 
-  //  void runToHomePos(CRServo chuteMotor, double home, FtcPotentiometer pot) {
-  //    double newVoltpot = Math.abs(pot.getVoltage());
-  //    int stallCount = 0;
-  //    double prevChutePos = 0.0;
-  //
-  //    do {
-  //      if (correctedChutePos < 2.0) {
-  //        chuteMotor.setPower(-0.3);
-  //      } else {
-  //        chuteMotor.setPower(-0.8);
-  //      }
-  //      updatePos(false, home, pot);
-  //
-  //      // See if we've stalled, if so, increase a count and make sure
-  //      if ((int) correctedChutePos == (int) prevChutePos) {
-  //        stallCount++;
-  //      } else {
-  //        stallCount = 0;
-  //      }
-  //
-  //      prevChutePos = correctedChutePos;
-  //
-  //      myOp.sleep(10);
-  //    } while (stallCount <= 50); // Loop until we stall at home
-  //
-  //    myOp.telemetry.addLine("Found home");
-  //    myOp.telemetry.update();
-  //    // Reset minChutePos to the new home position
-  //    minChutePos = absChutePos;
-  //
-  //    chuteMotor.setPower(0.0);
-  //  }
-  //
-  //  Optional<Double> chutePos = Optional.empty();
-  //
-  //  private void updatePos(boolean directionUp, double home, FtcPotentiometer pot) {
-  //    double newVoltpot = Math.abs(pot.getVoltage());
-  //
-  //    if (directionUp) {
-  //      if (newVoltpot >= maxPot / 2.0) {
-  //        if (!inUpperRegion) {
-  //          inUpperRegion = true;
-  //          majorLoopCt += 1;
-  //        }
-  //      }
-  //      if (newVoltpot < maxPot / 2.0) {
-  //        if (inUpperRegion) {
-  //          inUpperRegion = false;
-  //        }
-  //      }
-  //    } else {
-  //      if (newVoltpot >= maxPot / 2.0) {
-  //        if (!inUpperRegion) {
-  //          inUpperRegion = true;
-  //        }
-  //      }
-  //      if (newVoltpot < maxPot / 2.0) {
-  //        if (inUpperRegion) {
-  //          inUpperRegion = false;
-  //          majorLoopCt -= 1;
-  //        }
-  //      }
-  //    }
-
-  //    absChutePos = (maxPot * majorLoopCt) + (maxPot - newVoltpot);
-  //    if (!homePosSet) {
-  //      homePosSet = true;
-  //      minChutePos = absChutePos;
-  //    }
-  //    correctedChutePos = absChutePos - minChutePos;
-  /*
-         telemetry.addLine("Potentiometer: " + newVoltpot);
-         telemetry.addLine("Loop ct: " + majorLoopCt);
-         telemetry.addLine("-- Transition: " + maxPot / 2.0);
-         if (inUpperRegion) {
-             telemetry.addLine("Region: UPPER");
-         } else {
-             telemetry.addLine("Region: LOWER");
-         }
-         telemetry.addLine("Chute POS: " + absChutePos);
-         telemetry.addLine("Corrected POS: " + correctedChutePos);
-         telemetry.addData("Potentiometer", pot.getVoltage());
-         telemetry.update();
-
-  */
-
-  // prevVoltPot = newVoltpot;
+  public boolean getHome() {
+    return home.getState();
+  }
 }

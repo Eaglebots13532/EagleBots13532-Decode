@@ -16,8 +16,7 @@ import org.firstinspires.ftc.teamcode.drivers.wpilib.interpolation.Interpolating
 @TeleOp(name = "Decode Teleop")
 public class DecodeTeleop extends LinearOpMode {
 
-  private static final double CHUTE_STEP = 2.0;
-  private static final double POT_WRAP_AMOUNT = 6.16;
+  private static double chutePos = 2.0;
   private boolean gateOpen = false;
   private boolean autoRange = false;
 
@@ -76,9 +75,8 @@ public class DecodeTeleop extends LinearOpMode {
           // Y button -- gamepad2: emergency stop chute
           @Override
           public void onActionY(int gamepad) {
-            if (gamepad == 2) {
-              // chute.stop();
-            }
+
+            if (gamepad == 2) {}
           }
 
           // Dpad right -- gamepad2: extend chute
@@ -86,7 +84,9 @@ public class DecodeTeleop extends LinearOpMode {
           // onIncrementUp
           public void onIncrementUp(int gamepad) {
             if (gamepad == 2) {
-              // chute.extend();
+              chutePos += 2.0;
+              int encPulse = game.EncCntfrmRange(chutePos);
+              game.HoodPosition(encPulse);
             }
           }
 
@@ -95,21 +95,23 @@ public class DecodeTeleop extends LinearOpMode {
           // onIncrementDown
           public void onIncrementDown(int gamepad) {
             if (gamepad == 2) {
-              // chute.retract();
+              chutePos -= 2.0;
+              int encPulse = game.EncCntfrmRange(chutePos);
+              game.HoodPosition(encPulse);
             }
           }
 
           @Override
           public void on_D_Pad_Right_Released(int gamepad) {
             if (gamepad == 2) {
-              // chute.stop();
+              game.Chute_Stop();
             }
           }
 
           @Override
           public void on_D_Pad_Left_Released(int gamepad) {
             if (gamepad == 2) {
-              // chute.stop();
+              game.Chute_Stop();
             }
           }
 
@@ -167,16 +169,12 @@ public class DecodeTeleop extends LinearOpMode {
     telemetry.addData("Drive Mode", driveManager.getMode());
     telemetry.update();
 
-    InterpolatingDoubleTreeMap distanceToHoodMap = new InterpolatingDoubleTreeMap();
-    distanceToHoodMap.put(296.0, 10.5);
-    distanceToHoodMap.put(160.0, 9.5);
-    distanceToHoodMap.put(130.0, 8.5);
-    distanceToHoodMap.put(126.0, 8.0);
-    distanceToHoodMap.put(79.0, 4.0);
-    distanceToHoodMap.put(43.0, 2.0);
-
     waitForStart();
-
+    // hood starts in home position After auto~ hood is sent home
+    if (game.homed()) {
+      game.GotoHome();
+    }
+    game.setHome();// sets hood encoder home encoder count
     // --- Main loop ---
     while (opModeIsActive()) {
       // -----------------------------------------

@@ -24,9 +24,9 @@ public class GameDriver {
 
   // --- Hardware ---
   private final DcMotorEx launch;
-  private final DcMotorEx motor;
+  private final DcMotorEx hoodEnc;
   private final DcMotor arm;
-  private final CRServo intake;
+  private final DcMotor intake;
   private final Servo gate;
   private final Servo tilt;
   private final Telemetry telemetry;
@@ -61,12 +61,13 @@ public class GameDriver {
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
-    servo = hardwareMap.get(CRServo.class, "Servo");
+    servo = hardwareMap.get(CRServo.class, "chute");
     servo.setDirection(DcMotorSimple.Direction.FORWARD);
-    intake = hardwareMap.get(CRServo.class, "intake");
+    intake = hardwareMap.get(DcMotor.class, "Intake");
     gate = hardwareMap.get(Servo.class, "gate");
     tilt = hardwareMap.get(Servo.class, "tilt");
-    motor = hardwareMap.get(DcMotorEx.class, "Motor");
+    hoodEnc = hardwareMap.get(DcMotorEx.class, "Hood");
+    bob = hardwareMap.get(TouchSensor.class, "bob");
   }
 
   private CRServo servo = null;
@@ -188,7 +189,7 @@ public class GameDriver {
       dTime.reset(); // differential reset
       eTime.reset(); // udp reset
       while (linOp.opModeIsActive() && IsBusy(newPosition)) {
-          linOp.idle();
+        linOp.idle();
       }
       servo.setPower(0.0);
 
@@ -211,13 +212,14 @@ public class GameDriver {
     final int Hmc = (int) (revCtperRev * Hm / gearCircum); // max hood encoder count
     double Hh = distanceToHoodMap.get(range); // desired hood height from range
     int hood = (int) (revCtperRev * Hh / gearCircum); // hood desired count position
+    if (hood > Hmc) hood = Hmc;
     return hood;
   }
 
   private boolean IsBusy(int target) {
     final double k = 0.01;
     final double d = .005;
-    int encCt = motor.getCurrentPosition();
+    int encCt = hoodEnc.getCurrentPosition();
     int sgn = target > encCt ? -1 : 1; // change signs for reverse movement
     double tdiff = encCt - target;
     double servoPwr = sgn * tdiff * k + d * (tdiff - servode) / dTime.milliseconds();
@@ -234,11 +236,24 @@ public class GameDriver {
     else homedirection = -1;
     servo.setPower(hmpwr);
     while (linOp.opModeIsActive() && !bob.isPressed()) {
-        linOp.idle();
+      linOp.idle();
     }
     servo.setPower(0.0);
-    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    homeEncoder = motor.getCurrentPosition();
+    hoodEnc.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    homeEncoder = hoodEnc.getCurrentPosition();
+  }
+
+  public void Chute_Stop() {
+    servo.setPower(0.0);
+  }
+
+  public void setHome() {
+    homeEncoder = hoodEnc.getCurrentPosition();
+  }
+
+  // if hood home switch is pressed return false
+  public boolean homed() {
+    return bob.isPressed();
   }
 
   public double gp2LYjoy() {

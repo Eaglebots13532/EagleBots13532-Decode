@@ -60,11 +60,11 @@ public class UT_chkDevices extends LinearOpMode {
       // chute positioning
       telemetry.addLine("DPad +left -right 2");
       if (gamepad2.dpad_right) {
-        chuteDrv = .2;
+        chuteDrv = .4;
         if (turnOnHood) game.chuteMotor.setPower(chuteDrv);
       }
       if (gamepad2.dpad_left) {
-        chuteDrv = -.2;
+        chuteDrv = -.4;
         if (turnOnHood) game.chuteMotor.setPower(chuteDrv);
       }
       sleep(100);
@@ -85,8 +85,7 @@ public class UT_chkDevices extends LinearOpMode {
       sleep(100);
       telemetry.addData("Fly Request Velocity:", spinVeloc);
       telemetry.addData("Fly Present Velocity:", flyvel);
-      double Hpot = game.chutePot.getVoltage();
-      telemetry.addData("Hood potentiometer:", Hpot);
+      telemetry.addLine("Home Switch: " + game.getHome());
       double ArmEnc = game.getArmEnc();
       sleep(100);
       telemetry.addData("Arm Encoder Position:", ArmEnc);

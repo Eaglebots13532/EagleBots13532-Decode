@@ -47,11 +47,11 @@ public class HoodEncoder extends LinearOpMode {
 
   public void runOpMode() {
 
-    servo = hardwareMap.get(CRServo.class, "Servo");
+    servo = hardwareMap.get(CRServo.class, "chute");
     servo.setDirection(DcMotorSimple.Direction.FORWARD);
     // enable encoder calls - no motor
-    motor = hardwareMap.get(DcMotorEx.class, "Motor");
-    bob = hardwareMap.get(TouchSensor.class, "TouchSensor");
+    motor = hardwareMap.get(DcMotorEx.class, "Hood");
+    bob = hardwareMap.get(TouchSensor.class, "bob");
     dTime.reset();
     waitForStart();
     try {

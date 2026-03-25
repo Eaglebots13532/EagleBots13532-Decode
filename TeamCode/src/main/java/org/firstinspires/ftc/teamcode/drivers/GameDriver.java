@@ -24,9 +24,8 @@ public class GameDriver {
 
   // --- Hardware ---
   private final DcMotorEx launch;
-  private final DcMotorEx motor;
   private final DcMotor arm;
-  private final CRServo intake;
+  private final DcMotor intake;
   private final Servo gate;
   private final Servo tilt;
   private final Telemetry telemetry;
@@ -61,15 +60,15 @@ public class GameDriver {
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
-    servo = hardwareMap.get(CRServo.class, "Servo");
-    servo.setDirection(DcMotorSimple.Direction.FORWARD);
-    intake = hardwareMap.get(CRServo.class, "intake");
+    hood = hardwareMap.get(CRServo.class, "hood");
+    hood.setDirection(DcMotorSimple.Direction.FORWARD);
+    intake = hardwareMap.get(DcMotor.class, "intake");
+    intake.setDirection(DcMotorSimple.Direction.REVERSE);
     gate = hardwareMap.get(Servo.class, "gate");
     tilt = hardwareMap.get(Servo.class, "tilt");
-    motor = hardwareMap.get(DcMotorEx.class, "Motor");
   }
 
-  private CRServo servo = null;
+  private CRServo hood = null;
   public TouchSensor bob = null;
   int homeEncoder = 0;
 
@@ -188,9 +187,9 @@ public class GameDriver {
       dTime.reset(); // differential reset
       eTime.reset(); // udp reset
       while (linOp.opModeIsActive() && IsBusy(newPosition)) {
-          linOp.idle();
+        linOp.idle();
       }
-      servo.setPower(0.0);
+      hood.setPower(0.0);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -217,11 +216,11 @@ public class GameDriver {
   private boolean IsBusy(int target) {
     final double k = 0.01;
     final double d = .005;
-    int encCt = motor.getCurrentPosition();
+    int encCt = 0; // encoder goes here
     int sgn = target > encCt ? -1 : 1; // change signs for reverse movement
     double tdiff = encCt - target;
     double servoPwr = sgn * tdiff * k + d * (tdiff - servode) / dTime.milliseconds();
-    servo.setPower(Range.clip(servoPwr, -1, 1));
+    hood.setPower(Range.clip(servoPwr, -1, 1));
     servode = tdiff; // save error for differential error
     dTime.reset(); // reset for differential
     return !(tdiff < 1);
@@ -232,13 +231,12 @@ public class GameDriver {
     double hmpwr = .2;
     if (hmpwr > 0) homedirection = 1;
     else homedirection = -1;
-    servo.setPower(hmpwr);
+    hood.setPower(hmpwr);
     while (linOp.opModeIsActive() && !bob.isPressed()) {
-        linOp.idle();
+      linOp.idle();
     }
-    servo.setPower(0.0);
-    motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    homeEncoder = motor.getCurrentPosition();
+    hood.setPower(0.0);
+    homeEncoder = 0; // encoder needs to be added
   }
 
   public double gp2LYjoy() {

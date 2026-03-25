@@ -5,6 +5,7 @@ package org.firstinspires.ftc.teamcode.cole;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name = "Tank Drive With Triggers", group = "TeleOp")
@@ -14,18 +15,21 @@ public class Cole extends LinearOpMode {
   private DcMotor leftRear;
   private DcMotor rightFront;
   private DcMotor rightRear;
+  private CRServo arm;
 
   public void runOpMode() {
 
     // Hardware mapping
-    leftFront = hardwareMap.get(DcMotor.class, "LMotor");
-    leftRear = hardwareMap.get(DcMotor.class, "BMotor");
-    rightFront = hardwareMap.get(DcMotor.class, "RMotor");
-    rightRear = hardwareMap.get(DcMotor.class, "FMotor");
+    arm = hardwareMap.get(CRServo.class, "arm");
+    leftFront = hardwareMap.get(DcMotor.class, "LFMotor");
+    leftRear = hardwareMap.get(DcMotor.class, "LRMotor");
+    rightFront = hardwareMap.get(DcMotor.class, "RFMotor");
+    rightRear = hardwareMap.get(DcMotor.class, "RRMotor");
+
 
     // Reverse left side if needed
     leftFront.setDirection(DcMotor.Direction.REVERSE);
-    leftRear.setDirection(DcMotor.Direction.REVERSE);
+    rightRear.setDirection(DcMotor.Direction.REVERSE);
 
     waitForStart();
 
@@ -46,6 +50,15 @@ public class Cole extends LinearOpMode {
         leftPower = -backward;
         rightPower = -backward;
       }
+
+
+      // Set Servo Power using Dpad
+      if (gamepad1.dpad_left) {
+        arm.setPower(-1);
+      } else if (gamepad1.dpad_right) {
+        arm.setPower(1);
+      }
+      
 
       // Set motor power
       leftFront.setPower(leftPower);

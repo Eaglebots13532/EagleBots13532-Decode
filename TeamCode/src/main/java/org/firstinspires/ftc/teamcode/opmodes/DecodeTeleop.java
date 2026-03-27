@@ -5,7 +5,6 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
@@ -31,8 +30,6 @@ public class DecodeTeleop extends LinearOpMode {
     april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
     GameDriver game = new GameDriver(hardwareMap, telemetry, this);
-
-    CRServo chuteMotor = hardwareMap.get(CRServo.class, "chute");
 
     // --- Input ---
     InputStateMachine sm = new InputStateMachine(gamepad1, gamepad2);

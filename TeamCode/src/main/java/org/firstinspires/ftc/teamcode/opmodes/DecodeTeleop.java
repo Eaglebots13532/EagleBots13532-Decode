@@ -5,7 +5,6 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.Prism.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.DriveManager;
@@ -20,12 +19,10 @@ public class DecodeTeleop extends LinearOpMode {
   private boolean autoRange = false;
 
   private double flywheelPower = 1400.0;
-  GoBildaPrismDriver prism;
 
   @Override
   public void runOpMode() {
     // --- Subsystems ---
-    prism = hardwareMap.get(GoBildaPrismDriver.class, "prism"); // not used rn
     AprilDriver april = new AprilDriver(this);
     april.initAprilTag(); // initialize camera to read april tags
     DriveManager driveManager = new DriveManager(this, hardwareMap, telemetry);
@@ -101,14 +98,14 @@ public class DecodeTeleop extends LinearOpMode {
           @Override
           public void on_D_Pad_Right_Released(int gamepad) {
             if (gamepad == 2) {
-              game.Chute_Stop();
+              // game.Chute_Stop();
             }
           }
 
           @Override
           public void on_D_Pad_Left_Released(int gamepad) {
             if (gamepad == 2) {
-              game.Chute_Stop();
+              // game.Chute_Stop();
             }
           }
 
@@ -168,10 +165,10 @@ public class DecodeTeleop extends LinearOpMode {
 
     waitForStart();
     // hood starts in home position After auto~ hood is sent home
-    if (game.homed()) {
-      game.GotoHome();
-    }
-    game.setHome();// sets hood encoder home encoder count
+    // if (game.homed()) {
+    //  game.GotoHome();
+    // }
+    // game.setHome(); // sets hood encoder home encoder count
     // --- Main loop ---
     while (opModeIsActive()) {
       // -----------------------------------------

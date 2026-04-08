@@ -26,7 +26,6 @@ public class Cole extends LinearOpMode {
     rightFront = hardwareMap.get(DcMotor.class, "RFMotor");
     rightRear = hardwareMap.get(DcMotor.class, "RRMotor");
 
-
     // Reverse left side if needed
     leftFront.setDirection(DcMotor.Direction.REVERSE);
     rightRear.setDirection(DcMotor.Direction.REVERSE);
@@ -51,14 +50,12 @@ public class Cole extends LinearOpMode {
         rightPower = -backward;
       }
 
-
       // Set Servo Power using Dpad
       if (gamepad1.dpad_left) {
         arm.setPower(-1);
       } else if (gamepad1.dpad_right) {
         arm.setPower(1);
       }
-      
 
       // Set motor power
       leftFront.setPower(leftPower);

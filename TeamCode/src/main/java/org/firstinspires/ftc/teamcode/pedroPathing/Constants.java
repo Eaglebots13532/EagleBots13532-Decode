@@ -28,7 +28,7 @@ public class Constants {
           .forwardZeroPowerAcceleration(-90)
           .lateralZeroPowerAcceleration(-90)
           .translationalPIDFCoefficients(new PIDFCoefficients(0.35, 0, 0.03, 0.1))
-          .headingPIDFCoefficients(new PIDFCoefficients(1.2, 0, 0.1, 0.05))
+          .headingPIDFCoefficients(new PIDFCoefficients(1.4, 0, 0.05, 0.03))
       // .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.005, 0, 0.00003, 0.6, 0.13))
       // .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(
       // 0.05, //0.05 to 0.3
@@ -36,11 +36,7 @@ public class Constants {
       // 0.002)
       // )
       ;
-  public static PathConstraints pathConstraints = new PathConstraints(
-          0.99,
-          100,
-          1,
-          1);
+  public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
   public static SwerveConstants swerveConstants =
       new SwerveConstants()

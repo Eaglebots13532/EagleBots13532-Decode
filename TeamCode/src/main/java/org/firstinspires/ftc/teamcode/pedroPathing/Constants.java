@@ -36,11 +36,7 @@ public class Constants {
       // 0.002)
       // )
       ;
-  public static PathConstraints pathConstraints = new PathConstraints(
-          0.99,
-          100,
-          1,
-          1);
+  public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
   public static SwerveConstants swerveConstants =
       new SwerveConstants()

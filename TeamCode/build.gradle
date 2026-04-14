@@ -46,5 +46,5 @@ dependencies {
     implementation 'org.ejml:ejml-core:0.43.1' // Use the latest version
     implementation 'org.ejml:ejml-simple:0.43.1'
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:3.0.6'
-// Optional: for a simpler interface
+    // Optional: for a simpler interface
 }

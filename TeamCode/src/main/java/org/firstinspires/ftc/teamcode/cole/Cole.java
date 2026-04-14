@@ -28,7 +28,7 @@ public class Cole extends LinearOpMode {
 
     // Reverse left side if needed
     leftFront.setDirection(DcMotor.Direction.REVERSE);
-    rightRear.setDirection(DcMotor.Direction.REVERSE);
+    leftRear.setDirection(DcMotor.Direction.REVERSE);
 
     waitForStart();
 

@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -26,10 +27,12 @@ public class GameDriver {
   private final DcMotorEx launch;
   private final DcMotor arm;
   private final DcMotor intake;
+  private final DcMotor hoodEncoder;
   private final Servo gate;
   private final Servo tilt;
   private final Telemetry telemetry;
   private final LinearOpMode linOp;
+  private final DigitalChannel touchSensor;
 
   // --- Gate positions ---
   private static final double GATE_OPEN = 1.0;
@@ -66,6 +69,11 @@ public class GameDriver {
     intake.setDirection(DcMotorSimple.Direction.REVERSE);
     gate = hardwareMap.get(Servo.class, "gate");
     tilt = hardwareMap.get(Servo.class, "tilt");
+
+    hoodEncoder = hardwareMap.get(DcMotor.class, "Hood");
+    hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+    touchSensor = hardwareMap.get(DigitalChannel.class, "Home");
   }
 
   private CRServo hood = null;
@@ -264,5 +272,17 @@ public class GameDriver {
     telemetry.addData("Gate", gate.getPosition() >= GATE_OPEN ? "OPEN" : "CLOSED");
     telemetry.addData("Arm Power", "%.2f", arm.getPower());
     telemetry.addData("Launch Vel", "%.0f", launch.getVelocity());
+  }
+
+  public double getHoodEncoderPos () {
+    return hoodEncoder.getCurrentPosition();
+  }
+
+  public boolean getTouchSensor () {
+    return touchSensor.getState();
+  }
+
+  public void setHoodServoPower (double power) {
+    hood.setPower(power);
   }
 }

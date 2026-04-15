@@ -32,6 +32,7 @@ public class GameDriver {
   private final Servo tilt;
   private final Telemetry telemetry;
   private final LinearOpMode linOp;
+
   private final DigitalChannel touchSensor;
 
   // --- Gate positions ---
@@ -52,9 +53,36 @@ public class GameDriver {
   private static final double gearDia = 1.415;
   private static final double gearCircum = gearDia * 3.141;
 
-  public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
+  public GameDriver(HardwareMap hardwareMap, Telemetry telemetry) {
+    this.linOp = null;
+
     this.telemetry = telemetry;
+    launch = hardwareMap.get(DcMotorEx.class, "launch");
+    launch.setDirection(DcMotorSimple.Direction.FORWARD);
+    launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    launch.setZeroPowerBehavior(
+        DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
+    arm = hardwareMap.get(DcMotor.class, "arm");
+    arm.setDirection(DcMotorSimple.Direction.FORWARD);
+    armHome = arm.getCurrentPosition();
+    hood = hardwareMap.get(CRServo.class, "hood");
+    hood.setDirection(DcMotorSimple.Direction.FORWARD);
+    intake = hardwareMap.get(DcMotor.class, "intake");
+    intake.setDirection(DcMotorSimple.Direction.REVERSE);
+    gate = hardwareMap.get(Servo.class, "gate");
+    tilt = hardwareMap.get(Servo.class, "tilt");
+
+    hoodEncoder = hardwareMap.get(DcMotor.class, "Hood");
+    hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+    touchSensor = hardwareMap.get(DigitalChannel.class, "Home");
+  }
+
+  public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
+
     this.linOp = linOp;
+
+    this.telemetry = telemetry;
     launch = hardwareMap.get(DcMotorEx.class, "launch");
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -274,15 +302,23 @@ public class GameDriver {
     telemetry.addData("Launch Vel", "%.0f", launch.getVelocity());
   }
 
-  public double getHoodEncoderPos () {
+  public double getHoodEncoderPos() {
     return hoodEncoder.getCurrentPosition();
   }
 
-  public boolean getTouchSensor () {
+  public boolean getTouchSensor() {
     return touchSensor.getState();
   }
 
-  public void setHoodServoPower (double power) {
+  public void setHoodServoPower(double power) {
     hood.setPower(power);
+  }
+
+  public void resetHoodEncoder() {
+    hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+  }
+
+  public void setGate(double pos) {
+    gate.setPosition(pos);
   }
 }

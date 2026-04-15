@@ -3,7 +3,7 @@
 
 package org.firstinspires.ftc.teamcode.drivers;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -37,9 +37,9 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
  */
 
 public class AprilDriver {
-  private LinearOpMode myOp = null;
+  private OpMode myOp = null;
 
-  public AprilDriver(LinearOpMode opmode) {
+  public AprilDriver(OpMode opmode) {
     myOp = opmode;
   }
 

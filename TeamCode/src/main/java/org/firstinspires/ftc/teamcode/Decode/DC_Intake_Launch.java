@@ -33,9 +33,11 @@ public class DC_Intake_Launch {
   public DcMotor arm = null; // 312 rpm motor
 
   public DcMotor intake = null; // intake motor controller
+
+  public DcMotor hoodEncoder = null;
+  public CRServo chuteMotor = null;
   public Servo gate = null; // intake gate
   public Servo tilt = null; // tilt robot up
-  public CRServo chuteMotor = null;
   public DigitalChannel home = null;
 
   // time out timer
@@ -45,25 +47,12 @@ public class DC_Intake_Launch {
   boolean potage = false;
   double maxPot = 2.0 * Math.PI; // Was 6.16
   double lastVolt = 0.0;
-  double homeenc = 0.0; // start voltage
+  int homeenc = 0; // start voltage
   // does hoodPos = home position
-  double hoodPos = 0.0;
-  int count = 0;
+  int hoodPos = 0;
   // hood parameters
-  private static final double POT_WRAP_AMOUNT = 6.16;
-  private static final double MAX = 4 * Math.PI;
-  double minChutePos = 0.0;
+  int minChutePos = homeenc;
   boolean homePosSet = false;
-  boolean inUpperRegion = false;
-  double prevVoltPot = 0.0;
-  int majorLoopCt = 0;
-  double absChutePos = 0.0;
-
-  // potentiometer voltage change
-  double hoodpwr = 0.0;
-  double step = 0.0;
-  double voltpot = 0.0;
-  double correctedChutePos = 0.0;
 
   // status light
 
@@ -76,8 +65,8 @@ public class DC_Intake_Launch {
     arm =
         myOp.hardwareMap.get(
             DcMotor.class,
-            "arm"); // Bar attached to flywheel, defaults to correct tilt at start of match, needs
-    // to lower at end of match
+            "arm"); // Bar attached to flywheel, is set to correct tilt at start of match
+    // Arm needs to lower at end of match
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
 
     // Define and Initialize Servo
@@ -96,13 +85,26 @@ public class DC_Intake_Launch {
     encHome = arm.getCurrentPosition(); // Not used for this software feature
     // initialize hood components
     chuteMotor = myOp.hardwareMap.get(CRServo.class, "chute"); // Not used for this software
+    hoodEncoder = myOp.hardwareMap.get(DcMotor.class, "hoodencoder");
 
     home = myOp.hardwareMap.get(DigitalChannel.class, "Home"); // Not used for this software
 
-    // Create hardware adapters
-    // FtcCRServo motor = new FtcCRServo(chuteMotor);
-
-  }
+    ElapsedTime timeOut = new ElapsedTime();
+    if (!home.getState()) {
+      timeOut.reset();
+      chuteMotor.setPower(.1); // set proper direction
+      while ((timeOut.seconds() < 5.0) && home.getState()) {
+        myOp.idle();
+      }
+      homePosSet = true;
+      if (timeOut.seconds() > 5) {
+        myOp.telemetry.addLine("Hood home error");
+        myOp.telemetry.update();
+        homePosSet = false;
+      }
+    } // end if home
+    homeenc = hoodEncoder.getCurrentPosition();
+  } // end of InitL
 
   // Servo controlled motor
   public void Intake() {
@@ -134,7 +136,6 @@ public class DC_Intake_Launch {
     while (myOp.opModeIsActive() && runTime.seconds() < 5.0 && !ready) {
       if (launch.getVelocity() > shoot_velocity) ready = true;
     }
-    // set status light
     return ready;
   } // end spin up
 
@@ -143,13 +144,11 @@ public class DC_Intake_Launch {
   }
 
   /*
-   launch arm has three positions
-   home    above ball
+   launch arm has two positions
    launch  position to launch ball
    endGame end game retraction
 
-   Autonomous must start at home positon above ball
-   arm position is movement is from the home start position
+   Autonomous must start at launch position
    at the end of autonomous the launch arm should be set to home
   */
   public boolean armPosition(int pos) {
@@ -205,7 +204,26 @@ public class DC_Intake_Launch {
     // light indicator
   }
 
+  // must use +/- encoder count to move
+  public void hoodSetPos(int gotoHoodPos) {
+    int gotoPos = gotoHoodPos;
+    if (gotoPos < homeenc) gotoPos = homeenc;
+  }
+
   public boolean getHome() {
     return home.getState();
   }
-}
+
+  public double encpermm() {
+
+    return 0;
+  }
+
+  private double segment() {
+    final double hoodCord = 254.0;
+    final double hoodSagi = 20.0;
+    double radius = hoodSagi / 2 + (hoodCord * hoodCord) / (8 * hoodSagi);
+    double theta = 2 * Math.asin(hoodCord / 2.0) * radius;
+    return radius * theta;
+  }
+} // DcIntake_Launch

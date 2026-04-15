@@ -41,6 +41,11 @@ public class PedroTeleOp extends OpMode {
   boolean lastIntake = false;
   double seekHoodAngle;
   boolean isShooting = false;
+  boolean lastB;
+  boolean isIntaking = false;
+  double flyVel = 3500;
+  boolean lastDPadLeft = false;
+  boolean lastDPadRight = false;
 
   @Override
   public void init() {
@@ -235,16 +240,22 @@ public class PedroTeleOp extends OpMode {
     Gamepad 2 Controls
 
     Left bumper - homing hood
-    B - toggle intake
+    B - toggle intake on
+    A - toggle intake off
     Y - toggle shooting sequence on (Intake and gate)
     X - toggle shooting sequence off (Intake and gate)
-     */
 
-    // Toggle intake - sees if the last time X was pressed or if it was not pressed in order to
+    Left joystick y - tilt position (Endgame)
+     */
     if (gamepad2.b) {
+      isIntaking = true;
+    }
+    if (gamepad2.a) {
+      isIntaking = false;
+    }
+    if (isIntaking) {
       gameDriver.setIntakePower(1);
-      lastIntake = true;
-    } else if (gamepad2.a) {
+    } else if (!isIntaking) {
       gameDriver.setIntakePower(0);
     }
 
@@ -261,6 +272,7 @@ public class PedroTeleOp extends OpMode {
     }
     if (!isShooting) {
       gameDriver.setGate(0.5);
+      gameDriver.setIntakePower(0);
     }
 
     // Manually changes hood angle
@@ -284,8 +296,26 @@ public class PedroTeleOp extends OpMode {
     telemetry.addData("SeekHoodAngle is:", seekHoodAngle);
     telemetry.addData("Hood Angle is:", hood.getHoodAngle());
     telemetry.addData("Angle Error is:", hood.getAngleError());
+
+    // Stilt control - left joystick gamepad 2
+    hood.runToStiltPosition(hood.changePos(-gamepad2.left_stick_y), getRuntime());
+
+    // Flywheel Velocity control
+
+    // Simple driver input controls for testing
+    if (gamepad2.dpad_left && !lastDPadLeft) {
+      flyVel += 200;
+    }
+    if (gamepad2.dpad_right && !lastDPadRight) {
+      flyVel -= 200;
+    }
+
+    gameDriver.setFlyVelRPM(flyVel);
+
+    telemetry.addData("FlyVel is:", flyVel);
+    telemetry.addData("Current Vel is:", gameDriver.getFlyVelRPM());
+
+    lastDPadLeft = gamepad2.dpad_left;
+    lastDPadRight = gamepad2.dpad_right;
   }
 }
-/*
-
-*/

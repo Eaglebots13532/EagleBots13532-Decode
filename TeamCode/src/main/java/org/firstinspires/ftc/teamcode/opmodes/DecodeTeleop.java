@@ -225,8 +225,9 @@ public class DecodeTeleop extends LinearOpMode {
 
       // Gamepad2: arm and tilt (polled, continuous)
       game.setArmPower(-gamepad2.right_stick_y);
-      game.setTilt((-gamepad2.left_stick_y + 1.0) / 2.0); // map -1..1 to 0..1
-
+      // game.setTilt((-gamepad2.left_stick_y + 1.0) / 2.0); // map -1..1 to 0..1
+      // Commented out because needed to update gamedriver to be combatable with carlhoodshoot as
+      // tilt servo is now in continous instead of servo mode
       // Subsystem updates
       game.updateTelemetry();
       telemetry.addData("Auto Range ", autoRange ? "On" : "Off");

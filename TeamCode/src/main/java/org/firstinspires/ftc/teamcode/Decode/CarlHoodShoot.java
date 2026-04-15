@@ -189,4 +189,128 @@ public class CarlHoodShoot {
   public boolean hasHomed() {
     return isHoming;
   }
+
+  /** --------- Stilt logic --------- */
+
+  // Current min/max for testing min/max values
+  double currentAnlogMax = 0;
+
+  double currentAnalogMin = 1;
+  // Experimental min/max values
+  public double analogMin = 0.006;
+  public double analogMax = 3.286;
+  public double analogSpread = analogMax - analogMin;
+  int inc; // For counting rotations
+  double currentAnalog;
+  double lastAnalog;
+  double actualRotation;
+
+  /*
+  public void loop() {
+    telemetry.addData("Left Analog data is:", stiltAnalog.getVoltage());
+    telemetry.addData("Current Analog Max is:", readCurrentMax());
+    telemetry.addData("Current Analog Min is:", readCurrentMin());
+
+    telemetry.addData("Current Rotation Increment is:", inc);
+    telemetry.addData("Current Rotation From Start is:", readMultipleRotationFromStart());
+
+    telemetry.addData("Delta Time is:", getDeltaTime());
+
+    runToStiltPosition(changePos(gamepad1.left_stick_y));
+    telemetry.addData("Current Change Pos is:", changePos(gamepad1.left_stick_y));
+    telemetry.addData("Current Angle Error is:", stiltAngleError);
+  }
+
+   */
+  // For reading experimental min/max values of analog
+  public double readCurrentMax() {
+    if (motors.getStiltAnalog() > currentAnlogMax) {
+      currentAnlogMax = motors.getStiltAnalog();
+    }
+    return currentAnlogMax;
+  }
+
+  public double readCurrentMin() {
+    if (motors.getStiltAnalog() < currentAnalogMin) {
+      currentAnalogMin = motors.getStiltAnalog();
+    }
+    return currentAnalogMin;
+  }
+
+  // Wrapping logic
+  double delta;
+  double threshold;
+  double normalized;
+
+  public double readMultipleRotationFromStart() {
+    currentAnalog = motors.getStiltAnalog();
+
+    delta = currentAnalog - lastAnalog;
+    threshold = analogSpread * 0.4;
+
+    if (delta > threshold) {
+      inc--;
+    } else if (delta < -threshold) {
+      inc++;
+    }
+
+    lastAnalog = currentAnalog;
+
+    normalized = currentAnalog - analogMin;
+    actualRotation = normalized + (inc * analogSpread);
+
+    return actualRotation * 360 / analogSpread;
+  }
+
+  double lastRunTime;
+  double currentRunTime;
+  double deltaTime;
+
+  public double getDeltaTime(double runtime) {
+    currentRunTime = runtime;
+    deltaTime = currentRunTime - lastRunTime;
+    lastRunTime = currentRunTime;
+
+    return deltaTime;
+  }
+
+  double stiltAngleError;
+  double stiltErrorPower;
+  double stiltDerivative;
+  double lastStiltAngleError;
+  double stiltIntegral;
+  // Divide all the constants by 360 to convert to a more understandable rotations-relative tuning
+  // rather then inputing really small numbers for degrees-relative tuning
+  public final double stiltKP = 2.1 / 360;
+  public final double stiltKI = 0 / 360;
+  public final double stiltKD =
+      0.01 / 360; // Seems small but helps with ocilation, at least without the stilt at the moment.
+  public final double stiltKF = 0;
+
+  // Run to position function - seeks position so it doesn't sink
+  public void runToStiltPosition(double pos, double runtime) {
+    stiltAngleError = pos - readMultipleRotationFromStart();
+
+    stiltDerivative = (stiltAngleError - lastStiltAngleError) / getDeltaTime(runtime);
+    stiltIntegral += (stiltAngleError * getDeltaTime(runtime));
+    stiltIntegral = Math.max(-0.1, Math.min(0.1, stiltIntegral));
+
+    stiltErrorPower =
+        (stiltAngleError * stiltKP)
+            + (stiltDerivative * stiltKD)
+            + (stiltIntegral * stiltKI)
+            + stiltKF;
+    lastStiltAngleError = stiltAngleError;
+
+    motors.runTiltServo(Math.max(-0.9, Math.min(0.9, -stiltErrorPower)));
+  }
+
+  // To change position with driver input
+  double seekPos;
+  double tune = 3;
+
+  public double changePos(double change) {
+    seekPos += (change * tune);
+    return seekPos;
+  }
 }

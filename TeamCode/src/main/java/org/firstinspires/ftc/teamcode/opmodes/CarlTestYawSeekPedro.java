@@ -12,13 +12,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
-import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.WebCamCarlCoaxSwerve;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
-@TeleOp(name = "Pedro Teleop")
-public class PedroTeleOp extends OpMode {
+@TeleOp(name = "CarlTestYawSeekPedro Teleop")
+public class CarlTestYawSeekPedro extends OpMode {
   private Follower follower;
 
   private boolean slowMode = false;
@@ -29,10 +29,10 @@ public class PedroTeleOp extends OpMode {
   private TelemetryManager telemetryM;
 
   private GameDriver gameDriver;
-  private AprilDriver april;
 
   private InputStateMachine inputStateMachine;
   private CarlHoodShoot hood;
+  private WebCamCarlCoaxSwerve webcam;
 
   private boolean gateOpen = false;
 
@@ -43,18 +43,25 @@ public class PedroTeleOp extends OpMode {
   boolean isShooting = false;
   boolean lastB;
   boolean isIntaking = false;
-  double flyVel = 3500;
+  double flyVel = 0;
   boolean lastDPadLeft = false;
   boolean lastDPadRight = false;
+  boolean seekMode = false;
+  double seekYaw;
+  double currentYaw;
+  double changeYaw;
+  private static final double yawAcceleration = 0.2;
+  Double bearing;
+  double lastTime;
 
   @Override
   public void init() {
     gameDriver = new GameDriver(hardwareMap, telemetry);
 
-    april = new AprilDriver(this);
-    april.initAprilTag();
-
     hood = new CarlHoodShoot(gameDriver);
+
+    webcam = new WebCamCarlCoaxSwerve();
+    webcam.init(hardwareMap);
     /*
     inputStateMachine = new InputStateMachine(gamepad1, gamepad2);
 
@@ -196,6 +203,7 @@ public class PedroTeleOp extends OpMode {
     // Call this once per loop
     follower.update();
     telemetryM.update();
+    webcam.update();
 
     // Commented out for debugging
     // inputStateMachine.captureInputs();
@@ -204,13 +212,10 @@ public class PedroTeleOp extends OpMode {
     telemetryM.debug("position", follower.getPose());
     telemetryM.debug("velocity", follower.getVelocity());
 
-    /*
-    Gamepad 1 Controls
-
-    Left joystick - Forwards, backwards, strafe
-    Right joystick - Yaw/rotation control
-
-
+    /**
+     * Gamepad 1 Controls
+     *
+     * <p>Left joystick - Forwards, backwards, strafe Right joystick - Yaw/rotation control
      */
 
     // Slow Mode
@@ -218,34 +223,65 @@ public class PedroTeleOp extends OpMode {
       slowMode = !slowMode;
     }
 
+    // Seeking to a heading mode
+    if (gamepad1.right_bumper) {
+      seekMode = true;
+    }
+    if (gamepad1.left_bumper) {
+      seekMode = false;
+    }
+
+    // changeYaw = (seekYaw - currentYaw) * yawAcceleration;
+    bearing = webcam.getAprilBearing(24);
+
+    if (bearing != null) {
+      changeYaw = bearing * yawAcceleration;
+    } else {
+      changeYaw = 0; // or keep last value
+    }
     // This is the normal version to use in the TeleOp
-    if (!slowMode)
+    if (!slowMode && !seekMode) {
       follower.setTeleOpDrive(
           -gamepad1.left_stick_y,
           -gamepad1.left_stick_x,
           -gamepad1.right_stick_x,
-          true // true = Robot Centric; false = Field Centric
-          );
-
+          true); // true = Robot Centric; false = Field Centric
+    }
     // This is how it looks with slowMode on
-    else
+    else if (slowMode && !seekMode) {
       follower.setTeleOpDrive(
           -gamepad1.left_stick_y * slowModeMultiplier,
           -gamepad1.left_stick_x * slowModeMultiplier,
           -gamepad1.right_stick_x * slowModeMultiplier,
           true // true = Robot Centric; false = Field Centric
           );
+    }
 
-    /*
-    Gamepad 2 Controls
+    // Seek mode without slow mode
+    else if (!slowMode && seekMode)
+      follower.setTeleOpDrive(
+          -gamepad1.left_stick_y,
+          -gamepad1.left_stick_x,
+          changeYaw,
+          true // true = Robot Centric; false = Field Centric
+          );
 
-    Left bumper - homing hood
-    B - toggle intake on
-    A - toggle intake off
-    Y - toggle shooting sequence on (Intake and gate)
-    X - toggle shooting sequence off (Intake and gate)
+    // Seek mode with slow mode
+    else if (slowMode && seekMode)
+      follower.setTeleOpDrive(
+          -gamepad1.left_stick_y * slowModeMultiplier,
+          -gamepad1.left_stick_x * slowModeMultiplier,
+          changeYaw * slowModeMultiplier,
+          true // true = Robot Centric; false = Field Centric
+          );
 
-    Left joystick y - tilt position (Endgame)
+    /**
+     * Gamepad 2 Controls
+     *
+     * <p>Left bumper - homing hood B - toggle intake on A - toggle intake off Y - toggle shooting
+     * sequence on (Intake and gate) X - toggle shooting sequence off (Intake and gate)
+     *
+     * <p>Left joystick y - tilt position (Endgame)
      */
     if (gamepad2.b) {
       isIntaking = true;
@@ -317,5 +353,10 @@ public class PedroTeleOp extends OpMode {
 
     lastDPadLeft = gamepad2.dpad_left;
     lastDPadRight = gamepad2.dpad_right;
+
+    telemetry.addData("Apriltag Bearing is:", webcam.getAprilBearing(24));
+
+    telemetry.addData("Delta Time is:", getRuntime() - lastTime);
+    lastTime = getRuntime();
   }
 }

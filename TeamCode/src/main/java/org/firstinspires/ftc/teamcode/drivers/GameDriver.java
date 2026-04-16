@@ -4,12 +4,14 @@
 package org.firstinspires.ftc.teamcode.drivers;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -29,11 +31,12 @@ public class GameDriver {
   private final DcMotor intake;
   private final DcMotor hoodEncoder;
   private final Servo gate;
-  private final Servo tilt;
+  private final CRServo tilt;
   private final Telemetry telemetry;
   private final LinearOpMode linOp;
 
   private final DigitalChannel touchSensor;
+  private final AnalogInput tiltAnalog;
 
   // --- Gate positions ---
   private static final double GATE_OPEN = 1.0;
@@ -52,6 +55,11 @@ public class GameDriver {
   private static final int revCtperRev = 8192;
   private static final double gearDia = 1.415;
   private static final double gearCircum = gearDia * 3.141;
+  // --- Launch/Flywheel PID tuning ---
+  private static final double launchKP = 12;
+  private static final double launchKI = 0;
+  private static final double launchKD = 5;
+  private static final double launchKF = 14;
 
   public GameDriver(HardwareMap hardwareMap, Telemetry telemetry) {
     this.linOp = null;
@@ -62,6 +70,9 @@ public class GameDriver {
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     launch.setZeroPowerBehavior(
         DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
+    PIDFCoefficients pidf =
+        new PIDFCoefficients(launchKP, launchKI, launchKD, launchKF); // Set the flywheel PIDF
+    launch.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
@@ -70,12 +81,14 @@ public class GameDriver {
     intake = hardwareMap.get(DcMotor.class, "intake");
     intake.setDirection(DcMotorSimple.Direction.REVERSE);
     gate = hardwareMap.get(Servo.class, "gate");
-    tilt = hardwareMap.get(Servo.class, "tilt");
+    tilt = hardwareMap.get(CRServo.class, "tilt");
 
     hoodEncoder = hardwareMap.get(DcMotor.class, "Hood");
     hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
     touchSensor = hardwareMap.get(DigitalChannel.class, "Home");
+
+    tiltAnalog = hardwareMap.get(AnalogInput.class, "tiltAnalog");
   }
 
   public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
@@ -84,10 +97,10 @@ public class GameDriver {
 
     this.telemetry = telemetry;
     launch = hardwareMap.get(DcMotorEx.class, "launch");
-    launch.setDirection(DcMotorSimple.Direction.FORWARD);
-    launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    launch.setDirection(DcMotorEx.Direction.FORWARD);
+    launch.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
     launch.setZeroPowerBehavior(
-        DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
+        DcMotorEx.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     armHome = arm.getCurrentPosition();
@@ -96,12 +109,14 @@ public class GameDriver {
     intake = hardwareMap.get(DcMotor.class, "intake");
     intake.setDirection(DcMotorSimple.Direction.REVERSE);
     gate = hardwareMap.get(Servo.class, "gate");
-    tilt = hardwareMap.get(Servo.class, "tilt");
+    tilt = hardwareMap.get(CRServo.class, "tilt");
 
     hoodEncoder = hardwareMap.get(DcMotor.class, "Hood");
     hoodEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
     touchSensor = hardwareMap.get(DigitalChannel.class, "Home");
+
+    tiltAnalog = hardwareMap.get(AnalogInput.class, "tiltAnalog");
   }
 
   private CRServo hood = null;
@@ -167,7 +182,7 @@ public class GameDriver {
   // -----------------------------------------------------------------------
   // Tilt
   // -----------------------------------------------------------------------
-
+  /*
   public void setTilt(double position) {
     tilt.setPosition(position);
   }
@@ -175,6 +190,8 @@ public class GameDriver {
   public void tiltDefault() {
     tilt.setPosition(TILT_DEFAULT);
   }
+  This is old tilt code which is replaced by carl hood shoot
+   */
 
   // -----------------------------------------------------------------------
   // Arm -- direct power control from joystick
@@ -320,5 +337,23 @@ public class GameDriver {
 
   public void setGate(double pos) {
     gate.setPosition(pos);
+  }
+
+  public double getStiltAnalog() {
+    return tiltAnalog.getVoltage();
+  }
+
+  public void runTiltServo(double power) {
+    tilt.setPower(power);
+  }
+
+  public double getFlyVelRPM() {
+    return (launch.getVelocity() / 28)
+        * 60; // Converts from ticks/second to revolutions per minute, with 28 ticks per revolution
+  }
+
+  public void setFlyVelRPM(double RPM) {
+    launch.setVelocity(
+        RPM * 28 / 60); // Converts from rpm to ticks/second, with 28 ticks per revolution
   }
 }

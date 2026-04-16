@@ -40,13 +40,15 @@ public class DC_Intake_Launch {
   public Servo tilt = null; // tilt robot up
   public DigitalChannel home = null;
 
+  // hood perimeters calculated from segment chord and sagi to rev counts
+    private static final int encCtsPerInch = 922;
+    private static final int enCctsMax = 9759;
+
   // time out timer
   private ElapsedTime runTime = new ElapsedTime();
   // global variables
   public int encHome = 0;
-  boolean potage = false;
-  double maxPot = 2.0 * Math.PI; // Was 6.16
-  double lastVolt = 0.0;
+
   int homeenc = 0; // start voltage
   // does hoodPos = home position
   int hoodPos = 0;
@@ -208,22 +210,23 @@ public class DC_Intake_Launch {
   public void hoodSetPos(int gotoHoodPos) {
     int gotoPos = gotoHoodPos;
     if (gotoPos < homeenc) gotoPos = homeenc;
+    if (gotoPos > enCctsMax) gotoPos = enCctsMax;
+    int encPos = hoodEncoder.getCurrentPosition();
+    hoodEncoder.setTargetPosition(gotoPos);
+    hoodEncoder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    chuteMotor.setPower(.6);
+      while (myOp.opModeIsActive() && hoodEncoder.isBusy()) {
+            myOp.idle();
+      }
+
   }
 
   public boolean getHome() {
     return home.getState();
   }
 
-  public double encpermm() {
+  public int getEncCtPerInch(){
+      return encCtsPerInch;
+    }
 
-    return 0;
-  }
-
-  private double segment() {
-    final double hoodCord = 254.0;
-    final double hoodSagi = 20.0;
-    double radius = hoodSagi / 2 + (hoodCord * hoodCord) / (8 * hoodSagi);
-    double theta = 2 * Math.asin(hoodCord / 2.0) * radius;
-    return radius * theta;
-  }
 } // DcIntake_Launch

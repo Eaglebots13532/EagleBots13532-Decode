@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.CarlOdometryExampleImplementation;
 import org.firstinspires.ftc.teamcode.drivers.odo.WebCamCarlCoaxSwerve;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -33,6 +34,7 @@ public class CarlTestYawSeekPedro extends OpMode {
   private InputStateMachine inputStateMachine;
   private CarlHoodShoot hood;
   private WebCamCarlCoaxSwerve webcam;
+  private CarlOdometryExampleImplementation odo;
 
   private boolean gateOpen = false;
 
@@ -53,6 +55,15 @@ public class CarlTestYawSeekPedro extends OpMode {
   private static final double yawAcceleration = 0.2;
   Double bearing;
   double lastTime;
+  boolean coarseHeading = false;
+  boolean fineHeading = false;
+  boolean coarseHeadingDone = false;
+  boolean fineHeadingDone = false;
+  boolean headingReady = false;
+  boolean isRedTeam = true;
+  double aprilTagYaw;
+  boolean shootingReady = false;
+  int teamAprilTag;
 
   @Override
   public void init() {
@@ -62,125 +73,10 @@ public class CarlTestYawSeekPedro extends OpMode {
 
     webcam = new WebCamCarlCoaxSwerve();
     webcam.init(hardwareMap);
-    /*
-    inputStateMachine = new InputStateMachine(gamepad1, gamepad2);
 
-    inputStateMachine.setListener(
-        new InputStateMachine.StateListener() {
-          // A button -- gamepad2: toggle gate
-          @Override
-          public void onTogglePrimary(int gamepad, boolean active) {
+    odo = new CarlOdometryExampleImplementation(webcam);
+    odo.init(hardwareMap);
 
-            if (gamepad == 2) {
-              gateOpen = !gateOpen;
-              if (gateOpen) {
-                gameDriver.openGate();
-              } else {
-                gameDriver.closeGate();
-              }
-            }
-          }
-
-          // B button -- gamepad2: toggle intake
-          @Override
-          public void onToggleSecondary(int gamepad, boolean active) {
-            if (gamepad == 2) {
-              gameDriver.toggleIntake();
-            }
-          }
-
-          // X button -- gamepad2: send chute home
-          @Override
-          public void onActionX(int gamepad) {
-            if (gamepad == 2) {
-              // autoRange = !autoRange;
-            } // end if gamepad = 2
-          } // end onActionX
-
-          // Y button -- gamepad2: emergency stop chute
-          @Override
-          public void onActionY(int gamepad) {
-
-            if (gamepad == 2) {}
-          }
-
-          // Dpad right -- gamepad2: extend chute
-          @Override
-          // onIncrementUp
-          public void onIncrementUp(int gamepad) {
-            if (gamepad == 2) {
-              // chutePos += 2.0;
-              // int encPulse = game.EncCntfrmRange(chutePos);
-              // gameDriver.HoodPosition(encPulse);
-            }
-          }
-
-          // Dpad left -- gamepad2: retract chute
-          @Override
-          // onIncrementDown
-          public void onIncrementDown(int gamepad) {
-            if (gamepad == 2) {
-              // chutePos -= 2.0;
-              // int encPulse = game.EncCntfrmRange(chutePos);
-              // gameDriver.HoodPosition(encPulse);
-            }
-          }
-
-          @Override
-          public void on_D_Pad_Left(int gamepad) {
-            // do nothing
-          }
-
-          @Override
-          public void on_D_Pad_Right_Released(int gamepad) {
-            if (gamepad == 2) {
-              // gameDriver.Chute_Stop();
-            }
-          }
-
-          @Override
-          public void on_D_Pad_Left_Released(int gamepad) {
-            if (gamepad == 2) {
-              // gameDriver.Chute_Stop();
-            }
-          }
-
-          // Dpad up
-          @Override
-          // on_D_Pad_Right
-          public void on_D_Pad_Right(int gamepad) {
-            if (gamepad == 2) {
-              flywheelPower += 50.0;
-              if (flywheelPower > 2200.0) {
-                flywheelPower = 2100.0;
-              }
-              gameDriver.setLaunchVelocity(flywheelPower);
-            }
-          }
-            //FlyWheel
-          @Override
-          public void onModifierLeft(int gamepad, float value) {
-            if (gamepad == 2) {
-              double InPwr = value;
-              if (InPwr < 0.2) InPwr = 0.0;
-              gameDriver.setIntakePower(InPwr);
-            }
-          }
-
-          // Right trigger -- gamepad2: flywheel speed (proportional)
-          @Override
-          public void onModifierRight(int gamepad, float value) {
-            if (gamepad == 2) {
-              double inPwr = value;
-              if (inPwr < .2) {
-                inPwr = 0.0;
-              }
-              gameDriver.setLaunchPower(inPwr);
-            }
-          }
-        });
-
-     */
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -203,11 +99,27 @@ public class CarlTestYawSeekPedro extends OpMode {
     // Call this once per loop
     follower.update();
     telemetryM.update();
-    webcam.update();
+    odo.accumulateFieldPos();
 
-    // Commented out for debugging
-    // inputStateMachine.captureInputs();
-    // inputStateMachine.processInputs();
+    //See's if red or blue team is selected (Blue is just not red)
+    if (gamepad1.left_bumper) {
+      isRedTeam = true;
+      teamAprilTag = 24;
+    }
+    if (gamepad1.right_bumper) {
+      isRedTeam = false;
+      teamAprilTag = 20;
+    }
+
+    //Updates Yaw
+    currentYaw = odo.getFieldYaw();
+
+    if (isRedTeam) {
+      aprilTagYaw = 30;
+    } else {
+      aprilTagYaw = -30;
+    }
+
 
     telemetryM.debug("position", follower.getPose());
     telemetryM.debug("velocity", follower.getVelocity());
@@ -217,12 +129,14 @@ public class CarlTestYawSeekPedro extends OpMode {
      *
      * <p>Left joystick - Forwards, backwards, strafe Right joystick - Yaw/rotation control
      */
-
+    /*
     // Slow Mode
     if (gamepad1.rightBumperWasPressed()) {
       slowMode = !slowMode;
     }
 
+     */
+    /*
     // Seeking to a heading mode
     if (gamepad1.right_bumper) {
       seekMode = true;
@@ -231,10 +145,15 @@ public class CarlTestYawSeekPedro extends OpMode {
       seekMode = false;
     }
 
-    // changeYaw = (seekYaw - currentYaw) * yawAcceleration;
-    bearing = webcam.getAprilBearing(24);
+     */
 
-    if (bearing != null) {
+    if (seekMode && coarseHeading) {
+      changeYaw = (seekYaw - currentYaw) * yawAcceleration;
+    } else if (seekMode && fineHeading) {
+      bearing = webcam.getAprilBearing(teamAprilTag);
+    }
+
+    if (fineHeading && bearing != null) {
       changeYaw = bearing * yawAcceleration;
     } else {
       changeYaw = 0; // or keep last value
@@ -279,35 +198,66 @@ public class CarlTestYawSeekPedro extends OpMode {
      * Gamepad 2 Controls
      *
      * <p>Left bumper - homing hood B - toggle intake on A - toggle intake off Y - toggle shooting
-     * sequence on (Intake and gate) X - toggle shooting sequence off (Intake and gate)
+     * sequence on (Heading adjustment (Automatic, coarse with odometry then fine with camera), hood
+     * angle check, then gate and intake) X - toggle shooting sequence off (Intake and gate, turn off auto heading adjustment)
      *
      * <p>Left joystick y - tilt position (Endgame)
      */
+    //Intake toggle
     if (gamepad2.b) {
       isIntaking = true;
     }
     if (gamepad2.a) {
       isIntaking = false;
     }
-    if (isIntaking) {
-      gameDriver.setIntakePower(1);
-    } else if (!isIntaking) {
-      gameDriver.setIntakePower(0);
-    }
 
     // Toggle shooting sequence
     if (gamepad2.y) {
       isShooting = true;
+      seekMode = true;
     }
     if (gamepad2.x) {
       isShooting = false;
+      seekMode = false;
     }
-    if (isShooting) {
-      gameDriver.setGate(0.75);
-      gameDriver.setIntakePower(1);
+
+    //Drive shooting sequence
+
+    //Heading adjustment
+    if (isShooting && !headingReady) {
+      //Sees if coarse heading is complete
+      if (coarseHeading && (changeYaw > -5 || changeYaw < 5)) {
+        coarseHeading = false;
+        coarseHeadingDone = true;
+        fineHeading = true;
+      }
+      //Sees if camera based(Fine) heading is done
+      if (fineHeading && (bearing > -2 || bearing < 2)) {
+        fineHeading = false;
+        fineHeadingDone = true;
+      }
+
+      //Adjusts heading using odometry
+      if (coarseHeading) {
+      seekYaw = aprilTagYaw;
+      }
+
+      if (fineHeadingDone && coarseHeadingDone) {
+        headingReady = true;
+      }
     }
+
+    //Checks to see if hood is ready and
+
+
     if (!isShooting) {
       gameDriver.setGate(0.5);
+      gameDriver.setIntakePower(0);
+    }
+    //Set intake power
+    if (isIntaking) {
+      gameDriver.setIntakePower(1);
+    } else if (!isIntaking) {
       gameDriver.setIntakePower(0);
     }
 
@@ -354,9 +304,32 @@ public class CarlTestYawSeekPedro extends OpMode {
     lastDPadLeft = gamepad2.dpad_left;
     lastDPadRight = gamepad2.dpad_right;
 
-    telemetry.addData("Apriltag Bearing is:", webcam.getAprilBearing(24));
+    telemetry.addData("Apriltag Bearing is:", webcam.getAprilBearing(teamAprilTag));
 
     telemetry.addData("Delta Time is:", getRuntime() - lastTime);
     lastTime = getRuntime();
+
+    telemetry.addData("FieldX is:", odo.getFieldX());
+    telemetry.addData("FieldY is:", odo.getFieldY());
+    telemetry.addData("FieldYaw is:", odo.getFieldYaw());
+
+    telemetry.addData("RobotX is:", odo.getRobotX());
+    telemetry.addData("RobotY is:", odo.getRobotY());
+
+    telemetry.addData("Pinpoint X is:", odo.getPinpointX());
+    telemetry.addData("Pinpoint Y is:", odo.getPinpointY());
+    telemetry.addData("Pinpoint Yaw is:", odo.getPinpointYaw());
+
+    telemetry.addData("Delta X is:", odo.getDeltaRobotX());
+    telemetry.addData("Delta Y is:", odo.getDeltaRobotY());
+
+    telemetry.addData("Last X is:", odo.getLastPosX());
+    telemetry.addData("Last Y is:", odo.getLastPosY());
+
+    telemetry.addData("Delta Field X is:", odo.getDeltaFieldX());
+    telemetry.addData("Delta Field Y is:", odo.getDeltaFieldY());
+
+    // Shooting button test
+
   }
 }

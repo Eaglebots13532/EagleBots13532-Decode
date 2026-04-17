@@ -16,10 +16,12 @@ public class DC_Odometry_Sensor {
 
   private double x = 0.0; // x pos
   private double y = 0.0; // y pos
-  private Rotation2d b; // heading
+
+  private Rotation2d b; // b bearing
   private double lx = 0.0; // x pos
   private double ly = 0.0; // y pos
-  private Rotation2d lb; // heading
+
+  private Rotation2d lb; // bearing
 
   // Define a constructor that allows the OpMode to pass a reference to itself.
   public DC_Odometry_Sensor(LinearOpMode opmode) {
@@ -62,6 +64,7 @@ public class DC_Odometry_Sensor {
     lx = x;
     ly = y;
     lb = b; // save last values
+
     x = ppo.getPose().getX();
     y = ppo.getPose().getY();
     b = ppo.getPose().getRotation();

@@ -41,8 +41,8 @@ public class DC_Intake_Launch {
   public DigitalChannel home = null;
 
   // hood perimeters calculated from segment chord and sagi to rev counts
-    private static final int encCtsPerInch = 922;
-    private static final int enCctsMax = 9759;
+  private static final int encCtsPerInch = 922;
+  private static final int enCctsMax = 9759;
 
   // time out timer
   private ElapsedTime runTime = new ElapsedTime();
@@ -214,19 +214,17 @@ public class DC_Intake_Launch {
     int encPos = hoodEncoder.getCurrentPosition();
     hoodEncoder.setTargetPosition(gotoPos);
     hoodEncoder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    chuteMotor.setPower(.6);
-      while (myOp.opModeIsActive() && hoodEncoder.isBusy()) {
-            myOp.idle();
-      }
-
+    // since the Rev encoder is being used the calculated power is used to set servo power
+    while (myOp.opModeIsActive() && hoodEncoder.isBusy()) {
+      chuteMotor.setPower(hoodEncoder.getPower());
+    }
   }
 
   public boolean getHome() {
     return home.getState();
   }
 
-  public int getEncCtPerInch(){
-      return encCtsPerInch;
-    }
-
+  public int getEncCtPerInch() {
+    return encCtsPerInch;
+  }
 } // DcIntake_Launch

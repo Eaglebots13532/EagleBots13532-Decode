@@ -313,6 +313,4 @@ public class CarlHoodShoot {
     seekPos += (change * tune);
     return seekPos;
   }
-
-
 }

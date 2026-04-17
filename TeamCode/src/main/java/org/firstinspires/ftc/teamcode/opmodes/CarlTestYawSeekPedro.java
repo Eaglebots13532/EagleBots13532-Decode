@@ -77,7 +77,6 @@ public class CarlTestYawSeekPedro extends OpMode {
     odo = new CarlOdometryExampleImplementation(webcam);
     odo.init(hardwareMap);
 
-
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
     follower.update();
@@ -101,7 +100,7 @@ public class CarlTestYawSeekPedro extends OpMode {
     telemetryM.update();
     odo.accumulateFieldPos();
 
-    //See's if red or blue team is selected (Blue is just not red)
+    // See's if red or blue team is selected (Blue is just not red)
     if (gamepad1.left_bumper) {
       isRedTeam = true;
       teamAprilTag = 24;
@@ -111,7 +110,7 @@ public class CarlTestYawSeekPedro extends OpMode {
       teamAprilTag = 20;
     }
 
-    //Updates Yaw
+    // Updates Yaw
     currentYaw = odo.getFieldYaw();
 
     if (isRedTeam) {
@@ -119,7 +118,6 @@ public class CarlTestYawSeekPedro extends OpMode {
     } else {
       aprilTagYaw = -30;
     }
-
 
     telemetryM.debug("position", follower.getPose());
     telemetryM.debug("velocity", follower.getVelocity());
@@ -199,11 +197,12 @@ public class CarlTestYawSeekPedro extends OpMode {
      *
      * <p>Left bumper - homing hood B - toggle intake on A - toggle intake off Y - toggle shooting
      * sequence on (Heading adjustment (Automatic, coarse with odometry then fine with camera), hood
-     * angle check, then gate and intake) X - toggle shooting sequence off (Intake and gate, turn off auto heading adjustment)
+     * angle check, then gate and intake) X - toggle shooting sequence off (Intake and gate, turn
+     * off auto heading adjustment)
      *
      * <p>Left joystick y - tilt position (Endgame)
      */
-    //Intake toggle
+    // Intake toggle
     if (gamepad2.b) {
       isIntaking = true;
     }
@@ -221,25 +220,25 @@ public class CarlTestYawSeekPedro extends OpMode {
       seekMode = false;
     }
 
-    //Drive shooting sequence
+    // Drive shooting sequence
 
-    //Heading adjustment
+    // Heading adjustment
     if (isShooting && !headingReady) {
-      //Sees if coarse heading is complete
+      // Sees if coarse heading is complete
       if (coarseHeading && (changeYaw > -5 || changeYaw < 5)) {
         coarseHeading = false;
         coarseHeadingDone = true;
         fineHeading = true;
       }
-      //Sees if camera based(Fine) heading is done
+      // Sees if camera based(Fine) heading is done
       if (fineHeading && (bearing > -2 || bearing < 2)) {
         fineHeading = false;
         fineHeadingDone = true;
       }
 
-      //Adjusts heading using odometry
+      // Adjusts heading using odometry
       if (coarseHeading) {
-      seekYaw = aprilTagYaw;
+        seekYaw = aprilTagYaw;
       }
 
       if (fineHeadingDone && coarseHeadingDone) {
@@ -247,14 +246,13 @@ public class CarlTestYawSeekPedro extends OpMode {
       }
     }
 
-    //Checks to see if hood is ready and
-
+    // Checks to see if hood is ready and
 
     if (!isShooting) {
       gameDriver.setGate(0.5);
       gameDriver.setIntakePower(0);
     }
-    //Set intake power
+    // Set intake power
     if (isIntaking) {
       gameDriver.setIntakePower(1);
     } else if (!isIntaking) {

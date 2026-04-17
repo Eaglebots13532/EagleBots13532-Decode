@@ -90,13 +90,39 @@ public class WebCamCarlCoaxSwerve {
   }
 
   public Double getAprilDistance(int id) {
+    update();
     AprilTagDetection tag = getTagBySpecificId(id);
     if (tag == null) return null;
     return tag.ftcPose.range;
   }
 
   public Double getAprilBearing(int id) {
+    update();
     AprilTagDetection tag = getTagBySpecificId(id);
+    if (tag == null) return null;
+    return tag.ftcPose.bearing;
+  }
+
+  public AprilTagDetection getTag20or24() {
+    update();
+    for (AprilTagDetection tag : detectedTags) {
+      if (tag.id == 20 || tag.id == 24) {
+        return tag;
+      }
+    }
+    return null;
+  }
+
+  public Double getAprilDistance20Or24() {
+    update();
+    AprilTagDetection tag = getTag20or24();
+    if (tag == null) return null;
+    return tag.ftcPose.range;
+  }
+
+  public Double getAprilBearing20Or24() {
+    update();
+    AprilTagDetection tag = getTag20or24();
     if (tag == null) return null;
     return tag.ftcPose.bearing;
   }

@@ -247,31 +247,29 @@ public class PedroTeleOp extends OpMode {
 
     Left joystick y - tilt position (Endgame)
      */
-    if (gamepad2.b) {
+    if (gamepad2.y) {
       isIntaking = true;
     }
-    if (gamepad2.a) {
+    if (gamepad2.x) {
       isIntaking = false;
     }
-    if (isIntaking) {
-      gameDriver.setIntakePower(1);
-    } else if (!isIntaking) {
-      gameDriver.setIntakePower(0);
-    }
-
     // Toggle shooting sequence
-    if (gamepad2.y) {
+    if (gamepad2.a) {
       isShooting = true;
     }
-    if (gamepad2.x) {
+    if (gamepad2.b) {
       isShooting = false;
     }
     if (isShooting) {
       gameDriver.setGate(0.75);
-      gameDriver.setIntakePower(1);
-    }
-    if (!isShooting) {
+      isIntaking = true;
+    } else if (!isShooting) {
       gameDriver.setGate(0.5);
+    }
+
+    if (isIntaking) {
+      gameDriver.setIntakePower(1);
+    } else if (!isIntaking) {
       gameDriver.setIntakePower(0);
     }
 

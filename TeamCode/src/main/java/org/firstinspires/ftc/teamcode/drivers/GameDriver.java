@@ -68,8 +68,9 @@ public class GameDriver {
     launch = hardwareMap.get(DcMotorEx.class, "launch");
     launch.setDirection(DcMotorSimple.Direction.FORWARD);
     launch.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    launch.setZeroPowerBehavior(
-        DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
+    // launch.setZeroPowerBehavior(
+
+    // DcMotor.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
     PIDFCoefficients pidf =
         new PIDFCoefficients(launchKP, launchKI, launchKD, launchKF); // Set the flywheel PIDF
     launch.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);

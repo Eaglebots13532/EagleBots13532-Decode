@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.WebCamCarlCoaxSwerve;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
@@ -33,6 +34,7 @@ public class PedroTeleOp extends OpMode {
 
   private InputStateMachine inputStateMachine;
   private CarlHoodShoot hood;
+  private WebCamCarlCoaxSwerve webcam;
 
   private boolean gateOpen = false;
 
@@ -46,6 +48,19 @@ public class PedroTeleOp extends OpMode {
   double flyVel = 3500;
   boolean lastDPadLeft = false;
   boolean lastDPadRight = false;
+  boolean autoAim = true;
+  double lastCamDist = 1; // in meters
+  boolean theta1;
+  double checkHoodAngle;
+  boolean tryNormalizedHood;
+  boolean isReady;
+  double differenceFlyVel;
+  boolean headingSeekMode = false;
+  double yawError;
+  double currentYaw;
+  double yawSeek;
+  double yawKP = 0.1;
+  double finalYawValue;
 
   @Override
   public void init() {
@@ -55,6 +70,8 @@ public class PedroTeleOp extends OpMode {
     april.initAprilTag();
 
     hood = new CarlHoodShoot(gameDriver);
+
+    webcam = new WebCamCarlCoaxSwerve();
     /*
     inputStateMachine = new InputStateMachine(gamepad1, gamepad2);
 
@@ -218,8 +235,23 @@ public class PedroTeleOp extends OpMode {
       slowMode = !slowMode;
     }
 
+    // For auto yaw seeking
+    // yawError = currentYaw - yawSeek;
+    if (gamepad1.dpad_up) {
+      headingSeekMode = true;
+    }
+    if (gamepad1.dpad_down) {
+      headingSeekMode = false;
+    }
+    if (headingSeekMode) {
+      yawError = april.getActualBearing();
+      finalYawValue = yawError * yawKP;
+      telemetry.addData("Bearing is:", april.getBearing());
+      telemetry.addData("Actual Bearing is:", april.getActualBearing());
+    }
+
     // This is the normal version to use in the TeleOp
-    if (!slowMode)
+    if (!headingSeekMode && !slowMode)
       follower.setTeleOpDrive(
           -gamepad1.left_stick_y,
           -gamepad1.left_stick_x,
@@ -228,11 +260,19 @@ public class PedroTeleOp extends OpMode {
           );
 
     // This is how it looks with slowMode on
-    else
+    else if (!headingSeekMode && slowMode)
       follower.setTeleOpDrive(
           -gamepad1.left_stick_y * slowModeMultiplier,
           -gamepad1.left_stick_x * slowModeMultiplier,
           -gamepad1.right_stick_x * slowModeMultiplier,
+          true // true = Robot Centric; false = Field Centric
+          );
+    // Auto seeking
+    else if (headingSeekMode)
+      follower.setTeleOpDrive(
+          -gamepad1.left_stick_y,
+          -gamepad1.left_stick_x,
+          finalYawValue,
           true // true = Robot Centric; false = Field Centric
           );
 
@@ -247,6 +287,8 @@ public class PedroTeleOp extends OpMode {
 
     Left joystick y - tilt position (Endgame)
      */
+
+    // Toggle Intake
     if (gamepad2.y) {
       isIntaking = true;
     }
@@ -259,14 +301,28 @@ public class PedroTeleOp extends OpMode {
     }
     if (gamepad2.b) {
       isShooting = false;
+      isIntaking = false;
     }
+    // Checks to see if we are ready
+    differenceFlyVel = 3700 - gameDriver.getFlyVelRPM();
+    if (differenceFlyVel > -400 && differenceFlyVel < 400) {
+      isReady = true;
+    }
+
+    telemetry.addData("We are ready:", isReady);
+
     if (isShooting) {
-      gameDriver.setGate(0.75);
-      isIntaking = true;
+      if (isReady) {
+        gameDriver.setGate(0.75);
+        isIntaking = true;
+      } else if (!isReady) {
+        isIntaking = false;
+      }
     } else if (!isShooting) {
       gameDriver.setGate(0.5);
     }
 
+    // Sets intake power
     if (isIntaking) {
       gameDriver.setIntakePower(1);
     } else if (!isIntaking) {
@@ -274,12 +330,40 @@ public class PedroTeleOp extends OpMode {
     }
 
     // Manually changes hood angle
-    if (gamepad2.dpad_up) {
+    if (gamepad2.dpad_up && !autoAim) {
       seekHoodAngle++;
     }
-    if (gamepad2.dpad_down) {
+    if (gamepad2.dpad_down && !autoAim) {
       seekHoodAngle--;
     }
+
+    // Toggles Auto Aim for Testing
+    if (gamepad1.right_bumper) {
+      autoAim = true;
+    }
+    if (gamepad1.left_bumper) {
+      autoAim = false;
+    }
+
+    // Auto aim
+    if (autoAim) {
+      lastCamDist = april.getRange() * 2.54 / 100; // Converts inches to Meters
+      checkHoodAngle =
+          90
+              - hood.getLaunchAngle(
+                  lastCamDist,
+                  1.15,
+                  hood.getBallVelFromFly(hood.getFinalFlyVel(gameDriver.getFlyVelRPM())) / 100,
+                  theta1);
+      if (checkHoodAngle > 0 && checkHoodAngle < 90) {
+        seekHoodAngle = checkHoodAngle;
+      }
+      telemetry.addData("We are looking at:", checkHoodAngle);
+      telemetry.addData("Distance is:", april.getRange());
+      telemetry.addData("Distance in Meters is:", lastCamDist);
+      telemetry.addData("Final FlyVel is:", hood.getFinalFlyVel(gameDriver.getFlyVelRPM()));
+    }
+
     gameDriver.setHoodServoPower(hood.getHoodServoPowerPID(seekHoodAngle, getRuntime()));
 
     // Hood homing
@@ -301,10 +385,10 @@ public class PedroTeleOp extends OpMode {
     // Flywheel Velocity control
 
     // Simple driver input controls for testing
-    if (gamepad2.dpad_left && !lastDPadLeft) {
+    if (gamepad2.dpad_right && !lastDPadLeft) {
       flyVel += 200;
     }
-    if (gamepad2.dpad_right && !lastDPadRight) {
+    if (gamepad2.dpad_left && !lastDPadRight) {
       flyVel -= 200;
     }
 

@@ -57,6 +57,7 @@ public class AprilDriver {
   protected double Bpitch = 0.0;
   public static double range = 0.0;
   public static double bearing = 0.0;
+  public static double actualBearing;
 
   public static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 
@@ -194,6 +195,8 @@ public class AprilDriver {
         }
         range = detection.ftcPose.range * kdist;
         bearing = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
+        actualBearing = detection.ftcPose.bearing;
+
         if (notRedBlue) {
           UnkId = detection.id;
           UnkX = detection.center.x;
@@ -207,7 +210,18 @@ public class AprilDriver {
 
   // allows range to be accessed
   public double getRange() {
+    getAprilTag();
     return range;
+  }
+
+  public double getBearing() {
+    getAprilTag();
+    return bearing;
+  }
+
+  public double getActualBearing() {
+    getAprilTag();
+    return actualBearing;
   }
 
   // allows range to be accessed

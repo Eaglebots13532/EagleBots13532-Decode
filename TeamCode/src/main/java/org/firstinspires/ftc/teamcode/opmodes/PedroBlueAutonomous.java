@@ -17,6 +17,7 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -32,6 +33,7 @@ public class PedroBlueAutonomous extends OpMode {
   private final Pose parkPose = new Pose(16.3, 23.8, 0); // Position to park after scoring
 
   private PathChain scorePath, parkPath;
+  private CarlHoodShoot hood;
 
   public void buildPaths() {
 
@@ -74,6 +76,8 @@ public class PedroBlueAutonomous extends OpMode {
     follower = Constants.createFollower(hardwareMap);
     buildPaths();
     follower.setStartingPose(startPose);
+
+    hood = new CarlHoodShoot(gameDriver);
   }
 
   @Override

@@ -36,7 +36,7 @@ public class CarlHoodShoot {
           / 10; // Radius of the ball during the path of acceleration in the shooter I believe, in
   // Cm
   final double flyWheelMOI = 388.8; // Moment of inertia of the flywheel, g * cm^2
-  final double flyWheelMass = 600; // Flywheel mass in grams
+  final double flyWheelMass = 675; // Flywheel mass in grams
   boolean isHoming = false;
 
   public double getHoodServoPowerPID(double seekAngle, double elapsedTime) {

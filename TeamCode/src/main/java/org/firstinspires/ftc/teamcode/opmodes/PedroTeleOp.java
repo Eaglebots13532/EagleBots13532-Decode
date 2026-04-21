@@ -36,23 +36,17 @@ public class PedroTeleOp extends OpMode {
   private CarlHoodShoot hood;
   private WebCamCarlCoaxSwerve webcam;
 
-  private boolean gateOpen = false;
-
-  private double flywheelPower = 1400.0;
-  boolean isHoming = false;
-  boolean lastIntake = false;
+  boolean isHoming = true;
   double seekHoodAngle;
   boolean isShooting = false;
-  boolean lastB;
   boolean isIntaking = false;
-  double flyVel = 3500;
+  double flyVel = 3700;
   boolean lastDPadLeft = false;
   boolean lastDPadRight = false;
   boolean autoAim = true;
   double lastCamDist = 1; // in meters
   boolean theta1;
   double checkHoodAngle;
-  boolean tryNormalizedHood;
   boolean isReady;
   double differenceFlyVel;
   boolean headingSeekMode = false;
@@ -61,6 +55,11 @@ public class PedroTeleOp extends OpMode {
   double yawSeek;
   double yawKP = 0.1;
   double finalYawValue;
+  boolean distanceReady = true;
+  boolean manualFly = true;
+  boolean velReady;
+  boolean endgame = false;
+  boolean shooterSlow;
 
   @Override
   public void init() {
@@ -72,125 +71,6 @@ public class PedroTeleOp extends OpMode {
     hood = new CarlHoodShoot(gameDriver);
 
     webcam = new WebCamCarlCoaxSwerve();
-    /*
-    inputStateMachine = new InputStateMachine(gamepad1, gamepad2);
-
-    inputStateMachine.setListener(
-        new InputStateMachine.StateListener() {
-          // A button -- gamepad2: toggle gate
-          @Override
-          public void onTogglePrimary(int gamepad, boolean active) {
-
-            if (gamepad == 2) {
-              gateOpen = !gateOpen;
-              if (gateOpen) {
-                gameDriver.openGate();
-              } else {
-                gameDriver.closeGate();
-              }
-            }
-          }
-
-          // B button -- gamepad2: toggle intake
-          @Override
-          public void onToggleSecondary(int gamepad, boolean active) {
-            if (gamepad == 2) {
-              gameDriver.toggleIntake();
-            }
-          }
-
-          // X button -- gamepad2: send chute home
-          @Override
-          public void onActionX(int gamepad) {
-            if (gamepad == 2) {
-              // autoRange = !autoRange;
-            } // end if gamepad = 2
-          } // end onActionX
-
-          // Y button -- gamepad2: emergency stop chute
-          @Override
-          public void onActionY(int gamepad) {
-
-            if (gamepad == 2) {}
-          }
-
-          // Dpad right -- gamepad2: extend chute
-          @Override
-          // onIncrementUp
-          public void onIncrementUp(int gamepad) {
-            if (gamepad == 2) {
-              // chutePos += 2.0;
-              // int encPulse = game.EncCntfrmRange(chutePos);
-              // gameDriver.HoodPosition(encPulse);
-            }
-          }
-
-          // Dpad left -- gamepad2: retract chute
-          @Override
-          // onIncrementDown
-          public void onIncrementDown(int gamepad) {
-            if (gamepad == 2) {
-              // chutePos -= 2.0;
-              // int encPulse = game.EncCntfrmRange(chutePos);
-              // gameDriver.HoodPosition(encPulse);
-            }
-          }
-
-          @Override
-          public void on_D_Pad_Left(int gamepad) {
-            // do nothing
-          }
-
-          @Override
-          public void on_D_Pad_Right_Released(int gamepad) {
-            if (gamepad == 2) {
-              // gameDriver.Chute_Stop();
-            }
-          }
-
-          @Override
-          public void on_D_Pad_Left_Released(int gamepad) {
-            if (gamepad == 2) {
-              // gameDriver.Chute_Stop();
-            }
-          }
-
-          // Dpad up
-          @Override
-          // on_D_Pad_Right
-          public void on_D_Pad_Right(int gamepad) {
-            if (gamepad == 2) {
-              flywheelPower += 50.0;
-              if (flywheelPower > 2200.0) {
-                flywheelPower = 2100.0;
-              }
-              gameDriver.setLaunchVelocity(flywheelPower);
-            }
-          }
-            //FlyWheel
-          @Override
-          public void onModifierLeft(int gamepad, float value) {
-            if (gamepad == 2) {
-              double InPwr = value;
-              if (InPwr < 0.2) InPwr = 0.0;
-              gameDriver.setIntakePower(InPwr);
-            }
-          }
-
-          // Right trigger -- gamepad2: flywheel speed (proportional)
-          @Override
-          public void onModifierRight(int gamepad, float value) {
-            if (gamepad == 2) {
-              double inPwr = value;
-              if (inPwr < .2) {
-                inPwr = 0.0;
-              }
-              gameDriver.setLaunchPower(inPwr);
-            }
-          }
-        });
-
-     */
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -206,6 +86,7 @@ public class PedroTeleOp extends OpMode {
     // Constant.java (for Mecanum)
     // If you don't pass anything in, it uses the default (false)
     follower.startTeleopDrive();
+    gameDriver.setGate(0.5);
   }
 
   @Override
@@ -245,7 +126,7 @@ public class PedroTeleOp extends OpMode {
     }
     if (headingSeekMode) {
       yawError = april.getActualBearing();
-      finalYawValue = yawError * yawKP;
+      finalYawValue = hood.headingPID(yawError, getRuntime());
       telemetry.addData("Bearing is:", april.getBearing());
       telemetry.addData("Actual Bearing is:", april.getActualBearing());
     }
@@ -280,10 +161,10 @@ public class PedroTeleOp extends OpMode {
     Gamepad 2 Controls
 
     Left bumper - homing hood
-    B - toggle intake on
-    A - toggle intake off
-    Y - toggle shooting sequence on (Intake and gate)
-    X - toggle shooting sequence off (Intake and gate)
+    A - toggle shooting sequence on
+    B - toggle shooting sequence off
+    Y - toggle intake on (Intake and gate)
+    X - toggle intake off (Intake and gate)
 
     Left joystick y - tilt position (Endgame)
      */
@@ -295,30 +176,49 @@ public class PedroTeleOp extends OpMode {
     if (gamepad2.x) {
       isIntaking = false;
     }
-    // Toggle shooting sequence
-    if (gamepad2.a) {
+
+    // Toggles shooting mode
+    if (gamepad2.aWasPressed()) {
       isShooting = true;
+      isReady = false;
     }
-    if (gamepad2.b) {
+    if (gamepad2.bWasPressed()) {
       isShooting = false;
-      isIntaking = false;
-    }
-    // Checks to see if we are ready
-    differenceFlyVel = 3700 - gameDriver.getFlyVelRPM();
-    if (differenceFlyVel > -400 && differenceFlyVel < 400) {
-      isReady = true;
+      isReady = false;
     }
 
-    telemetry.addData("We are ready:", isReady);
+    /*
+    // Checks camera distance
+    if (isShooting && !distanceReady) {
+      lastCamDist = april.getRange() * 2.54 / 100; // Converts inches to Meters
+      distanceReady = true;
+    }
 
+     */
+
+    // Checks to see if velocity is in range
     if (isShooting) {
-      if (isReady) {
-        gameDriver.setGate(0.75);
-        isIntaking = true;
-      } else if (!isReady) {
-        isIntaking = false;
+      if (gameDriver.getFlyVelRPM() - flyVel > -400 && gameDriver.getFlyVelRPM() - flyVel < 400) {
+        velReady = true;
+      } else {
+        velReady = false;
       }
-    } else if (!isShooting) {
+      // Checks to see if we are ready
+      if (velReady && distanceReady) {
+        isReady = true;
+      } else {
+        isReady = false;
+      }
+    }
+
+    // Checks to see if we are ready
+
+    // Loads the balls when ready, turns the intake off but keeps gate open when not
+    if (isShooting && isReady) {
+      isIntaking = true;
+      gameDriver.setGate(0.75);
+    } else if (isShooting && !isReady) {
+      isIntaking = false;
       gameDriver.setGate(0.5);
     }
 
@@ -329,6 +229,7 @@ public class PedroTeleOp extends OpMode {
       gameDriver.setIntakePower(0);
     }
 
+    /*
     // Manually changes hood angle
     if (gamepad2.dpad_up && !autoAim) {
       seekHoodAngle++;
@@ -336,6 +237,7 @@ public class PedroTeleOp extends OpMode {
     if (gamepad2.dpad_down && !autoAim) {
       seekHoodAngle--;
     }
+
 
     // Toggles Auto Aim for Testing
     if (gamepad1.right_bumper) {
@@ -345,9 +247,10 @@ public class PedroTeleOp extends OpMode {
       autoAim = false;
     }
 
+     */
+
     // Auto aim
     if (autoAim) {
-      lastCamDist = april.getRange() * 2.54 / 100; // Converts inches to Meters
       checkHoodAngle =
           90
               - hood.getLaunchAngle(
@@ -359,11 +262,9 @@ public class PedroTeleOp extends OpMode {
         seekHoodAngle = checkHoodAngle;
       }
       telemetry.addData("We are looking at:", checkHoodAngle);
-      telemetry.addData("Distance is:", april.getRange());
       telemetry.addData("Distance in Meters is:", lastCamDist);
       telemetry.addData("Final FlyVel is:", hood.getFinalFlyVel(gameDriver.getFlyVelRPM()));
     }
-
     gameDriver.setHoodServoPower(hood.getHoodServoPowerPID(seekHoodAngle, getRuntime()));
 
     // Hood homing
@@ -379,25 +280,54 @@ public class PedroTeleOp extends OpMode {
     telemetry.addData("Hood Angle is:", hood.getHoodAngle());
     telemetry.addData("Angle Error is:", hood.getAngleError());
 
-    // Stilt control - left joystick gamepad 2
-    hood.runToStiltPosition(hood.changePos(-gamepad2.left_stick_y), getRuntime());
+    /** Endgame Code * */
+
+    // Pivot arm down and up
+    if (gamepad2.dpadDownWasPressed()) {
+      endgame = true;
+      flyVel = 0;
+    } else if (gamepad2.dpadUpWasPressed()) {
+      gameDriver.putArmUp();
+      autoAim = true;
+      endgame = false;
+    } else {
+      gameDriver.powerOffArm();
+    }
+    // Waits for shooter to slow down before allowing endgame
+    if (gameDriver.getFlyVelRPM() < 200) {
+      shooterSlow = true;
+    } else {
+      shooterSlow = false;
+    }
+    // Enables Stilt and Lift control, only during the endgame (For some reason a while loop doesnt
+    // work here)
+    if (endgame && shooterSlow) {
+      gameDriver.putArmDown();
+      autoAim = false;
+      seekHoodAngle = 0;
+      gameDriver.setFlyVelRPM(0);
+      endgame = true;
+      gameDriver.setGate(0.5);
+    }
+    if (endgame) {
+      // Stilt control - left joystick gamepad 2
+      hood.runToStiltPosition(hood.changePos(-gamepad2.left_stick_y), getRuntime());
+      gameDriver.powerLiftMotor(-gamepad2.right_stick_y);
+    }
 
     // Flywheel Velocity control
 
     // Simple driver input controls for testing
-    if (gamepad2.dpad_right && !lastDPadLeft) {
+    if (gamepad2.dpadRightWasPressed() && manualFly) {
       flyVel += 200;
     }
-    if (gamepad2.dpad_left && !lastDPadRight) {
+    if (gamepad2.dpadLeftWasPressed() && manualFly) {
       flyVel -= 200;
     }
-
     gameDriver.setFlyVelRPM(flyVel);
 
     telemetry.addData("FlyVel is:", flyVel);
     telemetry.addData("Current Vel is:", gameDriver.getFlyVelRPM());
-
-    lastDPadLeft = gamepad2.dpad_left;
-    lastDPadRight = gamepad2.dpad_right;
+    telemetry.addData("Arm Encoder is:", gameDriver.getArmPosition());
   }
 }

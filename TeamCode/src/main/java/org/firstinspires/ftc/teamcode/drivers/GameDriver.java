@@ -37,6 +37,7 @@ public class GameDriver {
 
   private final DigitalChannel touchSensor;
   private final AnalogInput tiltAnalog;
+  private DcMotor liftMotor;
 
   // --- Gate positions ---
   private static final double GATE_OPEN = 1.0;
@@ -49,7 +50,6 @@ public class GameDriver {
   private boolean intakeRunning = false;
 
   // --- Arm ---
-  private final int armHome;
   // servo power and pid error
   private static double servode = 0.0;
   private static final int revCtperRev = 8192;
@@ -75,8 +75,11 @@ public class GameDriver {
         new PIDFCoefficients(launchKP, launchKI, launchKD, launchKF); // Set the flywheel PIDF
     launch.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     arm = hardwareMap.get(DcMotor.class, "arm");
+    arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    arm.setTargetPosition(0);
+    arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
-    armHome = arm.getCurrentPosition();
+    arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     hood = hardwareMap.get(CRServo.class, "hood");
     hood.setDirection(DcMotorSimple.Direction.FORWARD);
     intake = hardwareMap.get(DcMotor.class, "intake");
@@ -90,6 +93,9 @@ public class GameDriver {
     touchSensor = hardwareMap.get(DigitalChannel.class, "Home");
 
     tiltAnalog = hardwareMap.get(AnalogInput.class, "tiltAnalog");
+
+    liftMotor = hardwareMap.get(DcMotor.class, "lift");
+    liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
   }
 
   public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
@@ -103,8 +109,11 @@ public class GameDriver {
     launch.setZeroPowerBehavior(
         DcMotorEx.ZeroPowerBehavior.BRAKE); // break hard could pull battery down
     arm = hardwareMap.get(DcMotor.class, "arm");
+    arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    arm.setTargetPosition(0);
+    arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
-    armHome = arm.getCurrentPosition();
+    arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     hood = hardwareMap.get(CRServo.class, "hood");
     hood.setDirection(DcMotorSimple.Direction.FORWARD);
     intake = hardwareMap.get(DcMotor.class, "intake");
@@ -199,12 +208,32 @@ public class GameDriver {
   // -----------------------------------------------------------------------
 
   /** Set arm power directly (pass joystick Y value). */
-  public void setArmPower(double power) {
-    arm.setPower(power);
-  }
+  private static final int armHomePos = 900;
 
   public double getArmPosition() {
     return arm.getCurrentPosition();
+  }
+
+  public void putArmDown() {
+
+    arm.setTargetPosition(armHomePos);
+    if (900 - getArmPosition() > 300) {
+      arm.setPower(1);
+    } else {
+      arm.setPower(0.5);
+    }
+  }
+
+  public void putArmUp() {
+
+    arm.setTargetPosition(0);
+    arm.setPower(0.5);
+  }
+
+  public void powerOffArm() {
+    if (!arm.isBusy()) {
+      arm.setPower(0);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -356,5 +385,9 @@ public class GameDriver {
   public void setFlyVelRPM(double RPM) {
     launch.setVelocity(
         RPM * 28 / 60); // Converts from rpm to ticks/second, with 28 ticks per revolution
+  }
+
+  public void powerLiftMotor(double power) {
+    liftMotor.setPower(power);
   }
 }

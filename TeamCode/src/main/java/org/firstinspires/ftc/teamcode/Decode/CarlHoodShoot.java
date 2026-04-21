@@ -313,4 +313,31 @@ public class CarlHoodShoot {
     seekPos += (change * tune);
     return seekPos;
   }
+
+  double headingP = 10; // In Degrees
+  double headingD = 0.1;
+  double headingI = 0;
+  double headingPower;
+  double lastError;
+  double headingDeltaTime;
+  double headingLastRunTime;
+  double termP;
+  double termD;
+  double termI;
+
+  public double headingPID(double error, double runTime) {
+    termP = error * headingP;
+
+    headingDeltaTime = runTime - headingLastRunTime;
+    termD = (error - lastError) / headingDeltaTime * headingD;
+
+    termI += (error * headingDeltaTime) * headingI;
+    termI = Math.min(0.2, Math.max(-0.2, termI));
+
+    headingPower = termP + termD + termI;
+
+    lastError = error;
+    headingLastRunTime = runTime;
+    return headingPower;
+  }
 }

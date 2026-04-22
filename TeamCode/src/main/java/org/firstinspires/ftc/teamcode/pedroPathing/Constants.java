@@ -55,7 +55,7 @@ public class Constants {
             "LFM", // the name of your motor in your config
             "LFS", // the name of your servo in your config
             "LFP", // the name of your analog encoder in your config
-            new PIDFCoefficients(0.3, 0, 0.005, 0.01), // pod PIDF coefficients
+            new PIDFCoefficients(0.3, 0, 0.005, 0.1), // pod PIDF coefficients
             DcMotorSimple.Direction.FORWARD, // the direction of your motor
             DcMotorSimple.Direction.REVERSE, // the direction of your servo
             Math.toRadians(182.0), // your pod's angle offset, in radians
@@ -77,10 +77,10 @@ public class Constants {
             "RFM", // the name of your motor in your config
             "RFS", // the name of your servo in your config
             "RFP", // the name of your analog encoder in your config
-            new PIDFCoefficients(0.35, 0, 0.005, 0.01), // pod PIDF coefficients
+            new PIDFCoefficients(0.35, 0, 0.005, 0.15), // pod PIDF coefficients
             DcMotorSimple.Direction.REVERSE, // the direction of your motor
             DcMotorSimple.Direction.REVERSE, // the direction of your servo
-            Math.toRadians(116.2), // your pod's angle offset, in radians
+            Math.toRadians(266), // your pod's angle offset, in radians
             new Pose(-dtLength, -dtWidth), // your pods x and y offsets,
             // in pedro coordinates (like with deadwheels)
             0.002, // analog min voltage

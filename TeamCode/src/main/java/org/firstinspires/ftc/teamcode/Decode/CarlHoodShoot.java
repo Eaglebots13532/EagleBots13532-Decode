@@ -9,10 +9,12 @@ public class CarlHoodShoot {
 
   GameDriver motors;
 
+  // CarlOdometryExampleImplementation odo;
+
   // GoBildaPinpointDriver odo;
 
   // Odo for future implementation
-  public CarlHoodShoot(GameDriver motors /* , GoBildaPinpointDriver odo*/) {
+  public CarlHoodShoot(GameDriver motors) {
     this.motors = motors;
     // this.odo = odo;
   }

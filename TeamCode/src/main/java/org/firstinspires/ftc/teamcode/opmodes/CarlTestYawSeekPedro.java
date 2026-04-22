@@ -12,9 +12,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
+import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
 import org.firstinspires.ftc.teamcode.drivers.odo.CarlOdometryExampleImplementation;
-import org.firstinspires.ftc.teamcode.drivers.odo.WebCamCarlCoaxSwerve;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
@@ -33,7 +33,7 @@ public class CarlTestYawSeekPedro extends OpMode {
 
   private InputStateMachine inputStateMachine;
   private CarlHoodShoot hood;
-  private WebCamCarlCoaxSwerve webcam;
+  private AprilDriver webcam;
   private CarlOdometryExampleImplementation odo;
 
   private boolean gateOpen = false;
@@ -69,13 +69,12 @@ public class CarlTestYawSeekPedro extends OpMode {
   public void init() {
     gameDriver = new GameDriver(hardwareMap, telemetry);
 
-    hood = new CarlHoodShoot(gameDriver);
-
-    webcam = new WebCamCarlCoaxSwerve();
-    webcam.init(hardwareMap);
+    webcam = new AprilDriver(this);
 
     odo = new CarlOdometryExampleImplementation(webcam);
     odo.init(hardwareMap);
+
+    hood = new CarlHoodShoot(gameDriver);
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -98,7 +97,6 @@ public class CarlTestYawSeekPedro extends OpMode {
     // Call this once per loop
     follower.update();
     telemetryM.update();
-    odo.accumulateFieldPos();
 
     // See's if red or blue team is selected (Blue is just not red)
     if (gamepad1.left_bumper) {
@@ -111,7 +109,7 @@ public class CarlTestYawSeekPedro extends OpMode {
     }
 
     // Updates Yaw
-    currentYaw = odo.getFieldYaw();
+    // currentYaw = odo.getFieldYaw();
 
     if (isRedTeam) {
       aprilTagYaw = 30;
@@ -144,12 +142,14 @@ public class CarlTestYawSeekPedro extends OpMode {
     }
 
      */
+    /*
+     if (seekMode && coarseHeading) {
+       changeYaw = (seekYaw - currentYaw) * yawAcceleration;
+     } else if (seekMode && fineHeading) {
+       bearing = webcam.getAprilBearing(teamAprilTag);
+     }
 
-    if (seekMode && coarseHeading) {
-      changeYaw = (seekYaw - currentYaw) * yawAcceleration;
-    } else if (seekMode && fineHeading) {
-      bearing = webcam.getAprilBearing(teamAprilTag);
-    }
+    */
 
     if (fineHeading && bearing != null) {
       changeYaw = bearing * yawAcceleration;
@@ -302,13 +302,14 @@ public class CarlTestYawSeekPedro extends OpMode {
     lastDPadLeft = gamepad2.dpad_left;
     lastDPadRight = gamepad2.dpad_right;
 
-    telemetry.addData("Apriltag Bearing is:", webcam.getAprilBearing(teamAprilTag));
+    // telemetry.addData("Apriltag Bearing is:", webcam.getAprilBearing(teamAprilTag));
 
     telemetry.addData("Delta Time is:", getRuntime() - lastTime);
     lastTime = getRuntime();
 
     telemetry.addData("FieldX is:", odo.getFieldX());
     telemetry.addData("FieldY is:", odo.getFieldY());
+    /*
     telemetry.addData("FieldYaw is:", odo.getFieldYaw());
 
     telemetry.addData("RobotX is:", odo.getRobotX());
@@ -327,6 +328,10 @@ public class CarlTestYawSeekPedro extends OpMode {
     telemetry.addData("Delta Field X is:", odo.getDeltaFieldX());
     telemetry.addData("Delta Field Y is:", odo.getDeltaFieldY());
 
+    telemetry.addData("Accum robot x is:", odo.getAccumRobotX());
+    telemetry.addData("Accum robot y is:", odo.getAccumRobotY());
+
+     */
     // Shooting button test
 
   }

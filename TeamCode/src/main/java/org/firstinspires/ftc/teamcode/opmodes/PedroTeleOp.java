@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
 import org.firstinspires.ftc.teamcode.StateMachine.InputStateMachine;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.CarlOdometryExampleImplementation;
 import org.firstinspires.ftc.teamcode.drivers.odo.WebCamCarlCoaxSwerve;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -33,6 +34,7 @@ public class PedroTeleOp extends OpMode {
   private AprilDriver april;
 
   private InputStateMachine inputStateMachine;
+  private CarlOdometryExampleImplementation odo;
   private CarlHoodShoot hood;
   private WebCamCarlCoaxSwerve webcam;
 
@@ -55,7 +57,7 @@ public class PedroTeleOp extends OpMode {
   double yawSeek;
   double yawKP = 0.1;
   double finalYawValue;
-  boolean distanceReady = true;
+  boolean distanceReady = false;
   boolean manualFly = true;
   boolean velReady;
   boolean endgame = false;
@@ -68,9 +70,10 @@ public class PedroTeleOp extends OpMode {
     april = new AprilDriver(this);
     april.initAprilTag();
 
-    hood = new CarlHoodShoot(gameDriver);
+    odo = new CarlOdometryExampleImplementation(april);
+    odo.init(hardwareMap);
 
-    webcam = new WebCamCarlCoaxSwerve();
+    hood = new CarlHoodShoot(gameDriver);
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -94,6 +97,7 @@ public class PedroTeleOp extends OpMode {
     // Call this once per loop
     follower.update();
     telemetryM.update();
+    odo.updatePos();
 
     // Commented out for debugging
     // inputStateMachine.captureInputs();
@@ -118,18 +122,22 @@ public class PedroTeleOp extends OpMode {
 
     // For auto yaw seeking
     // yawError = currentYaw - yawSeek;
+    /*
     if (gamepad1.dpad_up) {
       headingSeekMode = true;
     }
     if (gamepad1.dpad_down) {
       headingSeekMode = false;
     }
+
+
     if (headingSeekMode) {
       yawError = april.getActualBearing();
       finalYawValue = hood.headingPID(yawError, getRuntime());
       telemetry.addData("Bearing is:", april.getBearing());
       telemetry.addData("Actual Bearing is:", april.getActualBearing());
     }
+     */
 
     // This is the normal version to use in the TeleOp
     if (!headingSeekMode && !slowMode)
@@ -148,6 +156,7 @@ public class PedroTeleOp extends OpMode {
           -gamepad1.right_stick_x * slowModeMultiplier,
           true // true = Robot Centric; false = Field Centric
           );
+    /*
     // Auto seeking
     else if (headingSeekMode)
       follower.setTeleOpDrive(
@@ -157,14 +166,21 @@ public class PedroTeleOp extends OpMode {
           true // true = Robot Centric; false = Field Centric
           );
 
+     */
+
+    // Resets the hood odometry field positioning for testing
+    if (gamepad1.xWasPressed()) {
+      odo.resetFieldXY();
+    }
+
     /*
     Gamepad 2 Controls
 
     Left bumper - homing hood
-    A - toggle shooting sequence on
-    B - toggle shooting sequence off
-    Y - toggle intake on (Intake and gate)
-    X - toggle intake off (Intake and gate)
+    A - toggle shooting sequence on (Intake and gate)
+    B - toggle shooting sequence off (Intake and gate)
+    Y - toggle intake on
+    X - toggle intake off
 
     Left joystick y - tilt position (Endgame)
      */
@@ -185,20 +201,19 @@ public class PedroTeleOp extends OpMode {
     if (gamepad2.bWasPressed()) {
       isShooting = false;
       isReady = false;
+      isIntaking = false;
+      distanceReady = false;
     }
 
-    /*
     // Checks camera distance
     if (isShooting && !distanceReady) {
       lastCamDist = april.getRange() * 2.54 / 100; // Converts inches to Meters
       distanceReady = true;
     }
 
-     */
-
     // Checks to see if velocity is in range
     if (isShooting) {
-      if (gameDriver.getFlyVelRPM() - flyVel > -400 && gameDriver.getFlyVelRPM() - flyVel < 400) {
+      if (gameDriver.getFlyVelRPM() - flyVel > -300 && gameDriver.getFlyVelRPM() - flyVel < 300) {
         velReady = true;
       } else {
         velReady = false;
@@ -219,6 +234,9 @@ public class PedroTeleOp extends OpMode {
       gameDriver.setGate(0.75);
     } else if (isShooting && !isReady) {
       isIntaking = false;
+      gameDriver.setGate(0.5);
+    }
+    if (!isShooting) {
       gameDriver.setGate(0.5);
     }
 
@@ -319,15 +337,28 @@ public class PedroTeleOp extends OpMode {
 
     // Simple driver input controls for testing
     if (gamepad2.dpadRightWasPressed() && manualFly) {
-      flyVel += 200;
+      flyVel += 50;
     }
     if (gamepad2.dpadLeftWasPressed() && manualFly) {
-      flyVel -= 200;
+      flyVel -= 50;
     }
     gameDriver.setFlyVelRPM(flyVel);
 
     telemetry.addData("FlyVel is:", flyVel);
     telemetry.addData("Current Vel is:", gameDriver.getFlyVelRPM());
     telemetry.addData("Arm Encoder is:", gameDriver.getArmPosition());
+
+    telemetry.addData("Current FieldX is:", odo.getFieldX());
+    telemetry.addData("Current FieldY is:", odo.getFieldY());
+
+    telemetry.addData("Current Range is:", april.getRange());
+    telemetry.addData("Current Bearing is:", april.getBearing());
+    telemetry.addData("Current ActualBearing is:", april.getActualBearing());
+    telemetry.addData("Is Blue April Tag:", april.getIsBlueAprilTag());
+    telemetry.addData("Is Red April Tag:", april.getIsRedAprilTag());
+
+    telemetry.addData("Distace ready", distanceReady);
+
+    april.getRobotPoseFromTag()
   }
 }

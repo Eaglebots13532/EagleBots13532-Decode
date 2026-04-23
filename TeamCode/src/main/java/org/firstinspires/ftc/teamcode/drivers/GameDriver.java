@@ -38,6 +38,7 @@ public class GameDriver {
   private final DigitalChannel touchSensor;
   private final AnalogInput tiltAnalog;
   private DcMotor liftMotor;
+  private DigitalChannel armHomeSensor;
 
   // --- Gate positions ---
   private static final double GATE_OPEN = 1.0;
@@ -76,8 +77,7 @@ public class GameDriver {
     launch.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
     arm = hardwareMap.get(DcMotor.class, "arm");
     arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    arm.setTargetPosition(0);
-    arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     arm.setDirection(DcMotorSimple.Direction.FORWARD);
     arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     hood = hardwareMap.get(CRServo.class, "hood");
@@ -96,6 +96,8 @@ public class GameDriver {
 
     liftMotor = hardwareMap.get(DcMotor.class, "lift");
     liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+    armHomeSensor = hardwareMap.get(DigitalChannel.class, "ArmHome");
   }
 
   public GameDriver(HardwareMap hardwareMap, Telemetry telemetry, LinearOpMode linOp) {
@@ -215,7 +217,7 @@ public class GameDriver {
   }
 
   public void putArmDown() {
-
+    arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     arm.setTargetPosition(armHomePos);
     if (900 - getArmPosition() > 300) {
       arm.setPower(1);
@@ -225,15 +227,42 @@ public class GameDriver {
   }
 
   public void putArmUp() {
-
-    arm.setTargetPosition(0);
+    arm.setTargetPosition(20);
+    arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     arm.setPower(0.5);
   }
 
-  public void powerOffArm() {
+  public void manageArmPower() {
     if (!arm.isBusy()) {
       arm.setPower(0);
     }
+  }
+
+  public boolean armHomed;
+
+  public void armHoming() {
+    arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    if (armHomeSensor.getState()) {
+      arm.setPower(-0.5);
+      armHomed = false;
+    } else if (!armHomeSensor.getState()) {
+      arm.setPower(0);
+      arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+      armHomed = true;
+      putArmUp();
+    }
+  }
+
+  public boolean armHasHomed;
+
+  public void homeArm() {
+    if (!armHomed) {
+      armHoming();
+    }
+  }
+
+  public boolean getArmHomeSensor() {
+    return armHomeSensor.getState();
   }
 
   // -----------------------------------------------------------------------

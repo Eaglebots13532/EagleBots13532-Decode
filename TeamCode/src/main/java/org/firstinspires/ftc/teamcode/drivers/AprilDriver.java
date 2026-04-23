@@ -3,7 +3,6 @@
 
 package org.firstinspires.ftc.teamcode.drivers;
 
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import java.util.List;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -250,6 +249,7 @@ public class AprilDriver {
     getAprilTag();
     return blueAprilTag;
   }
+
   class Pose2d {
     public double x;
     public double y;
@@ -261,6 +261,7 @@ public class AprilDriver {
       this.yaw = yaw;
     }
   }
+
   public Pose2d compose(Pose2d a, Pose2d b) {
     double cos = Math.cos(a.yaw);
     double sin = Math.sin(a.yaw);
@@ -271,20 +272,22 @@ public class AprilDriver {
 
     return new Pose2d(x, y, yaw);
   }
+
   public Pose2d invert(Pose2d p) {
     double cos = Math.cos(p.yaw);
     double sin = Math.sin(p.yaw);
 
     double x = -p.x * cos - p.y * sin;
-    double y =  p.x * sin - p.y * cos;
+    double y = p.x * sin - p.y * cos;
     double yaw = -p.yaw;
 
     return new Pose2d(x, y, yaw);
   }
-  Pose2d fieldToTag = new Pose2d (141.33, 148.19, Math.toRadians(-45));
-  Pose2d CameraToRobot = new Pose2d (-10.0, 0.0, 0.0);
 
-  public Pose2d getRobotPoseFromTag (AprilTagDetection detection) {
+  Pose2d fieldToTag = new Pose2d(141.33, 148.19, Math.toRadians(-45));
+  Pose2d CameraToRobot = new Pose2d(-10.0, 0.0, 0.0);
+
+  public Pose2d getRobotPoseFromTag(AprilTagDetection detection) {
 
     // 1. Get camera pose relative to tag (FTC gives this)
     double camX = detection.ftcPose.x; // forward (cm)

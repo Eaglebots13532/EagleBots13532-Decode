@@ -38,7 +38,8 @@ public class PedroTeleOp extends OpMode {
   private CarlHoodShoot hood;
   private WebCamCarlCoaxSwerve webcam;
 
-  boolean isHoming = true;
+  boolean isHoodHoming = true;
+  boolean isArmHoming = true;
   double seekHoodAngle;
   boolean isShooting = false;
   boolean isIntaking = false;
@@ -62,6 +63,7 @@ public class PedroTeleOp extends OpMode {
   boolean velReady;
   boolean endgame = false;
   boolean shooterSlow;
+  boolean isBackTaking;
 
   @Override
   public void init() {
@@ -240,6 +242,17 @@ public class PedroTeleOp extends OpMode {
       gameDriver.setGate(0.5);
     }
 
+    if (gamepad2.left_bumper) {
+      isBackTaking = true;
+    } else {
+      isBackTaking = false;
+    }
+
+    if (isBackTaking) {
+      isIntaking = false;
+      gameDriver.setIntakePower(-1);
+    }
+
     // Sets intake power
     if (isIntaking) {
       gameDriver.setIntakePower(1);
@@ -286,13 +299,21 @@ public class PedroTeleOp extends OpMode {
     gameDriver.setHoodServoPower(hood.getHoodServoPowerPID(seekHoodAngle, getRuntime()));
 
     // Hood homing
-    if (gamepad2.left_bumper) {
-      isHoming = true;
-    }
-    if (isHoming) {
+    if (isHoodHoming) {
       hood.hoodHome();
-      isHoming = hood.hasHomed();
+      isHoodHoming = hood.hasHomed();
     }
+
+    // Arm homing
+    if (gamepad2.right_bumper) {
+      isArmHoming = true;
+    }
+    if (isArmHoming) {
+      gameDriver.homeArm();
+      isArmHoming = gameDriver.getArmHomeSensor();
+    }
+    // If arm isn't doing anything, set power to 0
+    // gameDriver.manageArmPower();
 
     telemetry.addData("SeekHoodAngle is:", seekHoodAngle);
     telemetry.addData("Hood Angle is:", hood.getHoodAngle());
@@ -304,15 +325,14 @@ public class PedroTeleOp extends OpMode {
     if (gamepad2.dpadDownWasPressed()) {
       endgame = true;
       flyVel = 0;
+      gameDriver.setLaunchPower(0);
     } else if (gamepad2.dpadUpWasPressed()) {
       gameDriver.putArmUp();
       autoAim = true;
       endgame = false;
-    } else {
-      gameDriver.powerOffArm();
     }
     // Waits for shooter to slow down before allowing endgame
-    if (gameDriver.getFlyVelRPM() < 200) {
+    if (gameDriver.getFlyVelRPM() < 1200) {
       shooterSlow = true;
     } else {
       shooterSlow = false;
@@ -359,6 +379,8 @@ public class PedroTeleOp extends OpMode {
 
     telemetry.addData("Distace ready", distanceReady);
 
-    april.getRobotPoseFromTag()
+    telemetry.addData("Touch Sensor:", gameDriver.getArmHomeSensor());
+
+    // april.getRobotPoseFromTag()
   }
 }

@@ -64,6 +64,8 @@ public class PedroTeleOp extends OpMode {
   boolean endgame = false;
   boolean shooterSlow;
   boolean isBackTaking;
+  int inc;
+  int incMode;
 
   @Override
   public void init() {
@@ -118,28 +120,56 @@ public class PedroTeleOp extends OpMode {
      */
 
     // Slow Mode
+    /*
     if (gamepad1.rightBumperWasPressed()) {
       slowMode = !slowMode;
     }
 
+     */
+
     // For auto yaw seeking
     // yawError = currentYaw - yawSeek;
-    /*
-    if (gamepad1.dpad_up) {
+
+    if (gamepad1.left_bumper) {
       headingSeekMode = true;
     }
-    if (gamepad1.dpad_down) {
+    if (gamepad1.right_bumper) {
       headingSeekMode = false;
     }
-
 
     if (headingSeekMode) {
       yawError = april.getActualBearing();
       finalYawValue = hood.headingPID(yawError, getRuntime());
       telemetry.addData("Bearing is:", april.getBearing());
       telemetry.addData("Actual Bearing is:", april.getActualBearing());
+      telemetry.addData("yawError is:", yawError);
+      telemetry.addData("Final Yaw Value is:", finalYawValue);
     }
-     */
+
+    if (gamepad1.dpadUpWasPressed()) {
+      incMode += 1;
+    }
+    if (gamepad1.dpadDownWasPressed()) {
+      incMode -= 1;
+    }
+    if (gamepad1.dpadRightWasPressed()) {
+      inc += 1;
+    }
+    if (gamepad1.dpadLeftWasPressed()) {
+      inc -= 1;
+    }
+    hood.tunePID(incMode, inc);
+    if (hood.isPCHange()) {
+      telemetry.addData("We Are changing KP", hood.isPCHange());
+      telemetry.addData("KP is:", hood.getKP());
+    } else if (hood.isIChange()) {
+      telemetry.addData("We Are changing KI", hood.isIChange());
+      telemetry.addData("KI is:", hood.getkI());
+    } else if (hood.isDChange()) {
+      telemetry.addData("We Are changing KD", hood.isDChange());
+      telemetry.addData("KD is:", hood.getkD());
+    }
+    telemetry.addData("Adjusted Inc is:", hood.getAdjustedInc());
 
     // This is the normal version to use in the TeleOp
     if (!headingSeekMode && !slowMode)
@@ -158,7 +188,6 @@ public class PedroTeleOp extends OpMode {
           -gamepad1.right_stick_x * slowModeMultiplier,
           true // true = Robot Centric; false = Field Centric
           );
-    /*
     // Auto seeking
     else if (headingSeekMode)
       follower.setTeleOpDrive(
@@ -167,8 +196,6 @@ public class PedroTeleOp extends OpMode {
           finalYawValue,
           true // true = Robot Centric; false = Field Centric
           );
-
-     */
 
     // Resets the hood odometry field positioning for testing
     if (gamepad1.xWasPressed()) {

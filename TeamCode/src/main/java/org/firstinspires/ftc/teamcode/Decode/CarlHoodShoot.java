@@ -323,9 +323,75 @@ public class CarlHoodShoot {
   double lastError;
   double headingDeltaTime;
   double headingLastRunTime;
-  double termP;
-  double termD;
-  double termI;
+
+  int pInc;
+  int iInc;
+  int dInc;
+  boolean pChange;
+  boolean iChange;
+  boolean dChange;
+  double termP = 1;
+  double termD = 0;
+  double termI = 0;
+  int increment = 0;
+  int resetInc;
+  int lastIncMode;
+  int adjustedInc;
+  double lastkP;
+
+  public void tunePID(int incMode, int inc) {
+
+    adjustedInc = inc - resetInc;
+    if (incMode % 3 == 0) {
+      pChange = true;
+      iChange = false;
+      dChange = false;
+    } else if (incMode % 3 == 1) {
+      pChange = false;
+      iChange = true;
+      dChange = false;
+    } else if (incMode % 3 == 2) {
+      pChange = false;
+      iChange = false;
+      dChange = true;
+    }
+    if (pChange) {
+      kP = (0.1 * adjustedInc);
+    } else if (iChange) {
+      kI = (0.1 * adjustedInc);
+    } else if (dChange) {
+      kD = (0.1 * adjustedInc);
+    }
+    lastIncMode = incMode;
+  }
+
+  public double getKP() {
+    return kP * 0.1;
+  }
+
+  public double getkI() {
+    return kI * 0.1;
+  }
+
+  public double getkD() {
+    return kD * 0.1;
+  }
+
+  public boolean isPCHange() {
+    return pChange;
+  }
+
+  public boolean isIChange() {
+    return iChange;
+  }
+
+  public boolean isDChange() {
+    return dChange;
+  }
+
+  public int getAdjustedInc() {
+    return adjustedInc;
+  }
 
   public double headingPID(double error, double runTime) {
     termP = error * headingP;

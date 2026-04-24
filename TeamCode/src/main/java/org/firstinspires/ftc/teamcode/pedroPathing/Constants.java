@@ -41,10 +41,10 @@ public class Constants {
   public static SwerveConstants swerveConstants =
       new SwerveConstants()
           .maxPower(.8) // determines the max power of the drivetrain
-          // .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
+          //.zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
 
-          .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.X_LOCK)
-          .velocity(15.6);
+  .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.X_LOCK)
+  .velocity(15.6);
 
   // the above disables x locking for swerve, which can be useful for tuning pod offsets
 
@@ -58,7 +58,7 @@ public class Constants {
             new PIDFCoefficients(0.3, 0, 0.005, 0.1), // pod PIDF coefficients
             DcMotorSimple.Direction.FORWARD, // the direction of your motor
             DcMotorSimple.Direction.REVERSE, // the direction of your servo
-            Math.toRadians(182.0), // your pod's angle offset, in radians
+            Math.toRadians(222), // your pod's angle offset, in radians
             new Pose(-dtLength, dtWidth), // your pods x and y offsets,
             // in pedro coordinates (like with deadwheels)
             0.0, // analog min voltage

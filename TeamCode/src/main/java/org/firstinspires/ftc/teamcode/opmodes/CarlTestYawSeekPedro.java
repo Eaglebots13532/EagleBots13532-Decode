@@ -74,7 +74,7 @@ public class CarlTestYawSeekPedro extends OpMode {
     odo = new CarlOdometryExampleImplementation(webcam);
     odo.init(hardwareMap);
 
-    hood = new CarlHoodShoot(gameDriver);
+    hood = new CarlHoodShoot(gameDriver, odo);
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);

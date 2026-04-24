@@ -41,10 +41,10 @@ public class Constants {
   public static SwerveConstants swerveConstants =
       new SwerveConstants()
           .maxPower(.8) // determines the max power of the drivetrain
-          //.zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
+          // .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
 
-  .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.X_LOCK)
-  .velocity(15.6);
+          .zeroPowerBehavior(SwerveConstants.ZeroPowerBehavior.X_LOCK)
+          .velocity(15.6);
 
   // the above disables x locking for swerve, which can be useful for tuning pod offsets
 

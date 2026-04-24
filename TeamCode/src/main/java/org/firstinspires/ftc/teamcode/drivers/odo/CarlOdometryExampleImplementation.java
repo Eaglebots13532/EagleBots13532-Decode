@@ -5,6 +5,7 @@ package org.firstinspires.ftc.teamcode.drivers.odo;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 
@@ -51,238 +52,6 @@ public class CarlOdometryExampleImplementation {
     ppo.resetPosAndIMU();
   }
 
-  /*
-  public void resetFieldWebcamRedBin() {
-    webcam.update();
-    Double dist = webcam.getAprilDistance(24);
-    Double bearing = webcam.getAprilBearing(24);
-
-    if (dist != null && bearing != null) {
-      double bearingRad = Math.toRadians(bearing);
-
-      fieldX = aprilX - dist * Math.sin(bearingRad);
-      fieldY = aprilY - dist * Math.cos(bearingRad);
-      fieldYaw = bearing + aprilYaw;
-
-      resetXValue = robotX;
-      resetYValue = robotY;
-      resetYawValue = robotYaw;
-    }
-  }
-
-   */
-  /*
-   public void update() {
-     // Update odometry
-     ppo.update();
-
-     // Get current robot position
-     robotX = ppo.getPosX(DistanceUnit.CM) - resetXValue;
-     robotY = ppo.getPosY(DistanceUnit.CM) - resetYValue;
-     robotYaw = ppo.getHeading(AngleUnit.DEGREES) - resetYawValue;
-
-     // Compute deltas
-     double dx = robotX - lastRobotX;
-     double dy = robotY - lastRobotY;
-
-     // Convert yaw to radians for heading calculations
-     double headingRad = Math.toRadians(robotYaw);
-
-     // Rotate robot-relative movement into field frame
-     double fieldDeltaX = dx * Math.cos(headingRad) - dy * Math.sin(headingRad);
-     double fieldDeltaY = dx * Math.sin(headingRad) + dy * Math.cos(headingRad);
-
-     // Accumulate into field position
-     fieldX += fieldDeltaX;
-     fieldY += fieldDeltaY;
-     fieldYaw = robotYaw;
-
-     // Store last values for next loop
-     lastRobotX = robotX;
-     lastRobotY = robotY;
-     lastRobotYaw = robotYaw;
-   }
-
-  */
-  /*
-   public double getFieldX() {
-     ;
-     update();
-     return fieldX;
-   }
-
-   public double getFieldY() {
-     update();
-     return fieldY;
-   }
-
-   public double getFieldYaw() {
-     update();
-     return fieldYaw;
-   }
-
-   public double getShootingDistance() {
-     update();
-     double aprilPosX;
-     double aprilPosY;
-     double aprilDistance;
-
-     aprilPosX = fieldX - aprilX;
-     aprilPosY = fieldY - aprilY;
-
-     aprilDistance = Math.hypot(aprilPosX, aprilPosY);
-     return aprilDistance;
-   }
-
-  */
-  /*
-   public double getShootingX() {
-     double aprilPosX;
-
-     aprilPosX = fieldX - aprilX;
-     return aprilPosX;
-   }
-
-   public double getShootingY() {
-     double aprilPosY;
-
-     aprilPosY = fieldY - aprilY;
-     return aprilPosY;
-   }
-
-  */
-  double aprilBearing;
-  double aprilDistance;
-  /*
-   public void updateCam(int desiredTag) {
-     webcam.update();
-     if (webcam.getAprilBearing(desiredTag) != null) {
-       aprilBearing = webcam.getAprilBearing20Or24();
-     }
-     if (webcam.getAprilDistance(desiredTag) != null) {
-       aprilDistance = webcam.getAprilDistance20Or24();
-     }
-   }
-
-  */
-  /*
-   double fieldX;
-   double fieldY;
-   double fieldYaw; // Positive Y direction (Towards Obelisk) is 0 yaw
-   double robotX;
-   double robotY;
-   double lastRobotX;
-   double lastRobotY;
-   double deltaRobotX;
-   double deltaRobotY;
-   double deltaFieldX;
-   double deltaFieldY;
-   double accumRobotX;
-   double accumRobotY;
-
-   public void computeRobotDelta() {
-     robotX = ppo.getPosX(DistanceUnit.CM);
-     robotY = ppo.getPosY(DistanceUnit.CM);
-
-     deltaRobotX = -(robotX - lastRobotX);
-     deltaRobotY = -(robotY - lastRobotY);
-
-     lastRobotX = ppo.getPosX(DistanceUnit.CM);
-     lastRobotY = ppo.getPosY(DistanceUnit.CM);
-   }
-
-   public void computeLastPosition() {
-     lastRobotX = ppo.getPosX(DistanceUnit.CM);
-     lastRobotY = ppo.getPosY(DistanceUnit.CM);
-   }
-
-   public void computeFieldDelta() {
-     computeRobotDelta();
-     fieldYaw = ppo.getHeading(AngleUnit.DEGREES);
-     double yawRad = Math.toRadians(fieldYaw - 90);
-
-     deltaFieldX = (deltaRobotX * Math.cos(yawRad)) - (deltaRobotY * Math.sin(yawRad));
-     deltaFieldY = (deltaRobotX * Math.sin(yawRad)) + (deltaRobotY * Math.cos(yawRad));
-   }
-
-   public void accumulateFieldPos() {
-     // Run accumulateFieldPos in the OpMode or wherever before getting fieldX and fieldY
-     computeFieldDelta();
-     fieldX += deltaFieldX;
-     fieldY += deltaFieldY;
-
-     accumRobotX += deltaRobotX;
-     accumRobotY += deltaRobotY;
-   }
-
-   public double getFieldX() {
-     // Run accumulateFieldPos in the OpMode or wherever before getting fieldX and fieldY
-     return fieldX;
-   }
-
-   public double getFieldY() {
-     // Run accumulateFieldPos in the OpMode or wherever before getting fieldX and fieldY
-     return fieldY;
-   }
-
-   public double getRobotX() {
-     return robotX;
-   }
-
-   public double getRobotY() {
-     return robotY;
-   }
-
-   public double getPinpointX() {
-     return ppo.getPosX(DistanceUnit.CM);
-   }
-
-   public double getPinpointY() {
-     return ppo.getPosY(DistanceUnit.CM);
-   }
-
-   public double getFieldYaw() {
-     return fieldYaw;
-   }
-
-   public double getPinpointYaw() {
-     return ppo.getHeading(AngleUnit.DEGREES);
-   }
-
-   public double getDeltaRobotX() {
-     return deltaRobotX;
-   }
-
-   public double getDeltaRobotY() {
-     return deltaRobotY;
-   }
-
-   public double getLastPosX() {
-     return lastRobotX;
-   }
-
-   public double getLastPosY() {
-     return lastRobotY;
-   }
-
-   public double getDeltaFieldX() {
-     return deltaFieldX;
-   }
-
-   public double getDeltaFieldY() {
-     return deltaFieldY;
-   }
-
-   public double getAccumRobotX() {
-     return accumRobotX;
-   }
-
-   public double getAccumRobotY() {
-     return accumRobotY;
-   }
-
-  */
-
   double resetX;
   double resetY;
   double robotX;
@@ -325,5 +94,25 @@ public class CarlOdometryExampleImplementation {
   public double getFieldY() {
     fieldY = getRobotPosY() - resetY;
     return fieldY;
+  }
+
+  public double getRobotYaw() {
+    return -ppo.getHeading(AngleUnit.DEGREES);
+  }
+
+  double resetYaw;
+  double cameraOffset;
+
+  public void resetYaw() {
+    resetYaw = getRobotYaw();
+    cameraOffset = webcam.getBearingAprilTag();
+  }
+
+  public double getAdjustedYaw() {
+    return -(getRobotYaw() - resetYaw + cameraOffset) + 45;
+  }
+
+  public double getResetYaw() {
+    return resetYaw;
   }
 }

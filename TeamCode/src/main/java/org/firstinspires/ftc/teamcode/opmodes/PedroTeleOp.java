@@ -24,7 +24,7 @@ public class PedroTeleOp extends OpMode {
   private Follower follower;
 
   private boolean slowMode = false;
-  private double slowModeMultiplier = 0.5;
+  private double slowModeMultiplier = 0.7;
 
   public static Pose startingPose; // See ExampleAuto to understand how to use this
 
@@ -77,7 +77,7 @@ public class PedroTeleOp extends OpMode {
     odo = new CarlOdometryExampleImplementation(april);
     odo.init(hardwareMap);
 
-    hood = new CarlHoodShoot(gameDriver);
+    hood = new CarlHoodShoot(gameDriver, odo);
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -120,22 +120,23 @@ public class PedroTeleOp extends OpMode {
      */
 
     // Slow Mode
-    /*
+
     if (gamepad1.rightBumperWasPressed()) {
       slowMode = !slowMode;
     }
 
-     */
-
     // For auto yaw seeking
     // yawError = currentYaw - yawSeek;
 
+    /*
     if (gamepad1.left_bumper) {
       headingSeekMode = true;
     }
     if (gamepad1.right_bumper) {
       headingSeekMode = false;
     }
+
+     */
 
     if (headingSeekMode) {
       yawError = april.getActualBearing();
@@ -395,9 +396,6 @@ public class PedroTeleOp extends OpMode {
     telemetry.addData("Current Vel is:", gameDriver.getFlyVelRPM());
     telemetry.addData("Arm Encoder is:", gameDriver.getArmPosition());
 
-    telemetry.addData("Current FieldX is:", odo.getFieldX());
-    telemetry.addData("Current FieldY is:", odo.getFieldY());
-
     telemetry.addData("Current Range is:", april.getRange());
     telemetry.addData("Current Bearing is:", april.getBearing());
     telemetry.addData("Current ActualBearing is:", april.getActualBearing());
@@ -408,6 +406,13 @@ public class PedroTeleOp extends OpMode {
 
     telemetry.addData("Touch Sensor:", gameDriver.getArmHomeSensor());
 
+    if (gamepad1.yWasPressed()) {
+      odo.resetYaw();
+    }
+    telemetry.addData("Reset Yaw is:", odo.getResetYaw());
+    telemetry.addData("Yaw", odo.getAdjustedYaw());
+    telemetry.addData("Camera yaw is:", odo.getAdjustedYaw());
+    telemetry.addData("Bearing is:", april.getBearingAprilTag());
     // april.getRobotPoseFromTag()
   }
 }

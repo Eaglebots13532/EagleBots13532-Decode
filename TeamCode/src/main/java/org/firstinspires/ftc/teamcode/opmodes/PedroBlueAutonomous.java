@@ -18,7 +18,9 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.Decode.CarlHoodShoot;
+import org.firstinspires.ftc.teamcode.drivers.AprilDriver;
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.CarlOdometryExampleImplementation;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "Pedro Blue Autonomous", group = "Autonomous")
@@ -34,6 +36,8 @@ public class PedroBlueAutonomous extends OpMode {
 
   private PathChain scorePath, parkPath;
   private CarlHoodShoot hood;
+  private CarlOdometryExampleImplementation odo;
+  private AprilDriver april;
 
   public void buildPaths() {
 
@@ -77,7 +81,9 @@ public class PedroBlueAutonomous extends OpMode {
     buildPaths();
     follower.setStartingPose(startPose);
 
-    hood = new CarlHoodShoot(gameDriver);
+    april = new AprilDriver(this);
+    odo = new CarlOdometryExampleImplementation(april);
+    hood = new CarlHoodShoot(gameDriver, odo);
   }
 
   @Override

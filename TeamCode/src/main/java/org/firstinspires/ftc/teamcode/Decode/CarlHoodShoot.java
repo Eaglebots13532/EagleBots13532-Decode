@@ -4,19 +4,20 @@
 package org.firstinspires.ftc.teamcode.Decode;
 
 import org.firstinspires.ftc.teamcode.drivers.GameDriver;
+import org.firstinspires.ftc.teamcode.drivers.odo.CarlOdometryExampleImplementation;
 
 public class CarlHoodShoot {
 
   GameDriver motors;
 
-  // CarlOdometryExampleImplementation odo;
+  CarlOdometryExampleImplementation odo;
 
   // GoBildaPinpointDriver odo;
 
   // Odo for future implementation
-  public CarlHoodShoot(GameDriver motors) {
+  public CarlHoodShoot(GameDriver motors, CarlOdometryExampleImplementation odo) {
     this.motors = motors;
-    // this.odo = odo;
+    this.odo = odo;
   }
 
   double encCountToLaunchAngle = 35.95 / 1117.84;
@@ -26,9 +27,9 @@ public class CarlHoodShoot {
   double lastAngleError;
   double hoodAngle;
   double hoodIntegral;
-  double kP = 0.05;
-  double kI = 0.00;
-  double kD = 0.005;
+  double hoodKP = 0.05;
+  double hoodKI = 0.00;
+  double hoodKD = 0.005;
   double lastTime;
   double changeTime;
   // Parameters for speed of ball equation
@@ -63,7 +64,7 @@ public class CarlHoodShoot {
         Math.max(
             -0.1, Math.min(0.1, hoodIntegral)); // clamp integral to keep from exploading in value
 
-    double out = ((kP * angleError) + (kI * hoodIntegral) + (kD * derivative));
+    double out = ((hoodKP * angleError) + (hoodKI * hoodIntegral) + (hoodKD * derivative));
 
     lastAngleError = angleError;
     lastTime = elapsedTime;
@@ -309,7 +310,7 @@ public class CarlHoodShoot {
 
   // To change position with driver input
   double seekPos;
-  double tune = 3;
+  double tune = 5;
 
   public double changePos(double change) {
     seekPos += (change * tune);
@@ -326,11 +327,14 @@ public class CarlHoodShoot {
   boolean pChange;
   boolean iChange;
   boolean dChange;
-  
+
   int resetInc;
   int lastIncMode;
   int adjustedInc;
   int lastAdjustedInc;
+  double kP;
+  double kI;
+  double kD;
 
   public void tunePID(int incMode, int inc) {
     if (incMode - lastIncMode != 0) {
@@ -351,28 +355,40 @@ public class CarlHoodShoot {
       dChange = true;
     }
     if (pChange) {
-      if (adjustedInc - lastAdjustedInc != 0) {
-        kP += 0.1;
+      if (adjustedInc - lastAdjustedInc > 0) {
+        kP += 1;
+      } else if (adjustedInc - lastAdjustedInc < 0) {
+        kP -= 1;
       }
       lastAdjustedInc = adjustedInc;
     } else if (iChange) {
-      kI = (0.1 * adjustedInc);
+      if (adjustedInc - lastAdjustedInc > 0) {
+        kI += 1;
+      } else if (adjustedInc - lastAdjustedInc < 0) {
+        kI -= 1;
+      }
+      lastAdjustedInc = adjustedInc;
     } else if (dChange) {
-      kD = (0.1 * adjustedInc);
+      if (adjustedInc - lastAdjustedInc > 0) {
+        kD += 1;
+      } else if (adjustedInc - lastAdjustedInc < 0) {
+        kD -= 1;
+      }
+      lastAdjustedInc = adjustedInc;
     }
     lastIncMode = incMode;
   }
 
   public double getKP() {
-    return kP * 0.1;
+    return kP;
   }
 
   public double getkI() {
-    return kI * 0.1;
+    return kI;
   }
 
   public double getkD() {
-    return kD * 0.1;
+    return kD;
   }
 
   public boolean isPCHange() {
@@ -390,22 +406,32 @@ public class CarlHoodShoot {
   public int getAdjustedInc() {
     return adjustedInc;
   }
+
   double termP;
   double termI;
   double termD;
+
   public double headingPID(double error, double runTime) {
-    termP = error * headingP;
+    double adjustedError = error / 360;
+    termP = adjustedError * kP;
 
     headingDeltaTime = runTime - headingLastRunTime;
-    termD = (error - lastError) / headingDeltaTime * kD;
+    termD = ((adjustedError - lastError) / headingDeltaTime) * kD;
 
-    termI += (error * headingDeltaTime) * kI;
+    termI += (adjustedError * headingDeltaTime) * kI;
     termI = Math.min(0.2, Math.max(-0.2, termI));
 
     headingPower = termP + termD + termI;
 
-    lastError = error;
+    lastError = adjustedError;
     headingLastRunTime = runTime;
     return headingPower;
+  }
+
+  double fieldX;
+  double fieldY;
+
+  public void resetUsingCamera() {
+    odo.resetFieldXY();
   }
 }

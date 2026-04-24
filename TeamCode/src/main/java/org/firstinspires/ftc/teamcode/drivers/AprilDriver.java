@@ -58,6 +58,8 @@ public class AprilDriver {
   public static double range = 0.0;
   public static double bearing = 0.0;
   public static double actualBearing;
+  public static double poseX;
+  public static double poseY;
 
   public static final boolean USE_WEBCAM = true; // true for webcam, false for phone camera
 
@@ -206,6 +208,8 @@ public class AprilDriver {
         range = detection.ftcPose.range * kdist;
         bearing = detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES);
         actualBearing = detection.ftcPose.bearing;
+        poseX = detection.ftcPose.x;
+        poseY = detection.ftcPose.y;
 
         if (notRedBlue) {
           UnkId = detection.id;
@@ -250,67 +254,53 @@ public class AprilDriver {
     return blueAprilTag;
   }
 
-  class Pose2d {
-    public double x;
-    public double y;
-    public double yaw; // radians
+  static final double blueAprilLocationX = 45; // Cm
+  static final double blueAprilLocationY = 327; // Cm
+  static final double blueAprilLocationYaw = 36.6; // Degrees
+  double distAprilTag;
+  double bearingAprilTag;
+  double fieldOrientation;
+  double fieldX;
+  double fieldY;
 
-    public Pose2d(double x, double y, double yaw) {
-      this.x = x;
-      this.y = y;
-      this.yaw = yaw;
-    }
+  public void resetPosUsingCam() {
+    distAprilTag = getRange();
+    bearingAprilTag = getActualBearing();
+
+    fieldOrientation = blueAprilLocationYaw - bearingAprilTag;
+    fieldX =
+        ((Math.sin(Math.toRadians(fieldOrientation)) * distAprilTag) * 2.54) + blueAprilLocationX;
+    fieldY =
+        ((Math.cos(Math.toRadians(fieldOrientation)) * distAprilTag) * 2.54) - blueAprilLocationY;
   }
 
-  public Pose2d compose(Pose2d a, Pose2d b) {
-    double cos = Math.cos(a.yaw);
-    double sin = Math.sin(a.yaw);
-
-    double x = a.x + b.x * cos - b.y * sin;
-    double y = a.y + b.x * sin + b.y * cos;
-    double yaw = a.yaw + b.yaw;
-
-    return new Pose2d(x, y, yaw);
+  public double getFieldX() {
+    resetPosUsingCam();
+    return fieldX;
   }
 
-  public Pose2d invert(Pose2d p) {
-    double cos = Math.cos(p.yaw);
-    double sin = Math.sin(p.yaw);
-
-    double x = -p.x * cos - p.y * sin;
-    double y = p.x * sin - p.y * cos;
-    double yaw = -p.yaw;
-
-    return new Pose2d(x, y, yaw);
+  public double getFieldY() {
+    resetPosUsingCam();
+    return fieldY;
   }
 
-  Pose2d fieldToTag = new Pose2d(141.33, 148.19, Math.toRadians(-45));
-  Pose2d CameraToRobot = new Pose2d(-10.0, 0.0, 0.0);
+  public double getDistAprilTag() {
+    resetPosUsingCam();
+    return distAprilTag;
+  }
 
-  public Pose2d getRobotPoseFromTag(AprilTagDetection detection) {
+  public double getBearingAprilTag() {
+    resetPosUsingCam();
+    return bearingAprilTag;
+  }
 
-    // 1. Get camera pose relative to tag (FTC gives this)
-    double camX = detection.ftcPose.x; // forward (cm)
-    double camY = detection.ftcPose.y; // left (cm)
-    double camYaw = Math.toRadians(detection.ftcPose.yaw);
+  public double getPoseX() {
+    resetPosUsingCam();
+    return poseX;
+  }
 
-    // FTC coordinate fix:
-    // ftcPose: +X forward, +Y left
-    // Convert to standard: +X right, +Y forward
-    double x_cam = -camY;
-    double y_cam = camX;
-
-    Pose2d cameraInTag = new Pose2d(x_cam, y_cam, camYaw);
-
-    // 2. Invert to get tag → camera
-    Pose2d tagToCamera = invert(cameraInTag);
-
-    // 3. Apply camera offset (camera → robot center)
-    Pose2d tagToRobot = compose(tagToCamera, CameraToRobot);
-
-    // 4. Apply field tag pose
-    Pose2d fieldToRobot = compose(fieldToTag, tagToRobot);
-
-    return fieldToRobot;
+  public double getPoseY() {
+    resetPosUsingCam();
+    return poseY;
   }
 } // end class

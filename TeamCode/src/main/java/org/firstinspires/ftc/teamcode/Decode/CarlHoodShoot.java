@@ -323,24 +323,19 @@ public class CarlHoodShoot {
   double lastError;
   double headingDeltaTime;
   double headingLastRunTime;
-
-  int pInc;
-  int iInc;
-  int dInc;
   boolean pChange;
   boolean iChange;
   boolean dChange;
-  double termP = 1;
-  double termD = 0;
-  double termI = 0;
-  int increment = 0;
+  
   int resetInc;
   int lastIncMode;
   int adjustedInc;
-  double lastkP;
+  int lastAdjustedInc;
 
   public void tunePID(int incMode, int inc) {
-
+    if (incMode - lastIncMode != 0) {
+      resetInc = inc;
+    }
     adjustedInc = inc - resetInc;
     if (incMode % 3 == 0) {
       pChange = true;
@@ -356,7 +351,10 @@ public class CarlHoodShoot {
       dChange = true;
     }
     if (pChange) {
-      kP = (0.1 * adjustedInc);
+      if (adjustedInc - lastAdjustedInc != 0) {
+        kP += 0.1;
+      }
+      lastAdjustedInc = adjustedInc;
     } else if (iChange) {
       kI = (0.1 * adjustedInc);
     } else if (dChange) {
@@ -392,14 +390,16 @@ public class CarlHoodShoot {
   public int getAdjustedInc() {
     return adjustedInc;
   }
-
+  double termP;
+  double termI;
+  double termD;
   public double headingPID(double error, double runTime) {
     termP = error * headingP;
 
     headingDeltaTime = runTime - headingLastRunTime;
-    termD = (error - lastError) / headingDeltaTime * headingD;
+    termD = (error - lastError) / headingDeltaTime * kD;
 
-    termI += (error * headingDeltaTime) * headingI;
+    termI += (error * headingDeltaTime) * kI;
     termI = Math.min(0.2, Math.max(-0.2, termI));
 
     headingPower = termP + termD + termI;

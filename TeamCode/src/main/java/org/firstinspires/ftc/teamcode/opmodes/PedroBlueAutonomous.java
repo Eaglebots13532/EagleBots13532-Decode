@@ -3,6 +3,7 @@
 
 package org.firstinspires.ftc.teamcode.opmodes;
 
+
 import static com.pedropathing.ivy.Scheduler.*;
 import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
@@ -27,44 +28,85 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 public class PedroBlueAutonomous extends OpMode {
 
   private GameDriver gameDriver;
-
   private Follower follower;
   private final Pose startPose =
       new Pose(0, 0, Math.toRadians(0)); // Starting position of the robot
-  private final Pose scorePose = new Pose(8, -1.8, 1.85); // Position to score the game element
-  private final Pose parkPose = new Pose(16.3, 23.8, 0); // Position to park after scoring
+  private final Pose shootPose = new Pose(14.5, -1.8, 2.05); // Position to score the game element
+  private final Pose toBallsPose = new Pose(40.2, 8.0, 0.90); // Go to the line where balls are set up
+  private final Pose getBallsPose = new Pose(40, 30, 1.60); // Pick up three balls while intaking
 
-  private PathChain scorePath, parkPath;
+
+  private PathChain scorePath, ballPath, parkPath, intakePath;
   private CarlHoodShoot hood;
   private CarlOdometryExampleImplementation odo;
   private AprilDriver april;
+  boolean isHoodHoming = true;
+  boolean isArmHoming = true;
+  double seekHoodAngle;
+  double FlyVel;
+
 
   public void buildPaths() {
 
     scorePath =
         follower
             .pathBuilder()
-            .addPath(new BezierLine(startPose, scorePose))
-            .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
+            .addPath(new BezierLine(startPose, shootPose))
+            .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
             .build();
 
-    parkPath =
+    ballPath =
         follower
             .pathBuilder()
-            .addPath(new BezierLine(scorePose, parkPose))
-            .setLinearHeadingInterpolation(scorePose.getHeading(), parkPose.getHeading())
+            .addPath(new BezierLine(shootPose, toBallsPose))
+            .setLinearHeadingInterpolation(shootPose.getHeading(), toBallsPose.getHeading())
             .build();
-  }
+    intakePath =
+            follower
+                    .pathBuilder()
+                    .addPath(new BezierLine(toBallsPose, getBallsPose))
+                    .setLinearHeadingInterpolation(toBallsPose.getHeading(), getBallsPose.getHeading())
+                    .build();
+    parkPath =
+            follower
+                    .pathBuilder()
+                    .addPath(new BezierLine(shootPose, toBallsPose))
+                    .setLinearHeadingInterpolation(shootPose.getHeading(), toBallsPose.getHeading())
+                    .build();
+  }// finishes buildPaths
+
+
+
 
   public Command autoRoutine() {
     return sequential(
-        parallel(follow(follower, scorePath), instant(() -> gameDriver.setLaunchPower(1400))),
+        parallel(
+                follow(follower, scorePath),
+                instant(() -> gameDriver.setLaunchPower(1400))),
+
         instant(() -> gameDriver.openGate()),
-        waitMs(500),
+            waitMs(5000),// shoot three balls
+
+        follow(follower,ballPath),
+        //go to the balls
+
+        parallel(
+                follow(follower,intakePath),
+                instant(()-> gameDriver.intakeOn())),
+                //get balls intake etc
+
+        parallel(
+
+                follow(follower, scorePath),
+                instant(() -> gameDriver.setLaunchPower(1400)),
+
+                instant(() -> gameDriver.openGate()),
+                waitMs(5000)), // go back to the shoot position, shoot the balls again
+
         parallel(
             follow(follower, parkPath),
             instant(() -> gameDriver.closeGate()),
-            instant(() -> gameDriver.setLaunchPower(0))));
+            instant(() -> gameDriver.setLaunchPower(0)))); //leave and stop shooting
   }
 
   @Override
@@ -95,5 +137,16 @@ public class PedroBlueAutonomous extends OpMode {
     telemetry.addData("y", follower.getPose().getY());
     telemetry.addData("heading", follower.getPose().getHeading());
     telemetry.update();
+    if (isHoodHoming) {
+      hood.hoodHome();
+      isHoodHoming = hood.hasHomed();
+    }
+    if (isArmHoming) {
+      gameDriver.homeArm();
+      isArmHoming = gameDriver.getArmHomeSensor();
+    }
+    gameDriver.setHoodServoPower(hood.getHoodServoPowerPID(seekHoodAngle, getRuntime()));
+    gameDriver.setFlyVelRPM(FlyVel);
+    //hood.getAngleError() use for sequential control
   }
 }

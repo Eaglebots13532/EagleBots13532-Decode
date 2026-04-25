@@ -12,17 +12,11 @@ public class CarlHoodShoot {
 
   CarlOdometryExampleImplementation odo;
 
-  // GoBildaPinpointDriver odo;
-
-  // Odo for future implementation
   public CarlHoodShoot(GameDriver motors, CarlOdometryExampleImplementation odo) {
     this.motors = motors;
     this.odo = odo;
   }
 
-  double encCountToLaunchAngle = 35.95 / 1117.84;
-  double targetHeight = 1200; // Target height for the ball to be at
-  double targetDistance;
   double angleError;
   double lastAngleError;
   double hoodAngle;
@@ -72,10 +66,6 @@ public class CarlHoodShoot {
     return out;
   }
 
-  public double getChangeTime() {
-    return changeTime;
-  }
-
   public double getHoodAngle() {
     return hoodAngle;
   }
@@ -84,17 +74,6 @@ public class CarlHoodShoot {
     return angleError;
   }
 
-  /*
-  public void homeHooD () {
-      if (motors.getTouchSensor()) {
-          motors.setHoodServoPower(-0.5);
-      } else if (!motors.getTouchSensor()) {
-          motors.setHoodServoPower(0);
-          motors.resetRevEncoderPos();
-      }
-  }
-
-   */
   double theta1;
   double theta2;
 
@@ -208,23 +187,6 @@ public class CarlHoodShoot {
   double lastAnalog;
   double actualRotation;
 
-  /*
-  public void loop() {
-    telemetry.addData("Left Analog data is:", stiltAnalog.getVoltage());
-    telemetry.addData("Current Analog Max is:", readCurrentMax());
-    telemetry.addData("Current Analog Min is:", readCurrentMin());
-
-    telemetry.addData("Current Rotation Increment is:", inc);
-    telemetry.addData("Current Rotation From Start is:", readMultipleRotationFromStart());
-
-    telemetry.addData("Delta Time is:", getDeltaTime());
-
-    runToStiltPosition(changePos(gamepad1.left_stick_y));
-    telemetry.addData("Current Change Pos is:", changePos(gamepad1.left_stick_y));
-    telemetry.addData("Current Angle Error is:", stiltAngleError);
-  }
-
-   */
   // For reading experimental min/max values of analog
   public double readCurrentMax() {
     if (motors.getStiltAnalog() > currentAnlogMax) {
@@ -317,9 +279,6 @@ public class CarlHoodShoot {
     return seekPos;
   }
 
-  double headingP = 10; // In Degrees
-  double headingD = 0.1;
-  double headingI = 0;
   double headingPower;
   double lastError;
   double headingDeltaTime;
@@ -426,12 +385,5 @@ public class CarlHoodShoot {
     lastError = adjustedError;
     headingLastRunTime = runTime;
     return headingPower;
-  }
-
-  double fieldX;
-  double fieldY;
-
-  public void resetUsingCamera() {
-    odo.resetFieldXY();
   }
 }

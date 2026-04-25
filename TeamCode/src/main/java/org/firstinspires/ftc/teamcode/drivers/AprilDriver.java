@@ -254,53 +254,28 @@ public class AprilDriver {
     return blueAprilTag;
   }
 
-  static final double blueAprilLocationX = 45; // Cm
-  static final double blueAprilLocationY = 327; // Cm
-  static final double blueAprilLocationYaw = 36.6; // Degrees
-  double distAprilTag;
-  double bearingAprilTag;
-  double fieldOrientation;
-  double fieldX;
-  double fieldY;
-
-  public void resetPosUsingCam() {
-    distAprilTag = getRange();
-    bearingAprilTag = getActualBearing();
-
-    fieldOrientation = blueAprilLocationYaw - bearingAprilTag;
-    fieldX =
-        ((Math.sin(Math.toRadians(fieldOrientation)) * distAprilTag) * 2.54) + blueAprilLocationX;
-    fieldY =
-        ((Math.cos(Math.toRadians(fieldOrientation)) * distAprilTag) * 2.54) - blueAprilLocationY;
-  }
-
-  public double getFieldX() {
-    resetPosUsingCam();
-    return fieldX;
-  }
-
-  public double getFieldY() {
-    resetPosUsingCam();
-    return fieldY;
-  }
-
-  public double getDistAprilTag() {
-    resetPosUsingCam();
-    return distAprilTag;
-  }
-
   public double getBearingAprilTag() {
-    resetPosUsingCam();
-    return bearingAprilTag;
+    getAprilTag();
+    return getActualBearing();
   }
 
-  public double getPoseX() {
-    resetPosUsingCam();
-    return poseX;
+  double fieldXHolonomic;
+  double fieldYHolonomic;
+
+  public double getFieldX(double heading) {
+    double adjustedHeading = Math.toRadians(heading);
+    double x = poseX * 2.54;
+    double y = poseY * 2.54;
+
+    fieldXHolonomic = -((x * Math.cos(adjustedHeading)) - (y * Math.sin(adjustedHeading))) - 146;
+    return fieldXHolonomic;
   }
 
-  public double getPoseY() {
-    resetPosUsingCam();
-    return poseY;
+  public double getFieldY(double heading) {
+    double adjustedHeading = Math.toRadians(heading);
+    double x = poseX * 2.54;
+    double y = poseY * 2.54;
+    fieldYHolonomic = -(((x * Math.cos(adjustedHeading) + y * Math.sin(adjustedHeading))) - 146);
+    return fieldYHolonomic;
   }
 } // end class

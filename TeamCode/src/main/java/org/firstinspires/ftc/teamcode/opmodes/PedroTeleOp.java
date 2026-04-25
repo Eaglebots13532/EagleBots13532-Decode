@@ -102,6 +102,7 @@ public class PedroTeleOp extends OpMode {
     follower.update();
     telemetryM.update();
     odo.updatePos();
+    odo.trackFieldPos();
 
     // Commented out for debugging
     // inputStateMachine.captureInputs();
@@ -406,13 +407,21 @@ public class PedroTeleOp extends OpMode {
 
     telemetry.addData("Touch Sensor:", gameDriver.getArmHomeSensor());
 
+    telemetry.addData("Heading is:", odo.getAdjustedYaw());
+    telemetry.addData("Field X is:", odo.getFinalFieldX());
+    telemetry.addData("Field Y is:", odo.getFinalFieldY());
+    telemetry.addData("Camera X is:", odo.getCameraX());
+    telemetry.addData("Camera Y is:", odo.getCameraY());
+    april.getAprilTag();
+    telemetry.addData("April X is:", april.getFieldX(odo.getAdjustedYaw()));
+    telemetry.addData("April Y is:", april.getFieldY(odo.getAdjustedYaw()));
     if (gamepad1.yWasPressed()) {
       odo.resetYaw();
     }
-    telemetry.addData("Reset Yaw is:", odo.getResetYaw());
-    telemetry.addData("Yaw", odo.getAdjustedYaw());
-    telemetry.addData("Camera yaw is:", odo.getAdjustedYaw());
-    telemetry.addData("Bearing is:", april.getBearingAprilTag());
+    if (gamepad1.xWasPressed()) {
+      odo.resetFieldPos(april.getFieldX(odo.getAdjustedYaw()), april.getFieldY(odo.getAdjustedYaw()));
+    }
+
     // april.getRobotPoseFromTag()
   }
 }

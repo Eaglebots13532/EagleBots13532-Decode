@@ -115,4 +115,51 @@ public class CarlOdometryExampleImplementation {
   public double getResetYaw() {
     return resetYaw;
   }
+
+  double finalFieldX;
+  double finalFieldY;
+  double cameraX;
+  double cameraY;
+
+  public void resetFieldPos(double x, double y) {
+    resetFieldXY();
+    webcam.getAprilTag();
+    cameraX = x;
+    cameraY = y;
+  }
+
+  public double getCameraX() {
+    return cameraX;
+  }
+
+  public double getCameraY() {
+    return cameraY;
+  }
+
+  public void trackFieldPos() {
+    finalFieldX = (getFieldX() + cameraX);
+    finalFieldY = (getFieldY() + cameraY);
+  }
+
+  public double getFinalFieldX() {
+    return finalFieldX;
+  }
+
+  public double getFinalFieldY() {
+    return finalFieldY;
+  }
+
+  double seekHeading;
+  double goalX;
+  double goalY;
+  static final double blueAprilLocationX = 146; // Cm
+  static final double blueAprilLocationY = 146; // Cm
+  static final double blueAprilLocationYaw = 45; // Degrees
+
+  public double getSeekHeading() {
+    goalX = Math.abs(blueAprilLocationX - finalFieldX);
+    goalY = Math.abs(blueAprilLocationY - finalFieldY);
+    seekHeading = Math.atan(goalX / goalY);
+    return seekHeading;
+  }
 }

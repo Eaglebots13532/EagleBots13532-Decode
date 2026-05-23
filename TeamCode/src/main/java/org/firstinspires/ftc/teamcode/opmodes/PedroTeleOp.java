@@ -24,7 +24,7 @@ public class PedroTeleOp extends OpMode {
   private Follower follower;
 
   private boolean slowMode = false;
-  private double slowModeMultiplier = 0.7;
+  private double slowModeMultiplier = 0.5;
 
   public static Pose startingPose; // See ExampleAuto to understand how to use this
 
@@ -77,7 +77,7 @@ public class PedroTeleOp extends OpMode {
     odo = new CarlOdometryExampleImplementation(april);
     odo.init(hardwareMap);
 
-    hood = new CarlHoodShoot(gameDriver, odo);
+    hood = new CarlHoodShoot(gameDriver);
 
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -102,7 +102,6 @@ public class PedroTeleOp extends OpMode {
     follower.update();
     telemetryM.update();
     odo.updatePos();
-    odo.trackFieldPos();
 
     // Commented out for debugging
     // inputStateMachine.captureInputs();
@@ -121,23 +120,22 @@ public class PedroTeleOp extends OpMode {
      */
 
     // Slow Mode
-
+    /*
     if (gamepad1.rightBumperWasPressed()) {
       slowMode = !slowMode;
     }
 
+     */
+
     // For auto yaw seeking
     // yawError = currentYaw - yawSeek;
 
-    /*
     if (gamepad1.left_bumper) {
       headingSeekMode = true;
     }
     if (gamepad1.right_bumper) {
       headingSeekMode = false;
     }
-
-     */
 
     if (headingSeekMode) {
       yawError = april.getActualBearing();
@@ -397,6 +395,9 @@ public class PedroTeleOp extends OpMode {
     telemetry.addData("Current Vel is:", gameDriver.getFlyVelRPM());
     telemetry.addData("Arm Encoder is:", gameDriver.getArmPosition());
 
+    telemetry.addData("Current FieldX is:", odo.getFieldX());
+    telemetry.addData("Current FieldY is:", odo.getFieldY());
+
     telemetry.addData("Current Range is:", april.getRange());
     telemetry.addData("Current Bearing is:", april.getBearing());
     telemetry.addData("Current ActualBearing is:", april.getActualBearing());
@@ -406,21 +407,6 @@ public class PedroTeleOp extends OpMode {
     telemetry.addData("Distace ready", distanceReady);
 
     telemetry.addData("Touch Sensor:", gameDriver.getArmHomeSensor());
-
-    telemetry.addData("Heading is:", odo.getAdjustedYaw());
-    telemetry.addData("Field X is:", odo.getFinalFieldX());
-    telemetry.addData("Field Y is:", odo.getFinalFieldY());
-    telemetry.addData("Camera X is:", odo.getCameraX());
-    telemetry.addData("Camera Y is:", odo.getCameraY());
-    april.getAprilTag();
-    telemetry.addData("April X is:", april.getFieldX(odo.getAdjustedYaw()));
-    telemetry.addData("April Y is:", april.getFieldY(odo.getAdjustedYaw()));
-    if (gamepad1.yWasPressed()) {
-      odo.resetYaw();
-    }
-    if (gamepad1.xWasPressed()) {
-      odo.resetFieldPos(april.getFieldX(odo.getAdjustedYaw()), april.getFieldY(odo.getAdjustedYaw()));
-    }
 
     // april.getRobotPoseFromTag()
   }
